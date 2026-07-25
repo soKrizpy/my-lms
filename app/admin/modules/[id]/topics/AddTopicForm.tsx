@@ -13,6 +13,8 @@ export function AddTopicForm({
 }) {
   const router = useRouter();
   const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [projectLink, setProjectLink] = useState("");
   const [orderIndex, setOrderIndex] = useState<number | "">("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -37,6 +39,8 @@ export function AddTopicForm({
         Number(moduleId),
         title.trim(),
         Number(orderIndex),
+        description.trim() || undefined,
+        projectLink.trim() || undefined,
       );
 
       if (error) {
@@ -45,6 +49,8 @@ export function AddTopicForm({
       }
 
       setTitle("");
+      setDescription("");
+      setProjectLink("");
       setOrderIndex("");
 
       if (onCreated) {
@@ -75,6 +81,32 @@ export function AddTopicForm({
           onChange={(e) => setTitle(e.target.value)}
           className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
           placeholder="Contoh: Pengantar JavaScript"
+        />
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-700">
+          Deskripsi Topik / Slide Embed (Canva)
+        </label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+          placeholder="Contoh: Pada sesi ini kita akan... atau paste kode embed iframe Canva di sini"
+          rows={3}
+        />
+      </div>
+
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-700">
+          Link Project
+        </label>
+        <input
+          type="url"
+          value={projectLink}
+          onChange={(e) => setProjectLink(e.target.value)}
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+          placeholder="https://github.com/..."
         />
       </div>
 
