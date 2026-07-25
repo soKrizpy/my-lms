@@ -6,9 +6,6 @@ export default async function Home() {
     .select("*")
     .limit(5);
 
-  console.log("modules", modules);
-  console.log("error", error);
-
   return (
     <main style={{ padding: "2rem", fontFamily: "sans-serif" }}>
       <h1>My LMS</h1>

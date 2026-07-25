@@ -60,7 +60,7 @@ export function AddTopicForm({
   }
 
   return (
-    <form className="space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+    <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
       <h2 className="text-sm font-semibold text-slate-900">
         Tambah Topik Baru
       </h2>
