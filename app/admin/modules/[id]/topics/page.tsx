@@ -1,6 +1,7 @@
 // app/admin/modules/[id]/topics/page.tsx
 
-import { supabase } from "../../../../../lib/supabaseClient";
+import Link from "next/link";
+import { getModuleById, getTopicsByModuleId } from "../../../../../lib/lmsData";
 import { AddTopicForm } from "./AddTopicForm";
 
 type PageProps = {
@@ -22,20 +23,12 @@ export default async function ModuleTopicsPage(props: PageProps) {
     );
   }
 
-  const { data: moduleData, error: moduleError } = await supabase
-    .from("modules")
-    .select("*")
-    .eq("id", moduleIdParam)
-    .single();
+  const { data: moduleData, error: moduleError } =
+    await getModuleById(moduleIdParam);
+  const { data: topics, error: topicsError } = await getTopicsByModuleId(
+    Number(moduleIdParam),
+  );
 
-  const { data: topics, error: topicsError } = await supabase
-    .from("topics")
-    .select("*")
-    .eq("module_id", Number(moduleIdParam))
-    .order("order_index", { ascending: true });
-
-  console.log("topics query result:", topics);
-  console.log("topics query error:", topicsError);
   if (moduleError) {
     return (
       <section>
@@ -46,34 +39,51 @@ export default async function ModuleTopicsPage(props: PageProps) {
   }
 
   return (
-    <section>
-      <h1>Topik untuk Modul: {moduleData?.title}</h1>
-      <p>{moduleData?.description}</p>
-      {/* Form tambah topik */}
+    <section className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-semibold text-slate-900">
+          Topik untuk Modul: {moduleData?.title ?? "-"}
+        </h1>
+        <p className="text-sm text-slate-600">
+          {moduleData?.description ?? "Tidak ada deskripsi."}
+        </p>
+      </div>
+
       <AddTopicForm moduleId={moduleIdParam} />
+
       {topicsError && (
         <p style={{ color: "red" }}>Error topik: {topicsError.message}</p>
       )}
-      {!topics || topics.length === 0 ? (
-        <p>Belum ada topik untuk modul ini.</p>
-      ) : (
-        <ol style={{ marginTop: "1rem" }}>
-          {topics.map((t: any) => (
-            <li key={t.id}>
-              {t.order_index}. {t.title}{" "}
-              <a
-                href={`/admin/modules/${moduleIdParam}/topics/${t.id}/quiz`}
-                style={{ marginLeft: "0.5rem" }}
+
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+        <h2 className="mb-3 text-sm font-semibold text-slate-900">
+          Daftar Topik
+        </h2>
+        {!topics || topics.length === 0 ? (
+          <p className="text-sm text-slate-500">
+            Belum ada topik untuk modul ini.
+          </p>
+        ) : (
+          <ol className="space-y-2">
+            {topics.map((topic: any) => (
+              <li
+                key={topic.id}
+                className="flex items-center justify-between rounded-md border border-slate-200 bg-white px-3 py-2"
               >
-                Kelola quiz
-              </a>
-            </li>
-          ))}
-        </ol>
-      )}{" "}
+                <span className="text-sm text-slate-700">
+                  {topic.order_index}. {topic.title}
+                </span>
+                <Link
+                  href={`/admin/modules/${moduleIdParam}/topics/${topic.id}/quiz`}
+                  className="text-sm font-medium text-slate-900 underline"
+                >
+                  Kelola quiz
+                </Link>
+              </li>
+            ))}
+          </ol>
+        )}
+      </div>
     </section>
   );
-
-  console.log("topics query result:", topics);
-  console.log("topics query error:", topicsError);
 }

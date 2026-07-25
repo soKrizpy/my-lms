@@ -1,7 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { supabase } from "../../../../../lib/supabaseClient";
+import { useRouter } from "next/navigation";
+import { createTopic } from "../../../../../lib/lmsData";
 
 export function AddTopicForm({
   moduleId,
@@ -10,6 +11,7 @@ export function AddTopicForm({
   moduleId: string;
   onCreated?: () => void;
 }) {
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [orderIndex, setOrderIndex] = useState<number | "">("");
   const [loading, setLoading] = useState(false);
@@ -31,28 +33,25 @@ export function AddTopicForm({
 
     try {
       setLoading(true);
-
-      const { data, error } = await supabase.from("topics").insert({
-        module_id: Number(moduleId),
-        title,
-        order_index: Number(orderIndex),
-      });
-
-      console.log("insert topic for module_id:", Number(moduleId));
-      console.log("insert topic error:", error);
+      const { error } = await createTopic(
+        Number(moduleId),
+        title.trim(),
+        Number(orderIndex),
+      );
 
       if (error) {
         setErrorMsg(error.message);
         return;
       }
 
-      // Reset form
       setTitle("");
       setOrderIndex("");
 
       if (onCreated) {
         onCreated();
       }
+
+      router.refresh();
     } catch (err: any) {
       setErrorMsg(err.message ?? "Terjadi kesalahan");
     } finally {
@@ -61,39 +60,26 @@ export function AddTopicForm({
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      style={{
-        marginTop: "1.5rem",
-        marginBottom: "1.5rem",
-        padding: "1rem",
-        backgroundColor: "white",
-        borderRadius: "0.5rem",
-        border: "1px solid #e5e7eb",
-      }}
-    >
-      <h2 style={{ marginBottom: "0.75rem" }}>Tambah Topik Baru</h2>
+    <form className="space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+      <h2 className="text-sm font-semibold text-slate-900">
+        Tambah Topik Baru
+      </h2>
 
-      <div style={{ marginBottom: "0.75rem" }}>
-        <label style={{ display: "block", marginBottom: "0.25rem" }}>
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-700">
           Judul Topik
         </label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "0.5rem",
-            borderRadius: "0.25rem",
-            border: "1px solid #d1d5db",
-          }}
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
           placeholder="Contoh: Pengantar JavaScript"
         />
       </div>
 
-      <div style={{ marginBottom: "0.75rem" }}>
-        <label style={{ display: "block", marginBottom: "0.25rem" }}>
+      <div>
+        <label className="mb-1 block text-sm font-medium text-slate-700">
           Urutan Topik (1, 2, 3, ...)
         </label>
         <input
@@ -102,31 +88,17 @@ export function AddTopicForm({
           onChange={(e) =>
             setOrderIndex(e.target.value === "" ? "" : Number(e.target.value))
           }
-          style={{
-            width: "100%",
-            padding: "0.5rem",
-            borderRadius: "0.25rem",
-            border: "1px solid #d1d5db",
-          }}
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
           placeholder="Contoh: 1"
         />
       </div>
 
-      {errorMsg && (
-        <p style={{ color: "red", marginBottom: "0.75rem" }}>{errorMsg}</p>
-      )}
+      {errorMsg && <p className="text-sm text-red-600">{errorMsg}</p>}
 
       <button
         type="submit"
         disabled={loading}
-        style={{
-          padding: "0.5rem 1rem",
-          backgroundColor: "#0f172a",
-          color: "white",
-          borderRadius: "0.25rem",
-          border: "none",
-          cursor: loading ? "not-allowed" : "pointer",
-        }}
+        className="rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {loading ? "Menyimpan..." : "Simpan Topik"}
       </button>

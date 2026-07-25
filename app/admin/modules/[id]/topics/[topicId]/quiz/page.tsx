@@ -1,6 +1,11 @@
 // app/admin/modules/[id]/topics/[topicId]/quiz/page.tsx
+import Link from "next/link";
 import { AddQuizQuestionForm } from "./AddQuizQuestionForm";
-import { supabase } from "../../../../../../../lib/supabaseClient";
+import {
+  getQuizQuestions,
+  getOrCreateQuiz,
+  getTopicById,
+} from "../../../../../../../lib/lmsData";
 
 type PageProps = {
   params: Promise<{
@@ -23,53 +28,16 @@ export default async function TopicQuizPage(props: PageProps) {
     );
   }
 
-  // Ambil data topik
-  const { data: topicData, error: topicError } = await supabase
-    .from("topics")
-    .select("id, title, module_id")
-    .eq("id", Number(topicIdParam))
-    .single();
+  const { data: topicData, error: topicError } =
+    await getTopicById(topicIdParam);
+  const { data: quiz, error: quizError } = await getOrCreateQuiz(
+    Number(topicIdParam),
+    `Quiz untuk ${topicData?.title ?? "topik"}`,
+  );
 
-  // Ambil / buat quiz untuk topik ini
-  const { data: existingQuiz, error: quizError } = await supabase
-    .from("quizzes")
-    .select("*")
-    .eq("topic_id", Number(topicIdParam))
-    .maybeSingle();
-
-  let quiz = existingQuiz;
-
-  // Jika belum ada quiz, buat satu
-  if (!quiz && !quizError) {
-    const { data: newQuiz, error: createQuizError } = await supabase
-      .from("quizzes")
-      .insert({
-        topic_id: Number(topicIdParam),
-        title: `Quiz untuk ${topicData?.title ?? ""}`,
-      })
-      .select()
-      .single();
-
-    if (createQuizError) {
-      return (
-        <section>
-          <h1>Quiz Topik</h1>
-          <p style={{ color: "red" }}>
-            Error membuat quiz: {createQuizError.message}
-          </p>
-        </section>
-      );
-    }
-
-    quiz = newQuiz;
-  }
-
-  // Ambil pertanyaan untuk quiz ini
-  const { data: questions, error: questionsError } = await supabase
-    .from("quiz_questions")
-    .select("*")
-    .eq("quiz_id", quiz?.id)
-    .order("id", { ascending: true });
+  const { data: questions, error: questionsError } = await getQuizQuestions(
+    quiz?.id ?? 0,
+  );
 
   if (topicError) {
     return (
@@ -80,84 +48,67 @@ export default async function TopicQuizPage(props: PageProps) {
     );
   }
 
-  return (
-    <section>
-      <h1>Quiz untuk Topik: {topicData?.title}</h1>
-      <p>Module ID: {moduleIdParam}</p>
+  if (quizError) {
+    return (
+      <section>
+        <h1>Quiz Topik</h1>
+        <p style={{ color: "red" }}>Error membuat quiz: {quizError.message}</p>
+      </section>
+    );
+  }
 
-      <div
-        style={{
-          marginTop: "1rem",
-          padding: "1rem",
-          borderRadius: 8,
-          border: "1px solid #e5e7eb",
-          backgroundColor: "#f9fafb",
-        }}
-      >
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: "0.75rem",
-          }}
+  return (
+    <section className="space-y-6">
+      <div className="space-y-1">
+        <h1 className="text-2xl font-semibold text-slate-900">
+          Quiz untuk Topik: {topicData?.title ?? "-"}
+        </h1>
+        <p className="text-sm text-slate-600">Module ID: {moduleIdParam}</p>
+        <Link
+          href={`/admin/modules/${moduleIdParam}/topics`}
+          className="text-sm font-medium text-slate-900 underline"
         >
-          <h2 style={{ margin: 0 }}>Daftar Pertanyaan Quiz</h2>
-          {/* Tombol di sini bisa dipakai nanti untuk mode tambah 5 soal sekaligus */}
-          <button
-            type="button"
-            style={{
-              padding: "0.4rem 0.8rem",
-              backgroundColor: "#0f172a",
-              color: "white",
-              borderRadius: 6,
-              border: "none",
-              cursor: "default",
-              opacity: 0.7,
-            }}
-          >
-            Tambahkan 5 soal
-          </button>
+          ← Kembali ke daftar topik
+        </Link>
+      </div>
+
+      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-sm font-semibold text-slate-900">
+            Daftar Pertanyaan Quiz
+          </h2>
+          <span className="rounded-full bg-slate-900 px-2.5 py-1 text-xs font-medium text-white">
+            {questions?.length ?? 0} soal
+          </span>
         </div>
 
         {questionsError && (
-          <p style={{ color: "red", marginBottom: "0.75rem" }}>
+          <p className="mb-3 text-sm text-red-600">
             Error pertanyaan: {questionsError.message}
           </p>
         )}
 
         {!questions || questions.length === 0 ? (
-          <p>Belum ada pertanyaan untuk quiz ini.</p>
+          <p className="text-sm text-slate-500">
+            Belum ada pertanyaan untuk quiz ini.
+          </p>
         ) : (
-          <ol style={{ marginTop: "0.5rem" }}>
-            {questions.map((q: any, idx: number) => (
+          <ol className="space-y-3">
+            {questions.map((question: any, idx: number) => (
               <li
-                key={q.id}
-                style={{
-                  marginBottom: "0.75rem",
-                  padding: "0.75rem",
-                  borderRadius: 6,
-                  border: "1px solid #e5e7eb",
-                  backgroundColor: "white",
-                }}
+                key={question.id}
+                className="rounded-md border border-slate-200 bg-white p-3"
               >
-                <strong>
-                  {idx + 1}. {q.question_text}
+                <strong className="text-sm text-slate-900">
+                  {idx + 1}. {question.question_text}
                 </strong>
-                <ul
-                  style={{
-                    marginTop: "0.5rem",
-                    marginLeft: "1rem",
-                    listStyleType: "none",
-                    paddingLeft: 0,
-                  }}
-                >
-                  <li> A. {q.option_a}</li>
-                  <li> B. {q.option_b}</li>
-                  <li> C. {q.option_c}</li>
-                  <li> D. {q.option_d}</li>
-                  <li style={{ marginTop: "0.25rem" }}>
-                    Jawaban benar: <strong>{q.correct_option}</strong>
+                <ul className="mt-2 ml-4 space-y-1 text-sm text-slate-700">
+                  <li>A. {question.option_a}</li>
+                  <li>B. {question.option_b}</li>
+                  <li>C. {question.option_c}</li>
+                  <li>D. {question.option_d}</li>
+                  <li className="pt-1 font-medium text-slate-900">
+                    Jawaban benar: {question.correct_option}
                   </li>
                 </ul>
               </li>
@@ -166,7 +117,6 @@ export default async function TopicQuizPage(props: PageProps) {
         )}
       </div>
 
-      {/* Form tambah pertanyaan di bawah card daftar */}
       {quiz?.id && <AddQuizQuestionForm quizId={quiz.id} />}
     </section>
   );

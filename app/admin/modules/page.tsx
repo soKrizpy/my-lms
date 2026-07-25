@@ -27,10 +27,21 @@ export default function ModulesPage() {
 
   async function loadModules() {
     setLoading(true);
-    const res = await fetch("/api/modules");
-    const data = await res.json();
-    setModules(data);
-    setLoading(false);
+    try {
+      const res = await fetch("/api/modules");
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Gagal memuat modul.");
+      }
+
+      setModules(data);
+    } catch (err) {
+      console.error(err);
+      setModules([]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => {

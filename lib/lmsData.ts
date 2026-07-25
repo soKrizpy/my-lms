@@ -1,0 +1,134 @@
+import { supabase } from "./supabaseClient";
+
+export type ModuleRecord = {
+  id: number;
+  title: string | null;
+  description: string | null;
+  created_at?: string | null;
+  is_active?: boolean | null;
+};
+
+export type TopicRecord = {
+  id: number;
+  module_id: number;
+  title: string;
+  order_index: number;
+  created_at?: string | null;
+};
+
+export type QuizRecord = {
+  id: number;
+  topic_id: number;
+  title: string | null;
+  created_at?: string | null;
+};
+
+export type QuizQuestionRecord = {
+  id: number;
+  quiz_id: number;
+  question_text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_option: string;
+  created_at?: string | null;
+};
+
+export async function getModules() {
+  return supabase
+    .from("modules")
+    .select("id, title, description, created_at, is_active")
+    .order("created_at", { ascending: false });
+}
+
+export async function getModuleById(moduleId: string) {
+  return supabase
+    .from("modules")
+    .select("id, title, description")
+    .eq("id", Number(moduleId))
+    .maybeSingle();
+}
+
+export async function getTopicById(topicId: string) {
+  return supabase
+    .from("topics")
+    .select("id, title, module_id")
+    .eq("id", Number(topicId))
+    .maybeSingle();
+}
+
+export async function getTopicsByModuleId(moduleId: number) {
+  return supabase
+    .from("topics")
+    .select("id, title, module_id, order_index")
+    .eq("module_id", moduleId)
+    .order("order_index", { ascending: true });
+}
+
+export async function createTopic(
+  moduleId: number,
+  title: string,
+  orderIndex: number,
+) {
+  return supabase.from("topics").insert({
+    module_id: moduleId,
+    title,
+    order_index: orderIndex,
+  });
+}
+
+export async function getOrCreateQuiz(topicId: number, fallbackTitle: string) {
+  const { data: existingQuiz, error: quizError } = await supabase
+    .from("quizzes")
+    .select("id, topic_id, title")
+    .eq("topic_id", topicId)
+    .maybeSingle();
+
+  if (existingQuiz) {
+    return { data: existingQuiz, error: null };
+  }
+
+  if (quizError) {
+    return { data: null, error: quizError };
+  }
+
+  return supabase
+    .from("quizzes")
+    .insert({
+      topic_id: topicId,
+      title: fallbackTitle,
+    })
+    .select("id, topic_id, title")
+    .single();
+}
+
+export async function getQuizQuestions(quizId: number) {
+  return supabase
+    .from("quiz_questions")
+    .select(
+      "id, quiz_id, question_text, option_a, option_b, option_c, option_d, correct_option",
+    )
+    .eq("quiz_id", quizId)
+    .order("id", { ascending: true });
+}
+
+export async function createQuizQuestion(input: {
+  quizId: number;
+  question: string;
+  optionA: string;
+  optionB: string;
+  optionC: string;
+  optionD: string;
+  correct: string;
+}) {
+  return supabase.from("quiz_questions").insert({
+    quiz_id: input.quizId,
+    question_text: input.question,
+    option_a: input.optionA,
+    option_b: input.optionB,
+    option_c: input.optionC,
+    option_d: input.optionD,
+    correct_option: input.correct,
+  });
+}
