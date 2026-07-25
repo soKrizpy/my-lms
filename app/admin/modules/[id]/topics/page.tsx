@@ -5,14 +5,25 @@ import { getModuleById, getTopicsByModuleId } from "../../../../../lib/lmsData";
 import { AddTopicForm } from "./AddTopicForm";
 
 type PageProps = {
-  params: Promise<{
-    id: string;
-  }>;
+  params:
+    | {
+        id?: string;
+        [key: string]: unknown;
+      }
+    | Promise<{ id?: string; [key: string]: unknown }>;
 };
 
-export default async function ModuleTopicsPage(props: PageProps) {
-  const params = await props.params;
-  const moduleIdParam = params.id;
+export default async function ModuleTopicsPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const moduleIdParam =
+    typeof resolvedParams?.id === "string"
+      ? resolvedParams.id
+      : typeof params === "object" &&
+          params !== null &&
+          "id" in params &&
+          typeof (params as { id?: unknown }).id === "string"
+        ? (params as { id?: string }).id
+        : undefined;
 
   if (!moduleIdParam) {
     return (

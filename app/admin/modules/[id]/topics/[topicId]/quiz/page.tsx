@@ -8,16 +8,35 @@ import {
 } from "../../../../../../../lib/lmsData";
 
 type PageProps = {
-  params: Promise<{
-    id: string; // module id
-    topicId: string; // topic id
-  }>;
+  params:
+    | {
+        id?: string; // module id
+        topicId?: string; // topic id
+        [key: string]: unknown;
+      }
+    | Promise<{ id?: string; topicId?: string; [key: string]: unknown }>;
 };
 
-export default async function TopicQuizPage(props: PageProps) {
-  const params = await props.params;
-  const moduleIdParam = params.id;
-  const topicIdParam = params.topicId;
+export default async function TopicQuizPage({ params }: PageProps) {
+  const resolvedParams = await params;
+  const moduleIdParam =
+    typeof resolvedParams?.id === "string"
+      ? resolvedParams.id
+      : typeof params === "object" &&
+          params !== null &&
+          "id" in params &&
+          typeof (params as { id?: unknown }).id === "string"
+        ? (params as { id?: string }).id
+        : undefined;
+  const topicIdParam =
+    typeof resolvedParams?.topicId === "string"
+      ? resolvedParams.topicId
+      : typeof params === "object" &&
+          params !== null &&
+          "topicId" in params &&
+          typeof (params as { topicId?: unknown }).topicId === "string"
+        ? (params as { topicId?: string }).topicId
+        : undefined;
 
   if (!topicIdParam) {
     return (
