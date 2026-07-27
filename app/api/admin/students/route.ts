@@ -54,19 +54,30 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Nama, Kontak, dan MPIN wajib diisi." }, { status: 400 });
     }
 
-    // Determine dummy email if contact is a phone number (doesn't contain @)
-    const email = contact.includes("@") ? contact : `${contact}@student.mylms.app`;
+    if (mpin.length !== 6) {
+      return NextResponse.json({ error: "MPIN harus 6 digit." }, { status: 400 });
+    }
 
-    // 1. Create auth user using Supabase Admin API
+    // Use dummy email for phone numbers
+    const email = contact.includes("@") ? contact.trim() : `${contact.trim()}@student.mylms.app`;
+
+    // 1. Create auth user
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
-      email: email,
+      email,
       password: mpin,
       email_confirm: true,
       user_metadata: { full_name: fullName, is_student: true },
     });
 
     if (authError) {
-      return NextResponse.json({ error: authError.message }, { status: 500 });
+      const msg = authError.message.includes("already been registered")
+        ? "Kontak ini sudah terdaftar sebagai siswa."
+        : authError.message;
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
+
+    if (!authData?.user?.id) {
+      return NextResponse.json({ error: "Gagal membuat akun auth — user null." }, { status: 500 });
     }
 
     const userId = authData.user.id;
@@ -76,28 +87,27 @@ export async function POST(request: Request) {
       .from("students")
       .insert({
         id: userId,
-        email_or_phone: contact,
+        email_or_phone: contact.trim(),
         full_name: fullName,
-        grade,
-        bio,
-        mpin, // Plain text for admin export
+        grade: grade || null,
+        bio: bio || null,
+        mpin,
       });
 
     if (studentError) {
+      // Rollback: remove auth user if profile insert fails
       await supabaseAdmin.auth.admin.deleteUser(userId);
-      return NextResponse.json({ error: studentError.message }, { status: 500 });
+      return NextResponse.json({ error: `DB error: ${studentError.message}` }, { status: 500 });
     }
 
-    // 3. Assign initial modules if provided
+    // 3. Assign modules
     if (Array.isArray(moduleIds) && moduleIds.length > 0) {
-      const studentModules = moduleIds.map((moduleId) => ({
+      const rows = moduleIds.map((moduleId: number) => ({
         student_id: userId,
         module_id: moduleId,
       }));
-      const { error: smError } = await supabaseAdmin
-        .from("student_modules")
-        .insert(studentModules);
-      if (smError) console.error("Error assigning modules:", smError);
+      const { error: smError } = await supabaseAdmin.from("student_modules").insert(rows);
+      if (smError) console.error("Module assign error:", smError.message);
     }
 
     return NextResponse.json({ success: true, userId }, { status: 201 });
@@ -105,3 +115,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message || "Terjadi kesalahan." }, { status: 500 });
   }
 }
+
