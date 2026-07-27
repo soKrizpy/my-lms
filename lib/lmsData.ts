@@ -84,6 +84,25 @@ export async function createTopic(
   });
 }
 
+export async function updateTopic(
+  topicId: number,
+  title: string,
+  orderIndex: number,
+  description?: string,
+  projectLink?: string,
+) {
+  return supabase.from("topics").update({
+    title,
+    order_index: orderIndex,
+    description,
+    project_link: projectLink,
+  }).eq("id", topicId);
+}
+
+export async function deleteTopic(topicId: number) {
+  return supabase.from("topics").delete().eq("id", topicId);
+}
+
 export async function getOrCreateQuiz(topicId: number, fallbackTitle: string) {
   const { data: existingQuiz, error: quizError } = await supabase
     .from("quizzes")
@@ -137,4 +156,29 @@ export async function createQuizQuestion(input: {
     option_d: input.optionD,
     correct_option: input.correct,
   });
+}
+
+export async function updateQuizQuestion(
+  id: number,
+  input: {
+    question: string;
+    optionA: string;
+    optionB: string;
+    optionC: string;
+    optionD: string;
+    correct: string;
+  }
+) {
+  return supabase.from("quiz_questions").update({
+    question_text: input.question,
+    option_a: input.optionA,
+    option_b: input.optionB,
+    option_c: input.optionC,
+    option_d: input.optionD,
+    correct_option: input.correct,
+  }).eq("id", id);
+}
+
+export async function deleteQuizQuestion(id: number) {
+  return supabase.from("quiz_questions").delete().eq("id", id);
 }

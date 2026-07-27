@@ -4,6 +4,7 @@
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import AddModuleForm from "./AddModuleForm";
+import EditModuleModal from "./EditModuleModal";
 
 interface TopicSummary {
   id: number;
@@ -22,6 +23,21 @@ export default function ModulesPage() {
   const [modules, setModules] = useState<Module[]>([]);
   const [topicMap, setTopicMap] = useState<Record<string, TopicSummary[]>>({});
   const [loading, setLoading] = useState(true);
+  const [editingModule, setEditingModule] = useState<Module | null>(null);
+
+  async function handleDeleteModule(id: string) {
+    if (!confirm("Yakin ingin menghapus modul ini beserta semua topik dan kuis di dalamnya?")) return;
+    try {
+      const res = await fetch(`/api/modules?id=${id}`, { method: "DELETE" });
+      if (res.ok) {
+        loadModules();
+      } else {
+        alert("Gagal menghapus modul.");
+      }
+    } catch {
+      alert("Terjadi kesalahan sistem.");
+    }
+  }
 
   async function createModule(data: { name: string; description: string; level: string }) {
     await fetch("/api/modules", {
@@ -124,6 +140,12 @@ export default function ModulesPage() {
                         {mod.level}
                       </span>
                     )}
+                    <button onClick={() => setEditingModule(mod)} className="ml-2 text-slate-400 hover:text-blue-600 p-1" title="Edit Modul">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                    </button>
+                    <button onClick={() => handleDeleteModule(mod.id)} className="text-slate-400 hover:text-red-600 p-1" title="Hapus Modul">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    </button>
                   </div>
                   {mod.description && (
                     <p className="text-xs text-slate-600">{mod.description}</p>
@@ -176,6 +198,16 @@ export default function ModulesPage() {
           </ul>
         )}
       </section>
+      {editingModule && (
+        <EditModuleModal
+          module={editingModule}
+          onClose={() => setEditingModule(null)}
+          onSuccess={() => {
+            setEditingModule(null);
+            loadModules();
+          }}
+        />
+      )}
     </div>
   );
 }

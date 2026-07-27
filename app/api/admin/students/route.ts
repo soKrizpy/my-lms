@@ -82,7 +82,21 @@ export async function POST(request: Request) {
 
     const userId = authData.user.id;
 
-    // 2. Insert into public.students
+    // 2. Insert into profiles
+    const { error: profileError } = await supabaseAdmin
+      .from("profiles")
+      .insert({
+        id: userId,
+        role: "student",
+        full_name: fullName,
+      });
+
+    if (profileError) {
+      await supabaseAdmin.auth.admin.deleteUser(userId);
+      return NextResponse.json({ error: `Profile DB error: ${profileError.message}` }, { status: 500 });
+    }
+
+    // 3. Insert into public.students
     const { error: studentError } = await supabaseAdmin
       .from("students")
       .insert({

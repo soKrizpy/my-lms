@@ -78,3 +78,43 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function PUT(request: Request) {
+  try {
+    const body = await request.json();
+    const id = body?.id;
+    const name = typeof body?.name === "string" ? body.name.trim() : "";
+    const description = typeof body?.description === "string" ? body.description : "";
+    const level = typeof body?.level === "string" ? body.level : "beginner";
+
+    if (!id || !name) {
+      return NextResponse.json({ error: "ID dan Nama modul wajib diisi." }, { status: 400 });
+    }
+
+    const { error } = await supabase
+      .from("modules")
+      .update({ title: name, description, level })
+      .eq("id", id);
+
+    if (error) throw error;
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Permintaan tidak valid." }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
+
+    const { error } = await supabase.from("modules").delete().eq("id", id);
+    if (error) throw error;
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Terjadi kesalahan." }, { status: 500 });
+  }
+}

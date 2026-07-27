@@ -1,6 +1,7 @@
 // app/admin/modules/[id]/topics/[topicId]/quiz/page.tsx
 import Link from "next/link";
 import { AddQuizQuestionForm } from "./AddQuizQuestionForm";
+import { QuizQuestionList } from "./QuizQuestionList";
 import {
   getQuizQuestions,
   getOrCreateQuiz,
@@ -112,27 +113,7 @@ export default async function TopicQuizPage({ params }: PageProps) {
             Belum ada pertanyaan untuk quiz ini.
           </p>
         ) : (
-          <ol className="space-y-3">
-            {questions.map((question: any, idx: number) => (
-              <li
-                key={question.id}
-                className="rounded-md border border-slate-200 bg-white p-3"
-              >
-                <strong className="text-sm text-slate-900">
-                  {idx + 1}. {question.question_text}
-                </strong>
-                <ul className="mt-2 ml-4 space-y-1 text-sm text-slate-700">
-                  <li>A. {question.option_a}</li>
-                  <li>B. {question.option_b}</li>
-                  <li>C. {question.option_c}</li>
-                  <li>D. {question.option_d}</li>
-                  <li className="pt-1 font-medium text-slate-900">
-                    Jawaban benar: {question.correct_option}
-                  </li>
-                </ul>
-              </li>
-            ))}
-          </ol>
+          <QuizQuestionList questions={questions} />
         )}
       </div>
 
