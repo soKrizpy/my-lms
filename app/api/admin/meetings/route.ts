@@ -15,6 +15,8 @@ export async function GET() {
       session_count,
       series_id,
       session_number,
+      progress_report,
+      is_completed,
       created_at,
       meeting_students (
         student_id,
@@ -40,6 +42,8 @@ export async function GET() {
     session_count: meet.session_count,
     series_id: meet.series_id,
     session_number: meet.session_number,
+    progress_report: meet.progress_report,
+    is_completed: meet.is_completed,
     created_at: meet.created_at,
     students: meet.meeting_students.map((ms: any) => ({
       id: ms.student_id,
@@ -205,6 +209,32 @@ export async function DELETE(request: Request) {
       const { error } = await supabaseAdmin.from("meetings").delete().eq("id", id);
       if (error) throw error;
     }
+
+    return NextResponse.json({ success: true });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message || "Terjadi kesalahan." }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const supabaseAdmin = getSupabaseAdmin();
+    const body = await request.json();
+    const { id, progressReport } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: "ID wajib diisi." }, { status: 400 });
+    }
+
+    const { error } = await supabaseAdmin
+      .from("meetings")
+      .update({
+        progress_report: progressReport || "",
+        is_completed: true,
+      })
+      .eq("id", id);
+
+    if (error) throw error;
 
     return NextResponse.json({ success: true });
   } catch (error: any) {
