@@ -4,7 +4,7 @@ import { supabase } from "../../../lib/supabaseClient";
 export async function GET() {
   const { data, error } = await supabase
     .from("modules")
-    .select("id, title, description")
+    .select("id, title, description, level")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -17,12 +17,14 @@ export async function GET() {
       title?: string | null;
       name?: string | null;
       description?: string | null;
+      level?: string | null;
     };
 
     return {
       id: record.id,
       name: record.title ?? record.name ?? "",
       description: record.description ?? null,
+      level: record.level ?? "beginner",
     };
   });
 
@@ -33,8 +35,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const name = typeof body?.name === "string" ? body.name.trim() : "";
-    const description =
-      typeof body?.description === "string" ? body.description : "";
+    const description = typeof body?.description === "string" ? body.description : "";
+    const level = typeof body?.level === "string" ? body.level : "beginner";
 
     if (!name) {
       return NextResponse.json(
@@ -45,8 +47,8 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabase
       .from("modules")
-      .insert([{ title: name, description }])
-      .select("id, title, description")
+      .insert([{ title: name, description, level }])
+      .select("id, title, description, level")
       .single();
 
     if (error) {
@@ -57,6 +59,7 @@ export async function POST(request: Request) {
       id: string;
       title?: string | null;
       description?: string | null;
+      level?: string | null;
     };
 
     return NextResponse.json(
@@ -64,6 +67,7 @@ export async function POST(request: Request) {
         id: record.id,
         name: record.title ?? name,
         description: record.description ?? description,
+        level: record.level ?? level,
       },
       { status: 201 },
     );

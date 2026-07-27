@@ -15,6 +15,7 @@ interface Module {
   id: string;
   name: string;
   description: string | null;
+  level: string;
 }
 
 export default function ModulesPage() {
@@ -22,7 +23,7 @@ export default function ModulesPage() {
   const [topicMap, setTopicMap] = useState<Record<string, TopicSummary[]>>({});
   const [loading, setLoading] = useState(true);
 
-  async function createModule(data: { name: string; description: string }) {
+  async function createModule(data: { name: string; description: string; level: string }) {
     await fetch("/api/modules", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -104,9 +105,16 @@ export default function ModulesPage() {
                 className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-slate-900">
-                    {mod.name}
-                  </p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-sm font-medium text-slate-900">
+                      {mod.name}
+                    </p>
+                    {mod.level && (
+                      <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10 capitalize">
+                        {mod.level}
+                      </span>
+                    )}
+                  </div>
                   {mod.description && (
                     <p className="text-xs text-slate-600">{mod.description}</p>
                   )}
