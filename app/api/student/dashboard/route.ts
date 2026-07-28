@@ -20,7 +20,7 @@ export async function GET() {
     .select(`
       id, title, meeting_date, link_url, notes,
       session_count, session_number, series_id,
-      progress_report, is_completed, module_id,
+      progress_report, is_completed,
       meeting_students!inner(student_id, has_joined)
     `)
     .eq("meeting_students.student_id", studentId)
@@ -28,6 +28,7 @@ export async function GET() {
 
   const now = new Date();
   const sortedMeetings = meetings || [];
+  sortedMeetings.forEach((m: any, idx: number) => m.globalIndex = idx);
   
   // Find the index of the latest meeting the student has joined
   let latestJoinedIdx = -1;

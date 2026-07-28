@@ -13,7 +13,7 @@ interface Meeting {
   session_number: number;
   is_completed: boolean;
   progress_report: string | null;
-  module_id: number;
+  globalIndex: number;
 }
 
 interface Topic {
@@ -77,9 +77,11 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
   const isCompleted = meet.is_completed;
   const canReportProgress = !isCompleted && now > meetEndTime && !meet.progress_report;
 
-  const module = modules.find(m => m.id === meet.module_id);
-  const quizIds = module?.topics.map((t: any) => t.quiz?.id).filter(Boolean) || [];
-  const hasAttempted = quizAttempts.some(qa => quizIds.includes(qa.quiz_id));
+  // Find the topic corresponding to this meeting's global index
+  const allTopics = modules.flatMap(m => m.topics);
+  const topicForThisMeeting = allTopics[meet.globalIndex];
+  const quizId = topicForThisMeeting?.quiz?.id;
+  const hasAttempted = quizId ? quizAttempts.some(qa => qa.quiz_id === quizId) : false;
 
   return (
     <div className={`bg-white rounded-lg border shadow-sm p-4 hover:shadow-md transition-shadow relative group ${isCompleted ? "border-green-200 bg-green-50/30" : canReportProgress ? "border-orange-200" : "border-slate-200"}`}>
