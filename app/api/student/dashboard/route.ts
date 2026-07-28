@@ -59,14 +59,13 @@ export async function GET() {
       .select("id, topic_id, title")
       .in("topic_id", (topics || []).map((t: any) => t.id));
 
-    // Find completed meeting topic IDs for this student
-    const completedMeetingIds = (meetings || [])
-      .filter(m => m.is_completed)
-      .map(m => m.id);
-
-    // For simplicity: topics are unlocked if admin has completed a meeting that includes the student
-    // We'll unlock topics based on completed meetings count (first N topics unlocked based on completed meetings)
-    const completedCount = (meetings || []).filter(m => m.is_completed).length;
+    // Unlock topics based on meetings that have already started (meeting_date <= now).
+    // This ensures clicking "Join" immediately reflects as an unlocked topic without
+    // waiting for admin to submit a progress report.
+    const nowMs = Date.now();
+    const startedCount = (meetings || []).filter(
+      m => new Date(m.meeting_date).getTime() <= nowMs
+    ).length;
 
     modulesWithTopics = (studentModules || []).map((sm: any) => {
       const mod = sm.modules;
@@ -74,7 +73,7 @@ export async function GET() {
         .filter((t: any) => t.module_id === sm.module_id)
         .map((t: any, idx: number) => {
           const quiz = (quizzes || []).find((q: any) => q.topic_id === t.id);
-          const isUnlocked = idx < completedCount;
+          const isUnlocked = idx < startedCount;
           return { ...t, quiz, isUnlocked };
         });
       return { ...mod, topics: modTopics };

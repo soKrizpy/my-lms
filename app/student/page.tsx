@@ -99,11 +99,14 @@ function StudentMeetingCard({ meet }: { meet: Meeting }) {
           Kelas Selesai
         </div>
       ) : isLive && meet.link_url ? (
-        <a href={meet.link_url} target="_blank" rel="noopener noreferrer"
-          className="flex items-center justify-center w-full bg-red-600 text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-red-700 transition-colors animate-pulse gap-2">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-          Bergabung Sekarang!
-        </a>
+        <div className="relative animate-pulse rounded-lg overflow-hidden">
+          <a href={meet.link_url} target="_blank" rel="noopener noreferrer"
+            className="flex items-center justify-center w-full bg-red-600 text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-red-700 transition-colors gap-2"
+            style={{ animation: "none" }}>
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+            Bergabung Sekarang!
+          </a>
+        </div>
       ) : (
         <div className="text-center">
           {timeLeft && (
