@@ -20,7 +20,7 @@ export async function GET() {
     .select(`
       id, title, meeting_date, link_url, notes,
       session_count, session_number, series_id,
-      progress_report, is_completed,
+      progress_report, is_completed, module_id,
       meeting_students!inner(student_id)
     `)
     .eq("meeting_students.student_id", studentId)

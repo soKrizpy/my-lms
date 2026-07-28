@@ -13,6 +13,7 @@ interface Meeting {
   session_number: number;
   is_completed: boolean;
   progress_report: string | null;
+  module_id: number;
 }
 
 interface Topic {
@@ -63,14 +64,22 @@ function calcTimeLeft(targetDate: string) {
 }
 
 // --- Meeting Card (Student View) ---
-function StudentMeetingCard({ meet }: { meet: Meeting }) {
+function StudentMeetingCard({ meet, modules, quizAttempts }: { meet: Meeting, modules: Module[], quizAttempts: any[] }) {
   const timeLeft = useCountdown(meet.meeting_date);
   const now = Date.now();
   const meetTime = new Date(meet.meeting_date).getTime();
   const meetEndTime = meetTime + 60 * 60 * 1000;
+  
+  // Can join live for the first 30 minutes
+  const canJoinLive = !meet.is_completed && now >= meetTime && now < meetTime + 30 * 60 * 1000;
+  // Is live for the whole hour just for the badge
   const isLive = !meet.is_completed && now >= meetTime && now < meetEndTime;
   const isCompleted = meet.is_completed;
   const canReportProgress = !isCompleted && now > meetEndTime && !meet.progress_report;
+
+  const module = modules.find(m => m.id === meet.module_id);
+  const quizIds = module?.topics.map((t: any) => t.quiz?.id).filter(Boolean) || [];
+  const hasAttempted = quizAttempts.some(qa => quizIds.includes(qa.quiz_id));
 
   return (
     <div className={`bg-white rounded-lg border shadow-sm p-4 hover:shadow-md transition-shadow relative group ${isCompleted ? "border-green-200 bg-green-50/30" : canReportProgress ? "border-orange-200" : "border-slate-200"}`}>
@@ -99,7 +108,7 @@ function StudentMeetingCard({ meet }: { meet: Meeting }) {
         <div className="flex items-center justify-center w-full bg-green-100 text-green-700 rounded-lg py-2 text-sm font-medium border border-green-200">
           Kelas Selesai
         </div>
-      ) : isLive && meet.link_url ? (
+      ) : canJoinLive && meet.link_url ? (
         <div className="relative animate-pulse rounded-lg overflow-hidden">
           <a href={meet.link_url} target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-center w-full bg-red-600 text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-red-700 transition-colors gap-2"
@@ -108,6 +117,16 @@ function StudentMeetingCard({ meet }: { meet: Meeting }) {
             Bergabung Sekarang!
           </a>
         </div>
+      ) : now >= meetTime + 30 * 60 * 1000 ? (
+        hasAttempted ? (
+          <div className="flex items-center justify-center w-full bg-green-100 text-green-700 rounded-lg py-2 text-sm font-medium border border-green-200">
+            Pembelajaran Selesai
+          </div>
+        ) : (
+          <div className="flex items-center justify-center w-full bg-orange-100 text-orange-700 rounded-lg py-2 text-sm font-medium border border-orange-200">
+            Selesaikan Quiz
+          </div>
+        )
       ) : (
         <div className="text-center">
           {timeLeft && (
@@ -523,7 +542,7 @@ export default function StudentDashboard() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {data.upcomingMeetings.map((meet: Meeting) => (
-                    <StudentMeetingCard key={meet.id} meet={meet} />
+                    <StudentMeetingCard key={meet.id} meet={meet} modules={data.modules || []} quizAttempts={data.quizAttempts || []} />
                   ))}
                 </div>
               )}
