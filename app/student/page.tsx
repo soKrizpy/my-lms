@@ -184,6 +184,30 @@ function QuizModal({ quiz, onClose }: { quiz: Topic["quiz"]; onClose: () => void
               </div>
               <p className="text-xl font-semibold text-slate-900">{result.score >= 70 ? "Bagus! 🎉" : "Coba lagi ya!"}</p>
               <p className="text-slate-500">{result.correct} dari {result.total} jawaban benar</p>
+              {result.attemptsCount >= 2 && (
+                <p className="text-xs text-orange-600 bg-orange-50 inline-block px-3 py-1 rounded-full border border-orange-100">Batas percobaan habis. Nilai terbaikmu: {result.bestScore}</p>
+              )}
+              
+              {/* Pembahasan Singkat / Kunci Jawaban */}
+              {result.correctAnswers && (
+                <div className="mt-6 text-left border border-slate-200 rounded-xl overflow-hidden text-sm">
+                  <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 font-semibold text-slate-700">Kunci Jawaban</div>
+                  <div className="p-4 space-y-3 max-h-[30vh] overflow-y-auto">
+                    {questions.map((q, idx) => (
+                      <div key={q.id} className="pb-3 border-b border-slate-100 last:border-0 last:pb-0">
+                        <p className="text-slate-800 mb-1">{idx + 1}. {q.question_text}</p>
+                        <p className={`font-medium ${answers[q.id] === result.correctAnswers[q.id] ? "text-green-600" : "text-red-600"}`}>
+                          Jawabanmu: {answers[q.id]}
+                        </p>
+                        {answers[q.id] !== result.correctAnswers[q.id] && (
+                          <p className="text-green-600 font-medium">Benar: {result.correctAnswers[q.id]}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <button onClick={onClose} className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Tutup</button>
             </div>
           ) : questions.length === 0 ? (
@@ -223,7 +247,7 @@ function QuizModal({ quiz, onClose }: { quiz: Topic["quiz"]; onClose: () => void
 }
 
 // --- Learning Path ---
-function LearningPath({ modules }: { modules: Module[] }) {
+function LearningPath({ modules, quizAttempts }: { modules: Module[], quizAttempts: any[] }) {
   // Default-open the first active (partially unlocked) module, or first module if all locked
   const defaultOpen = modules.find((m: any) => m.isModuleActive)?.id
     ?? modules.find((m: any) => !m.isModuleLocked)?.id
@@ -316,12 +340,24 @@ function LearningPath({ modules }: { modules: Module[] }) {
                       </p>
                     </div>
                     {topic.isUnlocked && topic.quiz && (
-                      <button
-                        onClick={() => setActiveQuiz(topic.quiz)}
-                        className="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors"
-                      >
-                        Quiz
-                      </button>
+                      (() => {
+                        const attempt = (quizAttempts || []).find((qa: any) => qa.quiz_id === topic.quiz.id);
+                        if (attempt && attempt.attempts_count >= 2) {
+                          return (
+                            <span className="text-xs font-bold text-green-700 bg-green-50 px-3 py-1 rounded-lg border border-green-200">
+                              Nilai: {attempt.score}
+                            </span>
+                          );
+                        }
+                        return (
+                          <button
+                            onClick={() => setActiveQuiz(topic.quiz)}
+                            className="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors"
+                          >
+                            Quiz
+                          </button>
+                        );
+                      })()
                     )}
                     {!topic.isUnlocked && (
                       <span className="text-xs text-slate-400">Ikuti kelas</span>
@@ -492,7 +528,7 @@ export default function StudentDashboard() {
           {activeTab === "learning" && (
             <div className="space-y-4">
               <h2 className="font-bold text-slate-900">Learning Path Saya</h2>
-              <LearningPath modules={data.modules} />
+              <LearningPath modules={data.modules} quizAttempts={data.quizAttempts || []} />
             </div>
           )}
 

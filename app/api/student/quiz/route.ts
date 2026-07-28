@@ -30,6 +30,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Quiz tidak ditemukan." }, { status: 404 });
   }
 
+  // Check existing attempt
+  const { data: existingAttempt } = await supabaseAdmin
+    .from("quiz_attempts")
+    .select("id, score, attempts_count")
+    .eq("student_id", user.id)
+    .eq("quiz_id", quizId)
+    .single();
+
+  if (existingAttempt && existingAttempt.attempts_count >= 2) {
+    return NextResponse.json({ error: "Kamu sudah mencapai batas maksimal 2 kali percobaan." }, { status: 400 });
+  }
+
   // Calculate score
   let correct = 0;
   for (const q of questions) {
@@ -38,22 +50,31 @@ export async function POST(request: Request) {
   }
 
   const score = Math.round((correct / questions.length) * 100);
+  const bestScore = existingAttempt ? Math.max(existingAttempt.score, score) : score;
+  const newAttemptsCount = (existingAttempt?.attempts_count || 0) + 1;
 
-  // Save attempt
+  // Save attempt (upsert)
   const { error: attemptError } = await supabaseAdmin
     .from("quiz_attempts")
     .upsert({
       student_id: user.id,
       quiz_id: quizId,
-      score,
+      score: bestScore,
       total_questions: questions.length,
+      attempts_count: newAttemptsCount
     }, { onConflict: "student_id,quiz_id" });
 
   if (attemptError) {
     return NextResponse.json({ error: attemptError.message }, { status: 500 });
   }
 
-  return NextResponse.json({ score, total: questions.length, correct });
+  // Return correct answers for the student to review
+  const correctAnswers = questions.reduce((acc: any, q: any) => {
+    acc[q.id] = q.correct_option;
+    return acc;
+  }, {});
+
+  return NextResponse.json({ score, bestScore, total: questions.length, correct, correctAnswers, attemptsCount: newAttemptsCount });
 }
 
 // GET /api/student/quiz?quizId=xxx - get quiz questions

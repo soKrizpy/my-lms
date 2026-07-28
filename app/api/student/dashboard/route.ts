@@ -97,7 +97,7 @@ export async function GET() {
   // 3. Quiz scores
   const { data: quizAttempts } = await supabaseAdmin
     .from("quiz_attempts")
-    .select(`id, quiz_id, score, total_questions, created_at, quizzes(title, topic_id, topics(title))`)
+    .select(`id, quiz_id, score, total_questions, attempts_count, created_at, quizzes(title, topic_id, topics(title))`)
     .eq("student_id", studentId)
     .order("created_at", { ascending: false });
 
