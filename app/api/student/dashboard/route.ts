@@ -21,15 +21,29 @@ export async function GET() {
       id, title, meeting_date, link_url, notes,
       session_count, session_number, series_id,
       progress_report, is_completed, module_id,
-      meeting_students!inner(student_id)
+      meeting_students!inner(student_id, has_joined)
     `)
     .eq("meeting_students.student_id", studentId)
     .order("meeting_date", { ascending: true });
 
   const now = new Date();
-  const upcomingMeetings = (meetings || [])
-    .filter(m => new Date(m.meeting_date).getTime() + 60 * 60 * 1000 > now.getTime() && !m.is_completed)
-    .slice(0, 3);
+  const sortedMeetings = meetings || [];
+  
+  // Find the index of the latest meeting the student has joined
+  let latestJoinedIdx = -1;
+  for (let i = sortedMeetings.length - 1; i >= 0; i--) {
+    if (sortedMeetings[i].meeting_students[0]?.has_joined) {
+      latestJoinedIdx = i;
+      break;
+    }
+  }
+
+  // We show meetings starting from latestJoinedIdx (if any), otherwise from the first uncompleted meeting.
+  // Wait, if latestJoinedIdx is -1, we just find the first uncompleted meeting.
+  let startIndex = latestJoinedIdx !== -1 ? latestJoinedIdx : sortedMeetings.findIndex(m => !m.is_completed);
+  if (startIndex === -1) startIndex = sortedMeetings.length; // all completed and none joined?
+
+  const upcomingMeetings = sortedMeetings.slice(startIndex, startIndex + 3);
 
   const pastMeetings = (meetings || []).filter(
     m => m.is_completed || new Date(m.meeting_date).getTime() + 60 * 60 * 1000 <= now.getTime()

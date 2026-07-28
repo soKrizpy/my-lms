@@ -64,7 +64,7 @@ function calcTimeLeft(targetDate: string) {
 }
 
 // --- Meeting Card (Student View) ---
-function StudentMeetingCard({ meet, modules, quizAttempts }: { meet: Meeting, modules: Module[], quizAttempts: any[] }) {
+function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: Meeting, modules: Module[], quizAttempts: any[], onRefresh: () => void }) {
   const timeLeft = useCountdown(meet.meeting_date);
   const now = Date.now();
   const meetTime = new Date(meet.meeting_date).getTime();
@@ -111,6 +111,13 @@ function StudentMeetingCard({ meet, modules, quizAttempts }: { meet: Meeting, mo
       ) : canJoinLive && meet.link_url ? (
         <div className="relative animate-pulse rounded-lg overflow-hidden">
           <a href={meet.link_url} target="_blank" rel="noopener noreferrer"
+            onClick={() => {
+              fetch("/api/student/meetings/join", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ meetingId: meet.id }),
+              }).then(() => onRefresh());
+            }}
             className="flex items-center justify-center w-full bg-red-600 text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-red-700 transition-colors gap-2"
             style={{ animation: "none" }}>
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
@@ -542,7 +549,7 @@ export default function StudentDashboard() {
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {data.upcomingMeetings.map((meet: Meeting) => (
-                    <StudentMeetingCard key={meet.id} meet={meet} modules={data.modules || []} quizAttempts={data.quizAttempts || []} />
+                    <StudentMeetingCard key={meet.id} meet={meet} modules={data.modules || []} quizAttempts={data.quizAttempts || []} onRefresh={fetchData} />
                   ))}
                 </div>
               )}
