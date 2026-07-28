@@ -69,8 +69,10 @@ function MeetingCard({
   const meetEndTime = meetTime + 60 * 60 * 1000;
   const isUpcoming = meetTime > now;
   const isLive = !isUpcoming && now < meetEndTime && !meet.is_completed;
-  const isPastNotReported = now >= meetEndTime && !meet.is_completed;
   const isCompleted = meet.is_completed;
+  
+  // Progress report button appears if 20 minutes have passed since start time
+  const canReportProgress = !isCompleted && now >= meetTime + 20 * 60 * 1000;
 
   return (
     <div className={`bg-white rounded-lg border shadow-sm p-4 hover:shadow-md transition-shadow relative group ${isCompleted ? "border-green-200 bg-green-50/30" : isPastNotReported ? "border-orange-200" : "border-slate-200"}`}>
@@ -138,69 +140,74 @@ function MeetingCard({
       )}
 
       {/* Action Button Area */}
-      <div className="mt-auto">
+      <div className="mt-auto space-y-2">
         {isCompleted ? (
           // Completed state
           <div className="flex items-center justify-center w-full bg-green-100 text-green-700 rounded-md py-2 text-sm font-medium border border-green-200">
             <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             Kelas Selesai
           </div>
-        ) : isPastNotReported ? (
-          // Past but no report yet
-          <button
-            onClick={onReportProgress}
-            className="flex items-center justify-center w-full bg-orange-500 text-white rounded-md py-2 text-sm font-medium hover:bg-orange-600 transition-colors"
-          >
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-            Report Progress
-          </button>
-        ) : isLive ? (
-          // Live — link active
-          meet.link_url ? (
-            <a
-              href={meet.link_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center w-full bg-red-600 text-white rounded-md py-2 text-sm font-medium hover:bg-red-700 transition-colors animate-pulse"
-            >
-              <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-              Mulai / Join Kelas (LIVE)
-            </a>
-          ) : (
-            <div className="flex items-center justify-center w-full bg-slate-100 text-slate-400 rounded-md py-2 text-sm font-medium border border-slate-200">
-              Tidak ada link
-            </div>
-          )
         ) : (
-          // Upcoming — show countdown, button disabled
-          <div>
-            {timeLeft && (
-              <div className="flex justify-center gap-2 mb-2">
-                {timeLeft.days > 0 && (
-                  <div className="text-center">
-                    <div className="bg-slate-900 text-white rounded px-2 py-1 text-sm font-mono font-bold min-w-[32px]">{timeLeft.days}</div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">Hari</div>
+          <>
+            {isLive ? (
+              // Live — link active
+              meet.link_url ? (
+                <a
+                  href={meet.link_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-full bg-red-600 text-white rounded-md py-2 text-sm font-medium hover:bg-red-700 transition-colors animate-pulse"
+                >
+                  <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                  Mulai / Join Kelas (LIVE)
+                </a>
+              ) : (
+                <div className="flex items-center justify-center w-full bg-slate-100 text-slate-400 rounded-md py-2 text-sm font-medium border border-slate-200">
+                  Tidak ada link
+                </div>
+              )
+            ) : isUpcoming ? (
+              // Upcoming — show countdown, button disabled
+              <div>
+                {timeLeft && (
+                  <div className="flex justify-center gap-2 mb-2">
+                    {timeLeft.days > 0 && (
+                      <div className="text-center">
+                        <div className="bg-slate-900 text-white rounded px-2 py-1 text-sm font-mono font-bold min-w-[32px]">{timeLeft.days}</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">Hari</div>
+                      </div>
+                    )}
+                    <div className="text-center">
+                      <div className="bg-slate-900 text-white rounded px-2 py-1 text-sm font-mono font-bold min-w-[32px]">{String(timeLeft.hours).padStart(2,'0')}</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">Jam</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="bg-slate-900 text-white rounded px-2 py-1 text-sm font-mono font-bold min-w-[32px]">{String(timeLeft.minutes).padStart(2,'0')}</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">Mnt</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="bg-slate-900 text-white rounded px-2 py-1 text-sm font-mono font-bold min-w-[32px]">{String(timeLeft.seconds).padStart(2,'0')}</div>
+                      <div className="text-[10px] text-slate-500 mt-0.5">Dtk</div>
+                    </div>
                   </div>
                 )}
-                <div className="text-center">
-                  <div className="bg-slate-900 text-white rounded px-2 py-1 text-sm font-mono font-bold min-w-[32px]">{String(timeLeft.hours).padStart(2,'0')}</div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">Jam</div>
-                </div>
-                <div className="text-center">
-                  <div className="bg-slate-900 text-white rounded px-2 py-1 text-sm font-mono font-bold min-w-[32px]">{String(timeLeft.minutes).padStart(2,'0')}</div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">Mnt</div>
-                </div>
-                <div className="text-center">
-                  <div className="bg-slate-900 text-white rounded px-2 py-1 text-sm font-mono font-bold min-w-[32px]">{String(timeLeft.seconds).padStart(2,'0')}</div>
-                  <div className="text-[10px] text-slate-500 mt-0.5">Dtk</div>
+                <div className="flex items-center justify-center w-full bg-slate-200 text-slate-400 rounded-md py-2 text-sm font-medium cursor-not-allowed border border-slate-300">
+                  <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                  Belum Waktunya
                 </div>
               </div>
+            ) : null}
+
+            {canReportProgress && (
+              <button
+                onClick={onReportProgress}
+                className="flex items-center justify-center w-full bg-orange-500 text-white rounded-md py-2 text-sm font-medium hover:bg-orange-600 transition-colors"
+              >
+                <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                Report Progress
+              </button>
             )}
-            <div className="flex items-center justify-center w-full bg-slate-200 text-slate-400 rounded-md py-2 text-sm font-medium cursor-not-allowed border border-slate-300">
-              <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-              Belum Waktunya
-            </div>
-          </div>
+          </>
         )}
       </div>
     </div>
