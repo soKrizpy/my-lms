@@ -75,7 +75,7 @@ function MeetingCard({
   const canReportProgress = !isCompleted && now >= meetTime + 20 * 60 * 1000;
 
   return (
-    <div className={`bg-white rounded-lg border shadow-sm p-4 hover:shadow-md transition-shadow relative group ${isCompleted ? "border-green-200 bg-green-50/30" : isPastNotReported ? "border-orange-200" : "border-slate-200"}`}>
+    <div className={`bg-white rounded-lg border shadow-sm p-4 hover:shadow-md transition-shadow relative group ${isCompleted ? "border-green-200 bg-green-50/30" : canReportProgress ? "border-orange-200" : "border-slate-200"}`}>
       
       {/* Header */}
       <div className="flex justify-between items-start mb-2">

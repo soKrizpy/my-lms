@@ -70,9 +70,10 @@ function StudentMeetingCard({ meet }: { meet: Meeting }) {
   const meetEndTime = meetTime + 60 * 60 * 1000;
   const isLive = !meet.is_completed && now >= meetTime && now < meetEndTime;
   const isCompleted = meet.is_completed;
+  const canReportProgress = !isCompleted && now > meetEndTime && !meet.progress_report;
 
   return (
-    <div className={`bg-white rounded-xl border shadow-sm p-4 flex flex-col gap-3 ${isLive ? "border-red-300 ring-1 ring-red-200" : isCompleted ? "border-green-200 bg-green-50/30" : "border-slate-200"}`}>
+    <div className={`bg-white rounded-lg border shadow-sm p-4 hover:shadow-md transition-shadow relative group ${isCompleted ? "border-green-200 bg-green-50/30" : canReportProgress ? "border-orange-200" : "border-slate-200"}`}>
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="font-semibold text-slate-900 text-sm">{meet.title}</p>
@@ -136,10 +137,10 @@ function StudentMeetingCard({ meet }: { meet: Meeting }) {
 }
 
 // --- Quiz Modal ---
-function QuizModal({ quiz, onClose }: { quiz: Topic["quiz"]; onClose: () => void }) {
+function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose: () => void; onComplete: () => void }) {
   const [questions, setQuestions] = useState<any[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
-  const [result, setResult] = useState<{ score: number; total: number; correct: number } | null>(null);
+  const [result, setResult] = useState<{ score: number; total: number; correct: number; attemptsCount?: number; bestScore?: number; correctAnswers?: Record<string, string> } | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
@@ -161,7 +162,11 @@ function QuizModal({ quiz, onClose }: { quiz: Topic["quiz"]; onClose: () => void
       body: JSON.stringify({ quizId: quiz!.id, answers }),
     });
     const data = await res.json();
-    setResult(data);
+    if (!res.ok) {
+      alert(data.error || "Gagal mengirim kuis.");
+    } else {
+      setResult(data);
+    }
     setSubmitting(false);
   };
 
@@ -184,10 +189,10 @@ function QuizModal({ quiz, onClose }: { quiz: Topic["quiz"]; onClose: () => void
               </div>
               <p className="text-xl font-semibold text-slate-900">{result.score >= 70 ? "Bagus! 🎉" : "Coba lagi ya!"}</p>
               <p className="text-slate-500">{result.correct} dari {result.total} jawaban benar</p>
-              {result.attemptsCount >= 2 && (
+              {(result.attemptsCount ?? 0) >= 2 && (
                 <p className="text-xs text-orange-600 bg-orange-50 inline-block px-3 py-1 rounded-full border border-orange-100">Batas percobaan habis. Nilai terbaikmu: {result.bestScore}</p>
               )}
-              
+
               {/* Pembahasan Singkat / Kunci Jawaban */}
               {result.correctAnswers && (
                 <div className="mt-6 text-left border border-slate-200 rounded-xl overflow-hidden text-sm">
@@ -196,11 +201,11 @@ function QuizModal({ quiz, onClose }: { quiz: Topic["quiz"]; onClose: () => void
                     {questions.map((q, idx) => (
                       <div key={q.id} className="pb-3 border-b border-slate-100 last:border-0 last:pb-0">
                         <p className="text-slate-800 mb-1">{idx + 1}. {q.question_text}</p>
-                        <p className={`font-medium ${answers[q.id] === result.correctAnswers[q.id] ? "text-green-600" : "text-red-600"}`}>
+                        <p className={`font-medium ${answers[q.id] === result.correctAnswers![q.id] ? "text-green-600" : "text-red-600"}`}>
                           Jawabanmu: {answers[q.id]}
                         </p>
-                        {answers[q.id] !== result.correctAnswers[q.id] && (
-                          <p className="text-green-600 font-medium">Benar: {result.correctAnswers[q.id]}</p>
+                        {answers[q.id] !== result.correctAnswers![q.id] && (
+                          <p className="text-green-600 font-medium">Benar: {result.correctAnswers![q.id]}</p>
                         )}
                       </div>
                     ))}
@@ -208,7 +213,7 @@ function QuizModal({ quiz, onClose }: { quiz: Topic["quiz"]; onClose: () => void
                 </div>
               )}
 
-              <button onClick={onClose} className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Tutup</button>
+              <button onClick={() => { onComplete(); onClose(); }} className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Tutup</button>
             </div>
           ) : questions.length === 0 ? (
             <p className="text-slate-500 text-center">Belum ada soal untuk quiz ini.</p>
@@ -247,7 +252,7 @@ function QuizModal({ quiz, onClose }: { quiz: Topic["quiz"]; onClose: () => void
 }
 
 // --- Learning Path ---
-function LearningPath({ modules, quizAttempts }: { modules: Module[], quizAttempts: any[] }) {
+function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[], quizAttempts: any[], onRefresh: () => void }) {
   // Default-open the first active (partially unlocked) module, or first module if all locked
   const defaultOpen = modules.find((m: any) => m.isModuleActive)?.id
     ?? modules.find((m: any) => !m.isModuleLocked)?.id
@@ -370,7 +375,7 @@ function LearningPath({ modules, quizAttempts }: { modules: Module[], quizAttemp
         );
       })}
 
-      {activeQuiz && <QuizModal quiz={activeQuiz} onClose={() => setActiveQuiz(null)} />}
+      {activeQuiz && <QuizModal quiz={activeQuiz} onClose={() => setActiveQuiz(null)} onComplete={onRefresh} />}
     </div>
   );
 }
@@ -528,7 +533,7 @@ export default function StudentDashboard() {
           {activeTab === "learning" && (
             <div className="space-y-4">
               <h2 className="font-bold text-slate-900">Learning Path Saya</h2>
-              <LearningPath modules={data.modules} quizAttempts={data.quizAttempts || []} />
+              <LearningPath modules={data.modules} quizAttempts={data.quizAttempts || []} onRefresh={fetchData} />
             </div>
           )}
 
