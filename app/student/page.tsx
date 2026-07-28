@@ -224,7 +224,11 @@ function QuizModal({ quiz, onClose }: { quiz: Topic["quiz"]; onClose: () => void
 
 // --- Learning Path ---
 function LearningPath({ modules }: { modules: Module[] }) {
-  const [expandedModule, setExpandedModule] = useState<number | null>(modules[0]?.id ?? null);
+  // Default-open the first active (partially unlocked) module, or first module if all locked
+  const defaultOpen = modules.find((m: any) => m.isModuleActive)?.id
+    ?? modules.find((m: any) => !m.isModuleLocked)?.id
+    ?? null;
+  const [expandedModule, setExpandedModule] = useState<number | null>(defaultOpen);
   const [activeQuiz, setActiveQuiz] = useState<Topic["quiz"] | null>(null);
 
   if (modules.length === 0) {
@@ -233,39 +237,73 @@ function LearningPath({ modules }: { modules: Module[] }) {
 
   return (
     <div className="space-y-3">
-      {modules.map(mod => {
-        const unlockedCount = mod.topics.filter(t => t.isUnlocked).length;
+      {modules.map((mod: any) => {
+        const unlockedCount = mod.topics.filter((t: any) => t.isUnlocked).length;
         const progress = mod.topics.length > 0 ? Math.round((unlockedCount / mod.topics.length) * 100) : 0;
         const isOpen = expandedModule === mod.id;
+        const isLocked = mod.isModuleLocked;
+        const isComplete = mod.isModuleComplete;
 
         return (
-          <div key={mod.id} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+          <div key={mod.id} className={`rounded-xl border overflow-hidden shadow-sm transition-all ${isLocked ? "bg-slate-50 border-slate-200 opacity-70" : isComplete ? "bg-white border-green-200" : "bg-white border-blue-200 ring-1 ring-blue-100"}`}>
             <button
-              onClick={() => setExpandedModule(isOpen ? null : mod.id)}
-              className="w-full flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors text-left"
+              onClick={() => !isLocked && setExpandedModule(isOpen ? null : mod.id)}
+              disabled={isLocked}
+              className={`w-full flex items-center gap-4 p-4 text-left transition-colors ${isLocked ? "cursor-not-allowed" : "hover:bg-slate-50/80"}`}
             >
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${mod.level === "beginner" ? "bg-green-100 text-green-700" : mod.level === "intermediate" ? "bg-orange-100 text-orange-700" : "bg-red-100 text-red-700"}`}>
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+              {/* Module icon */}
+              <div className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${isLocked ? "bg-slate-200 text-slate-400" : isComplete ? "bg-green-100 text-green-600" : "bg-blue-100 text-blue-600"}`}>
+                {isLocked ? (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                ) : isComplete ? (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                ) : (
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>
+                )}
               </div>
+
+              {/* Module info */}
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-slate-900 text-sm">{mod.title}</p>
-                <div className="flex items-center gap-2 mt-1.5">
-                  <div className="flex-1 bg-slate-100 rounded-full h-1.5">
-                    <div className="bg-blue-600 h-1.5 rounded-full transition-all" style={{ width: `${progress}%` }} />
-                  </div>
-                  <span className="text-xs text-slate-500 whitespace-nowrap">{unlockedCount}/{mod.topics.length} topik</span>
+                <div className="flex items-center gap-2">
+                  <p className={`font-semibold text-sm ${isLocked ? "text-slate-400" : "text-slate-900"}`}>{mod.title}</p>
+                  {isLocked && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-200 px-2 py-0.5 rounded-full">Terkunci</span>
+                  )}
+                  {isComplete && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Selesai</span>
+                  )}
+                  {!isLocked && !isComplete && (
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">Aktif</span>
+                  )}
                 </div>
+                {!isLocked && (
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <div className="flex-1 bg-slate-100 rounded-full h-1.5">
+                      <div className={`h-1.5 rounded-full transition-all ${isComplete ? "bg-green-500" : "bg-blue-600"}`} style={{ width: `${progress}%` }} />
+                    </div>
+                    <span className="text-xs text-slate-500 whitespace-nowrap">{unlockedCount}/{mod.topics.length} topik</span>
+                  </div>
+                )}
+                {isLocked && (
+                  <p className="text-xs text-slate-400 mt-0.5">Selesaikan modul sebelumnya untuk membuka modul ini</p>
+                )}
               </div>
-              <svg className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
+
+              {!isLocked && (
+                <svg className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              )}
+              {isLocked && (
+                <svg className="w-4 h-4 text-slate-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+              )}
             </button>
 
-            {isOpen && (
+            {isOpen && !isLocked && (
               <div className="border-t border-slate-100 divide-y divide-slate-100">
-                {mod.topics.map(topic => (
-                  <div key={topic.id} className={`flex items-center gap-3 px-4 py-3 ${!topic.isUnlocked ? "opacity-60" : ""}`}>
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${topic.isUnlocked ? "bg-blue-600 text-white" : "bg-slate-200 text-slate-400"}`}>
+                {mod.topics.map((topic: any) => (
+                  <div key={topic.id} className={`flex items-center gap-3 px-4 py-3 ${!topic.isUnlocked ? "opacity-50" : ""}`}>
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${topic.isUnlocked ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400"}`}>
                       {topic.isUnlocked ? (
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
                       ) : (
@@ -273,7 +311,9 @@ function LearningPath({ modules }: { modules: Module[] }) {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-800">{topic.order_index}. {topic.title}</p>
+                      <p className={`text-sm font-medium ${topic.isUnlocked ? "text-slate-800" : "text-slate-400"}`}>
+                        {topic.order_index}. {topic.title}
+                      </p>
                     </div>
                     {topic.isUnlocked && topic.quiz && (
                       <button
@@ -284,7 +324,7 @@ function LearningPath({ modules }: { modules: Module[] }) {
                       </button>
                     )}
                     {!topic.isUnlocked && (
-                      <span className="text-xs text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">Terkunci</span>
+                      <span className="text-xs text-slate-400">Ikuti kelas</span>
                     )}
                   </div>
                 ))}

@@ -59,11 +59,13 @@ export async function GET() {
       .select("id, topic_id, title")
       .in("topic_id", (topics || []).map((t: any) => t.id));
 
-    // Unlock topics based on meetings that have already started (meeting_date <= now).
-    // This ensures clicking "Join" immediately reflects as an unlocked topic without
-    // waiting for admin to submit a progress report.
+    // Sequential module unlock:
+    // - Count started meetings (meeting_date <= now) as "unlock budget"
+    // - Distribute budget across modules in order
+    // - Each module consumes up to its topic count from the budget
+    // - Once budget is 0, remaining modules are fully locked
     const nowMs = Date.now();
-    const startedCount = (meetings || []).filter(
+    let remainingUnlocks = (meetings || []).filter(
       m => new Date(m.meeting_date).getTime() <= nowMs
     ).length;
 
@@ -71,12 +73,24 @@ export async function GET() {
       const mod = sm.modules;
       const modTopics = (topics || [])
         .filter((t: any) => t.module_id === sm.module_id)
+        .sort((a: any, b: any) => a.order_index - b.order_index)
         .map((t: any, idx: number) => {
           const quiz = (quizzes || []).find((q: any) => q.topic_id === t.id);
-          const isUnlocked = idx < startedCount;
+          const isUnlocked = idx < remainingUnlocks;
           return { ...t, quiz, isUnlocked };
         });
-      return { ...mod, topics: modTopics };
+
+      // Consume this module's unlocks from the budget
+      const used = Math.min(remainingUnlocks, modTopics.length);
+      remainingUnlocks = Math.max(0, remainingUnlocks - used);
+
+      // A module is "active" if it has at least one unlocked topic but isn't fully unlocked
+      const unlockedCount = modTopics.filter((t: any) => t.isUnlocked).length;
+      const isModuleLocked = unlockedCount === 0;
+      const isModuleActive = unlockedCount > 0 && unlockedCount < modTopics.length;
+      const isModuleComplete = modTopics.length > 0 && unlockedCount === modTopics.length;
+
+      return { ...mod, topics: modTopics, isModuleLocked, isModuleActive, isModuleComplete };
     });
   }
 
