@@ -120,13 +120,11 @@ export default function AdminDashboardPage() {
       
       if (resMeet.ok) {
         const data = await resMeet.json();
-        const now = new Date();
-        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
-        const todayEnd = todayStart + 24 * 60 * 60 * 1000;
-        
+        const todayStr = new Date().toLocaleDateString("id-ID", { year: "numeric", month: "2-digit", day: "2-digit" });
         const today = data.filter((m: any) => {
-          const mTime = new Date(m.meeting_date).getTime();
-          return mTime >= todayStart && mTime < todayEnd;
+          const mDate = new Date(m.meeting_date);
+          const mStr = mDate.toLocaleDateString("id-ID", { year: "numeric", month: "2-digit", day: "2-digit" });
+          return mStr === todayStr;
         });
         setTodayMeetings(today);
       }
