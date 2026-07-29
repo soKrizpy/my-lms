@@ -2,6 +2,93 @@
 
 import React, { useState, useEffect } from "react";
 
+// --- Countdown Hook ---
+function calcTimeLeft(targetDate: string) {
+  const diff = new Date(targetDate).getTime() - Date.now();
+  if (diff <= 0) return null;
+  const h = Math.floor(diff / (1000 * 60 * 60));
+  const m = Math.floor((diff / (1000 * 60)) % 60);
+  const s = Math.floor((diff / 1000) % 60);
+  return { h, m, s };
+}
+
+function useCountdown(targetDate: string) {
+  const [timeLeft, setTimeLeft] = useState(() => calcTimeLeft(targetDate));
+  useEffect(() => {
+    const t = setInterval(() => setTimeLeft(calcTimeLeft(targetDate)), 1000);
+    return () => clearInterval(t);
+  }, [targetDate]);
+  return timeLeft;
+}
+
+function TodayMeetingCard({ meet }: { meet: any }) {
+  const timeLeft = useCountdown(meet.meeting_date);
+  const nowMs = Date.now();
+  const meetMs = new Date(meet.meeting_date).getTime();
+  const endMs = meetMs + 60 * 60 * 1000;
+  const isLive = nowMs >= meetMs && nowMs < endMs && !meet.is_completed;
+  const isUpcoming = meetMs > nowMs;
+  const isCompleted = meet.is_completed;
+
+  return (
+    <div className={`rounded-lg border p-4 flex flex-col gap-3 ${isCompleted ? 'bg-green-50 border-green-200' : isLive ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200'}`}>
+      <div className="flex justify-between items-start gap-2">
+        <div className="flex-1 min-w-0">
+          <h3 className="font-semibold text-slate-900 truncate">{meet.title}</h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            {new Date(meet.meeting_date).toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' })} WIB
+            {meet.session_count > 1 && ` · Sesi ${meet.session_number}/${meet.session_count}`}
+          </p>
+        </div>
+        <div className="flex-shrink-0">
+          {isLive && <span className="text-[10px] px-2 py-0.5 rounded bg-red-600 text-white font-bold animate-pulse">LIVE</span>}
+          {isCompleted && <span className="text-[10px] px-2 py-0.5 rounded bg-green-600 text-white font-bold">✓ Selesai</span>}
+        </div>
+      </div>
+
+      {meet.students?.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {meet.students.map((s: any) => (
+            <span key={s.id} className="text-[10px] bg-slate-100 border border-slate-200 text-slate-600 px-1.5 py-0.5 rounded">{s.name}</span>
+          ))}
+        </div>
+      )}
+
+      {isUpcoming && timeLeft && (
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-slate-500">Mulai dalam:</span>
+          <div className="flex gap-1 font-mono">
+            {timeLeft.h > 0 && (
+              <span className="bg-slate-900 text-white text-xs px-2 py-0.5 rounded font-bold">{String(timeLeft.h).padStart(2,'0')}j</span>
+            )}
+            <span className="bg-slate-900 text-white text-xs px-2 py-0.5 rounded font-bold">{String(timeLeft.m).padStart(2,'0')}m</span>
+            <span className="bg-slate-800 text-white text-xs px-2 py-0.5 rounded font-bold">{String(timeLeft.s).padStart(2,'0')}d</span>
+          </div>
+        </div>
+      )}
+
+      {!isCompleted && meet.link_url && (
+        <a
+          href={meet.link_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`inline-flex items-center justify-center gap-2 w-full px-3 py-2 rounded-md text-sm font-semibold text-white transition-colors ${
+            isLive ? 'bg-red-600 hover:bg-red-700 animate-pulse' : 'bg-blue-600 hover:bg-blue-700'
+          }`}
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+          {isLive ? 'Join Kelas (LIVE)' : 'Buka Link'}
+        </a>
+      )}
+      {!isCompleted && !meet.link_url && (
+        <div className="w-full px-3 py-2 rounded-md text-sm text-slate-400 text-center bg-slate-100 border border-slate-200">
+          Tidak ada link
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface Announcement {
   id: number;
   content: string;
@@ -115,24 +202,7 @@ export default function AdminDashboardPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {todayMeetings.map((meet) => (
-              <div key={meet.id} className={`p-4 rounded-lg border ${meet.is_completed ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200'}`}>
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold text-slate-800">{meet.title}</h3>
-                  {meet.is_completed && (
-                    <span className="text-[10px] px-2 py-0.5 rounded font-medium bg-green-100 text-green-700 border border-green-200">
-                      Selesai
-                    </span>
-                  )}
-                </div>
-                <p className="text-xs text-slate-500 mb-2">{new Date(meet.meeting_date).toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' })} WIB</p>
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {meet.students?.map((s: any) => (
-                    <span key={s.id} className="text-[10px] bg-white border border-slate-200 text-slate-600 px-1.5 py-0.5 rounded">
-                      {s.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
+              <TodayMeetingCard key={meet.id} meet={meet} />
             ))}
           </div>
         )}
