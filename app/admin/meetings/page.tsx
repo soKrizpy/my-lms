@@ -67,7 +67,7 @@ function ProgressReportModal({
       <div className="bg-white rounded-lg w-full max-w-lg shadow-xl">
         <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 rounded-t-lg">
           <h2 className="text-lg font-semibold text-slate-900">Report Progress</h2>
-          <p className="text-sm text-slate-500">{meeting.title} — {new Date(meeting.meeting_date).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" })}</p>
+          <p className="text-sm text-slate-500">{meeting.title} â€” {new Date(meeting.meeting_date).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" })}</p>
         </div>
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
           <div>
@@ -260,12 +260,12 @@ function CalendarView({
                           <p className="font-semibold text-slate-900 truncate">{meet.title}</p>
                           <p className="text-xs text-slate-500">
                             {new Date(meet.meeting_date).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })} WIB
-                            {meet.session_count > 1 && ` · Sesi ${meet.session_number}/${meet.session_count}`}
+                            {meet.session_count > 1 && ` Â· Sesi ${meet.session_number}/${meet.session_count}`}
                           </p>
                         </div>
                         <div className="flex gap-1 flex-shrink-0 mt-0.5">
                           {isLive && <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-600 text-white font-bold animate-pulse">LIVE</span>}
-                          {meet.is_completed && <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-600 text-white font-bold">?</span>}
+                          {meet.is_completed && <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-600 text-white font-bold">âœ“</span>}
                         </div>
                       </div>
 
