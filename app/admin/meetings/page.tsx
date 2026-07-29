@@ -19,8 +19,9 @@ interface Meeting {
   session_count: number;
   series_id: string | null;
   session_number: number;
-  progress_report: string | null;
   is_completed: boolean;
+  completion_status: string;
+  progress_report: string | null;
   created_at: string;
   students: StudentMinimal[];
 }
@@ -225,6 +226,7 @@ function ProgressReportModal({
   onSuccess: () => void;
 }) {
   const [report, setReport] = useState("");
+  const [completionStatus, setCompletionStatus] = useState<"selesai" | "terlewat">("selesai");
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -235,7 +237,7 @@ function ProgressReportModal({
       const res = await fetch("/api/admin/meetings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: meeting.id, progressReport: report }),
+        body: JSON.stringify({ id: meeting.id, progressReport: report, completionStatus }),
       });
       if (res.ok) {
         onSuccess();
@@ -259,13 +261,39 @@ function ProgressReportModal({
         </div>
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
           <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Status Pertemuan</label>
+            <div className="flex items-center gap-4 mt-2 mb-4">
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  className="form-radio text-blue-600 focus:ring-blue-500"
+                  name="status"
+                  value="selesai"
+                  checked={completionStatus === "selesai"}
+                  onChange={() => setCompletionStatus("selesai")}
+                />
+                <span className="ml-2 text-sm text-slate-700">Selesai (Hadir)</span>
+              </label>
+              <label className="inline-flex items-center">
+                <input
+                  type="radio"
+                  className="form-radio text-blue-600 focus:ring-blue-500"
+                  name="status"
+                  value="terlewat"
+                  checked={completionStatus === "terlewat"}
+                  onChange={() => setCompletionStatus("terlewat")}
+                />
+                <span className="ml-2 text-sm text-slate-700">Terlewat (Tidak Hadir/Batal)</span>
+              </label>
+            </div>
+            
             <label className="block text-sm font-medium text-slate-700 mb-1">Apa yang dikerjakan / progress hari ini?</label>
             <textarea
               rows={5}
               required
               value={report}
               onChange={e => setReport(e.target.value)}
-              placeholder="Contoh: Siswa telah menyelesaikan bab 3 Aljabar. PR diberikan halaman 45-47..."
+              placeholder={completionStatus === "selesai" ? "Contoh: Siswa telah menyelesaikan bab 3 Aljabar. PR diberikan halaman 45-47..." : "Contoh: Siswa berhalangan hadir karena sakit..."}
               className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
             />
           </div>
@@ -379,15 +407,32 @@ export default function MeetingsPage() {
   
   const displayedMeetings = activeTab === "upcoming" ? upcomingMeetings : pastMeetings;
 
-  // Group by date
-  const groupedMeetings = displayedMeetings.reduce((acc, meet) => {
-    const dateKey = new Date(meet.meeting_date).toLocaleDateString("id-ID", {
-      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  // Grouping logic
+  let groupedUpcoming: Record<string, Meeting[]> = {};
+  let groupedPast: Record<string, Meeting[]> = {};
+
+  if (activeTab === "upcoming") {
+    groupedUpcoming = upcomingMeetings.reduce((acc, meet) => {
+      const dateKey = new Date(meet.meeting_date).toLocaleDateString("id-ID", {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+      });
+      if (!acc[dateKey]) acc[dateKey] = [];
+      acc[dateKey].push(meet);
+      return acc;
+    }, {} as Record<string, Meeting[]>);
+  } else {
+    pastMeetings.forEach(meet => {
+      if (meet.students && meet.students.length > 0) {
+        meet.students.forEach(stu => {
+          if (!groupedPast[stu.name]) groupedPast[stu.name] = [];
+          groupedPast[stu.name].push(meet);
+        });
+      } else {
+        if (!groupedPast["Tanpa Siswa"]) groupedPast["Tanpa Siswa"] = [];
+        groupedPast["Tanpa Siswa"].push(meet);
+      }
     });
-    if (!acc[dateKey]) acc[dateKey] = [];
-    acc[dateKey].push(meet);
-    return acc;
-  }, {} as Record<string, Meeting[]>);
+  }
 
   return (
     <div className="space-y-6">
@@ -426,25 +471,68 @@ export default function MeetingsPage() {
       <div className="space-y-8">
         {loading ? (
           <p className="text-slate-500">Memuat data jadwal...</p>
-        ) : Object.keys(groupedMeetings).length === 0 ? (
-          <p className="text-slate-500 italic">Belum ada jadwal {activeTab === "upcoming" ? "mendatang" : "dalam riwayat"}.</p>
-        ) : (
-          Object.entries(groupedMeetings).map(([dateLabel, meets]) => (
-            <div key={dateLabel} className="space-y-4">
-              <h2 className="text-lg font-bold text-slate-800 border-b border-slate-200 pb-2">{dateLabel}</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {meets.map(meet => (
-                  <MeetingCard
-                    key={meet.id}
-                    meet={meet}
-                    onEdit={() => setEditingMeeting(meet)}
-                    onDelete={() => handleDelete(meet)}
-                    onReportProgress={() => setReportingMeeting(meet)}
-                  />
-                ))}
+        ) : activeTab === "upcoming" ? (
+          Object.keys(groupedUpcoming).length === 0 ? (
+            <p className="text-slate-500 italic">Belum ada jadwal mendatang.</p>
+          ) : (
+            Object.entries(groupedUpcoming).map(([dateLabel, meets]) => (
+              <div key={dateLabel} className="space-y-4">
+                <h2 className="text-lg font-bold text-slate-800 border-b border-slate-200 pb-2">{dateLabel}</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {meets.map(meet => (
+                    <MeetingCard
+                      key={meet.id}
+                      meet={meet}
+                      onEdit={() => setEditingMeeting(meet)}
+                      onDelete={() => handleDelete(meet)}
+                      onReportProgress={() => setReportingMeeting(meet)}
+                    />
+                  ))}
+                </div>
               </div>
+            ))
+          )
+        ) : (
+          Object.keys(groupedPast).length === 0 ? (
+            <p className="text-slate-500 italic">Belum ada jadwal dalam riwayat.</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {Object.entries(groupedPast).map(([studentName, meets]) => (
+                <div key={studentName} className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm">
+                  <h2 className="text-lg font-bold text-slate-800 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
+                    <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                    {studentName}
+                  </h2>
+                  <div className="space-y-3">
+                    {meets.sort((a, b) => new Date(b.meeting_date).getTime() - new Date(a.meeting_date).getTime()).map(meet => (
+                      <div key={meet.id} className="text-sm p-3 bg-slate-50 rounded-md border border-slate-100 flex flex-col gap-1">
+                        <div className="flex justify-between items-start">
+                          <strong className="text-slate-800">{meet.title}</strong>
+                          <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${meet.completion_status === 'terlewat' ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-green-100 text-green-700 border border-green-200'}`}>
+                            {meet.completion_status === 'terlewat' ? 'Terlewat' : 'Selesai'}
+                          </span>
+                        </div>
+                        <span className="text-slate-500 text-xs">{new Date(meet.meeting_date).toLocaleString("id-ID")}</span>
+                        {meet.progress_report && (
+                          <p className="mt-1 text-slate-700 italic border-l-2 border-slate-300 pl-2">
+                            "{meet.progress_report}"
+                          </p>
+                        )}
+                        {!meet.is_completed && (
+                           <button
+                             onClick={() => setReportingMeeting(meet)}
+                             className="mt-2 self-start px-2 py-1 bg-orange-100 text-orange-700 hover:bg-orange-200 text-xs rounded border border-orange-200"
+                           >
+                             Tulis Report
+                           </button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
-          ))
+          )
         )}
       </div>
 

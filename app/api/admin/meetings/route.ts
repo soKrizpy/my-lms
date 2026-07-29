@@ -220,7 +220,7 @@ export async function PATCH(request: Request) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
     const body = await request.json();
-    const { id, progressReport } = body;
+    const { id, progressReport, completionStatus } = body;
 
     if (!id) {
       return NextResponse.json({ error: "ID wajib diisi." }, { status: 400 });
@@ -231,6 +231,7 @@ export async function PATCH(request: Request) {
       .update({
         progress_report: progressReport || "",
         is_completed: true,
+        completion_status: completionStatus || 'selesai'
       })
       .eq("id", id);
 

@@ -16,24 +16,42 @@ export default function AdminDashboardPage() {
   const [durationDays, setDurationDays] = useState("7");
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
+  const [todayMeetings, setTodayMeetings] = useState<any[]>([]);
 
-  const fetchAnnouncements = async () => {
+  const fetchData = async () => {
     setFetchLoading(true);
     try {
-      const res = await fetch("/api/admin/announcements");
-      if (res.ok) {
-        const data = await res.json();
+      const [resAnn, resMeet] = await Promise.all([
+        fetch("/api/admin/announcements"),
+        fetch("/api/admin/meetings")
+      ]);
+      
+      if (resAnn.ok) {
+        const data = await resAnn.json();
         setAnnouncements(data);
       }
+      
+      if (resMeet.ok) {
+        const data = await resMeet.json();
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+        const todayEnd = todayStart + 24 * 60 * 60 * 1000;
+        
+        const today = data.filter((m: any) => {
+          const mTime = new Date(m.meeting_date).getTime();
+          return mTime >= todayStart && mTime < todayEnd;
+        });
+        setTodayMeetings(today);
+      }
     } catch (error) {
-      console.error("Failed to fetch announcements", error);
+      console.error("Failed to fetch dashboard data", error);
     } finally {
       setFetchLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchAnnouncements();
+    fetchData();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -50,7 +68,7 @@ export default function AdminDashboardPage() {
       if (res.ok) {
         setContent("");
         setDurationDays("7");
-        fetchAnnouncements();
+        fetchData();
       } else {
         alert("Gagal menambahkan pengumuman.");
       }
@@ -68,7 +86,7 @@ export default function AdminDashboardPage() {
         method: "DELETE",
       });
       if (res.ok) {
-        fetchAnnouncements();
+        fetchData();
       }
     } catch (error) {
       console.error(error);
@@ -83,6 +101,42 @@ export default function AdminDashboardPage() {
           Selamat datang di panel admin LMS. Kelola pengumuman untuk siswa di sini.
         </p>
       </div>
+
+      {/* Jadwal Hari Ini */}
+      <section className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+        <h2 className="text-lg font-medium text-slate-900 mb-4 flex items-center gap-2">
+          <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+          Jadwal Hari Ini
+        </h2>
+        {fetchLoading ? (
+          <p className="text-sm text-slate-500">Memuat jadwal...</p>
+        ) : todayMeetings.length === 0 ? (
+          <p className="text-sm text-slate-500 italic">Tidak ada jadwal pertemuan untuk hari ini.</p>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {todayMeetings.map((meet) => (
+              <div key={meet.id} className={`p-4 rounded-lg border ${meet.is_completed ? 'bg-green-50 border-green-200' : 'bg-slate-50 border-slate-200'}`}>
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-semibold text-slate-800">{meet.title}</h3>
+                  {meet.is_completed && (
+                    <span className="text-[10px] px-2 py-0.5 rounded font-medium bg-green-100 text-green-700 border border-green-200">
+                      Selesai
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 mb-2">{new Date(meet.meeting_date).toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' })} WIB</p>
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {meet.students?.map((s: any) => (
+                    <span key={s.id} className="text-[10px] bg-white border border-slate-200 text-slate-600 px-1.5 py-0.5 rounded">
+                      {s.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Form Pengumuman */}

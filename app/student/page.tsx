@@ -69,7 +69,7 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
   const now = Date.now();
   const meetTime = new Date(meet.meeting_date).getTime();
   const meetEndTime = meetTime + 60 * 60 * 1000;
-  
+
   // Can join live for the first 30 minutes
   const canJoinLive = !meet.is_completed && now >= meetTime && now < meetTime + 30 * 60 * 1000;
   // Is live for the whole hour just for the badge
@@ -286,6 +286,7 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
     ?? modules.find((m: any) => !m.isModuleLocked)?.id
     ?? null;
   const [expandedModule, setExpandedModule] = useState<number | null>(defaultOpen);
+  const [expandedTopic, setExpandedTopic] = useState<number | null>(null);
   const [activeQuiz, setActiveQuiz] = useState<Topic["quiz"] | null>(null);
 
   if (modules.length === 0) {
@@ -358,45 +359,74 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
 
             {isOpen && !isLocked && (
               <div className="border-t border-slate-100 divide-y divide-slate-100">
-                {mod.topics.map((topic: any) => (
-                  <div key={topic.id} className={`flex items-center gap-3 px-4 py-3 ${!topic.isUnlocked ? "opacity-50" : ""}`}>
-                    <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${topic.isUnlocked ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400"}`}>
-                      {topic.isUnlocked ? (
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                      ) : (
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                {mod.topics.map((topic: any) => {
+                  const attempt = topic.isUnlocked && topic.quiz ? (quizAttempts || []).find((qa: any) => qa.quiz_id === topic.quiz.id) : null;
+                  const isTopicExpanded = expandedTopic === topic.id;
+
+                  return (
+                    <div key={topic.id} className="flex flex-col">
+                      <div className={`flex items-center gap-3 px-4 py-3 ${!topic.isUnlocked ? "opacity-50" : ""}`}>
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${topic.isUnlocked ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400"}`}>
+                          {topic.isUnlocked ? (
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                          ) : (
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm font-medium ${topic.isUnlocked ? "text-slate-800" : "text-slate-400"}`}>
+                            {topic.order_index}. {topic.title}
+                          </p>
+                        </div>
+                        {topic.isUnlocked && topic.quiz && (
+                          <div className="flex items-center gap-2">
+                            {attempt && attempt.attempts_count >= 2 ? (
+                              <span className="text-xs font-bold text-green-700 bg-green-50 px-3 py-1 rounded-lg border border-green-200">
+                                Nilai: {attempt.score}
+                              </span>
+                            ) : (
+                              <button
+                                onClick={() => setActiveQuiz(topic.quiz)}
+                                className="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors"
+                              >
+                                Quiz
+                              </button>
+                            )}
+                            {attempt && (
+                              <button 
+                                onClick={() => setExpandedTopic(isTopicExpanded ? null : topic.id)}
+                                className="p-1 text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 rounded"
+                              >
+                                <svg className={`w-4 h-4 transition-transform ${isTopicExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </button>
+                            )}
+                          </div>
+                        )}
+                        {!topic.isUnlocked && (
+                          <span className="text-xs text-slate-400">Ikuti kelas</span>
+                        )}
+                      </div>
+                      
+                      {isTopicExpanded && attempt && (
+                        <div className="px-14 pb-4 pt-1 bg-slate-50/50">
+                          <div className="text-xs border border-slate-200 rounded-md p-3 bg-white shadow-sm space-y-2">
+                            <h4 className="font-semibold text-slate-700 mb-1">Riwayat Kuis</h4>
+                            <div className="flex justify-between items-center text-slate-600 border-b border-slate-100 pb-1">
+                              <span>Percobaan Terpakai</span>
+                              <span className="font-medium text-slate-800">{attempt.attempts_count} / 2</span>
+                            </div>
+                            <div className="flex justify-between items-center text-slate-600">
+                              <span>Nilai Terbaik</span>
+                              <span className={`font-bold ${attempt.score >= 70 ? 'text-green-600' : 'text-orange-600'}`}>{attempt.score} / 100</span>
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-medium ${topic.isUnlocked ? "text-slate-800" : "text-slate-400"}`}>
-                        {topic.order_index}. {topic.title}
-                      </p>
-                    </div>
-                    {topic.isUnlocked && topic.quiz && (
-                      (() => {
-                        const attempt = (quizAttempts || []).find((qa: any) => qa.quiz_id === topic.quiz.id);
-                        if (attempt && attempt.attempts_count >= 2) {
-                          return (
-                            <span className="text-xs font-bold text-green-700 bg-green-50 px-3 py-1 rounded-lg border border-green-200">
-                              Nilai: {attempt.score}
-                            </span>
-                          );
-                        }
-                        return (
-                          <button
-                            onClick={() => setActiveQuiz(topic.quiz)}
-                            className="text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors"
-                          >
-                            Quiz
-                          </button>
-                        );
-                      })()
-                    )}
-                    {!topic.isUnlocked && (
-                      <span className="text-xs text-slate-400">Ikuti kelas</span>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -472,6 +502,8 @@ function ParentHub({ pastMeetings, quizAttempts }: { pastMeetings: Meeting[]; qu
 export default function StudentDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [activeQuiz, setActiveQuiz] = useState<any>(null);
+  const [expandedModule, setExpandedModule] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"jadwal" | "learning" | "parent">("jadwal");
   const [announcement, setAnnouncement] = useState<string | null>(null);
 

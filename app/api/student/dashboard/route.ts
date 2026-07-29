@@ -20,7 +20,7 @@ export async function GET() {
     .select(`
       id, title, meeting_date, link_url, notes,
       session_count, session_number, series_id,
-      progress_report, is_completed,
+      progress_report, is_completed, completion_status,
       meeting_students!inner(student_id, has_joined)
     `)
     .eq("meeting_students.student_id", studentId)
@@ -81,7 +81,7 @@ export async function GET() {
     // - Once budget is 0, remaining modules are fully locked
     const nowMs = Date.now();
     let remainingUnlocks = (meetings || []).filter(
-      m => new Date(m.meeting_date).getTime() <= nowMs
+      m => new Date(m.meeting_date).getTime() <= nowMs && m.completion_status !== 'terlewat'
     ).length;
 
     modulesWithTopics = (studentModules || []).map((sm: any) => {
