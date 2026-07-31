@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
-import { supabase } from "../../../lib/supabaseClient";
+import { getSupabaseAdmin } from "../../../lib/supabaseAdmin";
+
+function getErrorMessage(error: unknown, fallback = "Terjadi kesalahan.") {
+  return error instanceof Error ? error.message : fallback;
+}
 
 export async function GET() {
-  const { data, error } = await supabase
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
     .from("modules")
     .select("id, title, description, level")
     .order("created_at", { ascending: false });
@@ -33,6 +38,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     const body = await request.json();
     const name = typeof body?.name === "string" ? body.name.trim() : "";
     const description = typeof body?.description === "string" ? body.description : "";
@@ -45,7 +51,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("modules")
       .insert([{ title: name, description, level }])
       .select("id, title, description, level")
@@ -71,7 +77,7 @@ export async function POST(request: Request) {
       },
       { status: 201 },
     );
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Permintaan tidak valid." },
       { status: 400 },
@@ -81,6 +87,7 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     const body = await request.json();
     const id = body?.id;
     const name = typeof body?.name === "string" ? body.name.trim() : "";
@@ -91,30 +98,37 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "ID dan Nama modul wajib diisi." }, { status: 400 });
     }
 
-    const { error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("modules")
       .update({ title: name, description, level })
-      .eq("id", id);
+      .eq("id", id)
+      .select("id")
+      .maybeSingle();
 
     if (error) throw error;
+    if (!data) {
+      return NextResponse.json({ error: "Modul tidak ditemukan." }, { status: 404 });
+    }
+
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Permintaan tidak valid." }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error, "Permintaan tidak valid.") }, { status: 500 });
   }
 }
 
 export async function DELETE(request: Request) {
   try {
+    const supabaseAdmin = getSupabaseAdmin();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
     if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
 
-    const { error } = await supabase.from("modules").delete().eq("id", id);
+    const { error } = await supabaseAdmin.from("modules").delete().eq("id", id);
     if (error) throw error;
 
     return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message || "Terjadi kesalahan." }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
   }
 }

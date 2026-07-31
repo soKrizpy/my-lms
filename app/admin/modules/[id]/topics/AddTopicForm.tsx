@@ -2,7 +2,6 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createTopic } from "../../../../../lib/lmsData";
 
 export function AddTopicForm({
   moduleId,
@@ -35,16 +34,20 @@ export function AddTopicForm({
 
     try {
       setLoading(true);
-      const { error } = await createTopic(
-        Number(moduleId),
-        title.trim(),
-        Number(orderIndex),
-        description.trim() || undefined,
-        projectLink.trim() || undefined,
-      );
+      const res = await fetch(`/api/modules/${moduleId}/topics`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title.trim(),
+          orderIndex: Number(orderIndex),
+          description: description.trim(),
+          projectLink: projectLink.trim(),
+        }),
+      });
+      const result = await res.json().catch(() => null);
 
-      if (error) {
-        setErrorMsg(error.message);
+      if (!res.ok) {
+        setErrorMsg(result?.error || "Gagal menyimpan topik.");
         return;
       }
 
@@ -58,8 +61,8 @@ export function AddTopicForm({
       }
 
       router.refresh();
-    } catch (err: any) {
-      setErrorMsg(err.message ?? "Terjadi kesalahan");
+    } catch (err: unknown) {
+      setErrorMsg(err instanceof Error ? err.message : "Terjadi kesalahan");
     } finally {
       setLoading(false);
     }
