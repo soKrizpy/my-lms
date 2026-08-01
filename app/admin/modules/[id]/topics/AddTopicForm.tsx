@@ -55,7 +55,7 @@ export function AddTopicForm({ moduleId }: { moduleId: string }) {
         <input
           id="new-topic-project-link"
           name="projectLink"
-          type="url"
+          type="text"
           className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
           placeholder="https://github.com/..."
         />

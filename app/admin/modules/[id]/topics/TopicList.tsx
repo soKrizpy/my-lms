@@ -169,9 +169,10 @@ export function TopicList({
                   <input
                     id={editProjectLinkId}
                     name="projectLink"
-                    type="url"
+                    type="text"
                     defaultValue={topic.project_link ?? ""}
                     className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="https://github.com/..."
                   />
                 </div>
 

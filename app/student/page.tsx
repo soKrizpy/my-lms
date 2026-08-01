@@ -44,14 +44,6 @@ interface QuizAttempt {
 }
 
 // --- Countdown Hook ---
-function useCountdown(targetDate: string) {
-  const [timeLeft, setTimeLeft] = useState(() => calcTimeLeft(targetDate));
-  useEffect(() => {
-    const timer = setInterval(() => setTimeLeft(calcTimeLeft(targetDate)), 1000);
-    return () => clearInterval(timer);
-  }, [targetDate]);
-  return timeLeft;
-}
 function calcTimeLeft(targetDate: string) {
   const diff = new Date(targetDate).getTime() - Date.now();
   if (diff <= 0) return null;
@@ -61,6 +53,21 @@ function calcTimeLeft(targetDate: string) {
     minutes: Math.floor((diff / (1000 * 60)) % 60),
     seconds: Math.floor((diff / 1000) % 60),
   };
+}
+function useCountdown(targetDate: string) {
+  const [timeLeft, setTimeLeft] = useState(() => calcTimeLeft(targetDate));
+  useEffect(() => {
+    // Don't bother ticking if the target is already in the past
+    if (!calcTimeLeft(targetDate)) return;
+    const timer = setInterval(() => {
+      const left = calcTimeLeft(targetDate);
+      setTimeLeft(left);
+      // Stop the interval once it hits zero to avoid unnecessary ticks
+      if (!left) clearInterval(timer);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [targetDate]);
+  return timeLeft;
 }
 
 // --- Meeting Card (Student View) ---
@@ -366,7 +373,7 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
                   return (
                     <div key={topic.id} className="flex flex-col">
                       <div className={`flex items-center gap-3 px-4 py-3 ${!topic.isUnlocked ? "opacity-50" : ""}`}>
-                        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold ${topic.isUnlocked ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400"}`}>
+                        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold self-start mt-0.5 ${topic.isUnlocked ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-400"}`}>
                           {topic.isUnlocked ? (
                             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
                           ) : (
@@ -377,9 +384,33 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
                           <p className={`text-sm font-medium ${topic.isUnlocked ? "text-slate-800" : "text-slate-400"}`}>
                             {topic.order_index}. {topic.title}
                           </p>
+                          {topic.isUnlocked && (() => {
+                            // Strip HTML tags to show plain-text synopsis only
+                            const synopsis = topic.description
+                              ? topic.description.replace(/<[^>]*>/g, "").trim()
+                              : null;
+                            return synopsis ? (
+                              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed line-clamp-2">{synopsis}</p>
+                            ) : null;
+                          })()}
+                          {topic.isUnlocked && topic.project_link && (
+                            <a
+                              href={topic.project_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline mt-1 font-medium"
+                            >
+                              <svg className="w-3 h-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                <polyline points="15 3 21 3 21 9" />
+                                <line x1="10" y1="14" x2="21" y2="3" />
+                              </svg>
+                              Link Project
+                            </a>
+                          )}
                         </div>
                         {topic.isUnlocked && topic.quiz && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 self-start mt-0.5">
                             {attempt && attempt.attempts_count >= 2 ? (
                               <span className="text-xs font-bold text-green-700 bg-green-50 px-3 py-1 rounded-lg border border-green-200">
                                 Nilai: {attempt.score}
@@ -405,7 +436,7 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
                           </div>
                         )}
                         {!topic.isUnlocked && (
-                          <span className="text-xs text-slate-400">Ikuti kelas</span>
+                          <span className="text-xs text-slate-400 self-start mt-0.5">Ikuti kelas</span>
                         )}
                       </div>
                       
@@ -502,8 +533,6 @@ function ParentHub({ pastMeetings, quizAttempts }: { pastMeetings: Meeting[]; qu
 export default function StudentDashboard() {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [activeQuiz, setActiveQuiz] = useState<any>(null);
-  const [expandedModule, setExpandedModule] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<"jadwal" | "learning" | "parent">("jadwal");
   const [announcement, setAnnouncement] = useState<string | null>(null);
 
