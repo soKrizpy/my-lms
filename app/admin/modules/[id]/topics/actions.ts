@@ -51,7 +51,7 @@ export async function updateTopicAction(formData: FormData) {
   }
 
   const supabaseAdmin = getSupabaseAdmin();
-  const { data, error } = await supabaseAdmin
+  const { error } = await supabaseAdmin
     .from("topics")
     .update({
       title,
@@ -60,12 +60,9 @@ export async function updateTopicAction(formData: FormData) {
       project_link: projectLink || null,
     })
     .eq("id", topicId)
-    .eq("module_id", Number(moduleId))
-    .select("id")
-    .maybeSingle();
+    .eq("module_id", Number(moduleId));
 
   if (error) throw error;
-  if (!data) throw new Error("Topik tidak ditemukan.");
 
   revalidatePath(topicPath(moduleId));
   revalidatePath("/admin/modules");
