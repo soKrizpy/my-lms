@@ -90,9 +90,10 @@ export default function AddModuleForm({ onSubmit }: AddModuleFormProps) {
           onChange={(e) => setLevel(e.target.value)}
           className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900"
         >
-          <option value="beginner">Beginner</option>
-          <option value="intermediate">Intermediate</option>
-          <option value="advance">Advance</option>
+          <option value="beginner">Beginner (SD / Pemula)</option>
+          <option value="intermediate">Intermediate (SMP / Menengah)</option>
+          <option value="advance">Advance (SMA / Mahir)</option>
+          <option value="master">Master (Expert)</option>
         </select>
       </div>
 

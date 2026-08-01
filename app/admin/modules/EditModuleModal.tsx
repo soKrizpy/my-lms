@@ -93,7 +93,7 @@ export default function EditModuleModal({
                 Intermediate (SMP / Menengah)
               </option>
               <option value="advance">Advance (SMA / Mahir)</option>
-              <option value="all">Semua Level</option>
+              <option value="master">Master (Expert)</option>
             </select>
           </div>
           <div>

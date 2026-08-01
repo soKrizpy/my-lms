@@ -158,7 +158,9 @@ export default function ModulesPage() {
                               ? "bg-orange-50 text-orange-700 ring-orange-600/20"
                               : mod.level === "advance"
                                 ? "bg-red-50 text-red-700 ring-red-600/20"
-                                : "bg-blue-50 text-blue-700 ring-blue-700/10"
+                                : mod.level === "master"
+                                  ? "bg-purple-50 text-purple-700 ring-purple-600/20"
+                                  : "bg-blue-50 text-blue-700 ring-blue-700/10"
                         }`}
                       >
                         {mod.level}
