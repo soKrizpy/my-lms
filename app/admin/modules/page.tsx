@@ -3,6 +3,7 @@
 
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import AdminToast, { type AdminNotice } from "../components/AdminToast";
 import AddModuleForm from "./AddModuleForm";
 import EditModuleModal from "./EditModuleModal";
 
@@ -24,30 +25,51 @@ export default function ModulesPage() {
   const [topicMap, setTopicMap] = useState<Record<string, TopicSummary[]>>({});
   const [loading, setLoading] = useState(true);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
+  const [notice, setNotice] = useState<AdminNotice | null>(null);
 
   async function handleDeleteModule(id: string) {
-    if (!confirm("Yakin ingin menghapus modul ini beserta semua topik dan kuis di dalamnya?")) return;
+    if (
+      !confirm(
+        "Yakin ingin menghapus modul ini beserta semua topik dan kuis di dalamnya?",
+      )
+    )
+      return;
     try {
       const res = await fetch(`/api/modules?id=${id}`, { method: "DELETE" });
-      if (res.ok) {
-        loadModules();
-      } else {
-        alert("Gagal menghapus modul.");
+      const payload = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        throw new Error(payload?.error || "Gagal menghapus modul.");
       }
-    } catch {
-      alert("Terjadi kesalahan sistem.");
+
+      await loadModules();
+      setNotice({ type: "success", text: "Modul berhasil dihapus." });
+    } catch (err) {
+      setNotice({
+        type: "error",
+        text: err instanceof Error ? err.message : "Terjadi kesalahan sistem.",
+      });
     }
   }
 
-  async function createModule(data: { name: string; description: string; level: string }) {
-    await fetch("/api/modules", {
+  async function createModule(data: {
+    name: string;
+    description: string;
+    level: string;
+  }) {
+    const res = await fetch("/api/modules", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
     });
+    const payload = await res.json().catch(() => null);
 
-    // setelah berhasil, reload daftar modul
+    if (!res.ok) {
+      throw new Error(payload?.error || "Gagal menambahkan modul.");
+    }
+
     await loadModules();
+    setNotice({ type: "success", text: "Modul berhasil ditambahkan." });
   }
 
   async function loadModules() {
@@ -97,6 +119,8 @@ export default function ModulesPage() {
         </p>
       </header>
 
+      <AdminToast notice={notice} onDismiss={() => setNotice(null)} />
+
       <section className="bg-slate-50 border border-slate-200 rounded-lg p-4">
         <h2 className="text-sm font-medium text-slate-900 mb-3">
           Tambah Modul Baru
@@ -140,11 +164,43 @@ export default function ModulesPage() {
                         {mod.level}
                       </span>
                     )}
-                    <button onClick={() => setEditingModule(mod)} className="ml-2 text-slate-400 hover:text-blue-600 p-1" title="Edit Modul">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                    <button
+                      onClick={() => setEditingModule(mod)}
+                      className="ml-2 text-slate-400 hover:text-blue-600 p-1"
+                      title="Edit Modul"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                        />
+                      </svg>
                     </button>
-                    <button onClick={() => handleDeleteModule(mod.id)} className="text-slate-400 hover:text-red-600 p-1" title="Hapus Modul">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                    <button
+                      onClick={() => handleDeleteModule(mod.id)}
+                      className="text-slate-400 hover:text-red-600 p-1"
+                      title="Hapus Modul"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
                     </button>
                   </div>
                   {mod.description && (
@@ -154,8 +210,17 @@ export default function ModulesPage() {
                   <details className="mt-3 group rounded-md border border-slate-200 bg-slate-50 p-3">
                     <summary className="flex cursor-pointer items-center justify-between list-none outline-none">
                       <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        <svg className="h-4 w-4 transition-transform group-open:rotate-180" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                        <svg
+                          className="h-4 w-4 transition-transform group-open:rotate-180"
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
+                            clipRule="evenodd"
+                          />
                         </svg>
                         Lihat Topik
                       </p>
@@ -169,7 +234,9 @@ export default function ModulesPage() {
 
                     <div className="mt-3">
                       {(topicMap[mod.id] ?? []).length === 0 ? (
-                        <p className="text-sm text-slate-500">Belum ada topik.</p>
+                        <p className="text-sm text-slate-500">
+                          Belum ada topik.
+                        </p>
                       ) : (
                         <ul className="space-y-2">
                           {(topicMap[mod.id] ?? []).map((topic) => (
@@ -205,6 +272,7 @@ export default function ModulesPage() {
           onSuccess={() => {
             setEditingModule(null);
             loadModules();
+            setNotice({ type: "success", text: "Modul berhasil diperbarui." });
           }}
         />
       )}

@@ -8,28 +8,29 @@ interface Student {
   email_or_phone: string;
 }
 
-export default function EditMeetingModal({ 
-  meeting, 
-  onClose, 
-  onSuccess 
-}: { 
-  meeting: any; 
-  onClose: () => void; 
-  onSuccess: () => void; 
+export default function EditMeetingModal({
+  meeting,
+  onClose,
+  onSuccess,
+}: {
+  meeting: any;
+  onClose: () => void;
+  onSuccess: () => void;
 }) {
   const [title, setTitle] = useState(meeting.title || "");
   const [meetingDate, setMeetingDate] = useState("");
   const [linkUrl, setLinkUrl] = useState(meeting.link_url || "");
   const [notes, setNotes] = useState(meeting.notes || "");
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>(
-    meeting.students?.map((s: any) => s.id) || []
+    meeting.students?.map((s: any) => s.id) || [],
   );
-  
+
   // "single" or "series"
   const [editMode, setEditMode] = useState<"single" | "series">("single");
 
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Format existing date to datetime-local format
@@ -37,7 +38,9 @@ export default function EditMeetingModal({
       const date = new Date(meeting.meeting_date);
       // Adjust for local timezone offset to display correctly in input
       const offset = date.getTimezoneOffset() * 60000;
-      const localISOTime = (new Date(date.getTime() - offset)).toISOString().slice(0, 16);
+      const localISOTime = new Date(date.getTime() - offset)
+        .toISOString()
+        .slice(0, 16);
       setMeetingDate(localISOTime);
     }
 
@@ -58,10 +61,11 @@ export default function EditMeetingModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
 
     try {
       const dateObj = new Date(meetingDate);
-      
+
       const payload = {
         id: meeting.id,
         title,
@@ -71,7 +75,7 @@ export default function EditMeetingModal({
         studentIds: selectedStudentIds,
         editMode,
         seriesId: meeting.series_id,
-        sessionNumber: meeting.session_number
+        sessionNumber: meeting.session_number,
       };
 
       const res = await fetch("/api/admin/meetings", {
@@ -80,24 +84,24 @@ export default function EditMeetingModal({
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
 
       if (res.ok) {
         onSuccess();
       } else {
-        alert(data.error || "Gagal mengubah jadwal.");
+        setError(data?.error || "Gagal mengubah jadwal.");
       }
     } catch (error) {
       console.error(error);
-      alert("Terjadi kesalahan sistem.");
+      setError("Terjadi kesalahan sistem.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleStudentToggle = (id: string) => {
-    setSelectedStudentIds(prev => 
-      prev.includes(id) ? prev.filter(sId => sId !== id) : [...prev, id]
+    setSelectedStudentIds((prev) =>
+      prev.includes(id) ? prev.filter((sId) => sId !== id) : [...prev, id],
     );
   };
 
@@ -106,49 +110,75 @@ export default function EditMeetingModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
       <div className="bg-white rounded-lg w-full max-w-2xl max-h-full flex flex-col shadow-xl">
-        
         <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50 rounded-t-lg">
           <div>
-            <h2 className="text-xl font-semibold text-slate-900">Ubah Jadwal Pertemuan</h2>
+            <h2 className="text-xl font-semibold text-slate-900">
+              Ubah Jadwal Pertemuan
+            </h2>
             {isPartOfSeries && (
-              <p className="text-sm text-slate-500">Sesi {meeting.session_number} dari {meeting.session_count}</p>
+              <p className="text-sm text-slate-500">
+                Sesi {meeting.session_number} dari {meeting.session_count}
+              </p>
             )}
           </div>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-600">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
           </button>
         </div>
 
         <div className="px-6 py-4 overflow-y-auto">
-          <form id="edit-meeting-form" onSubmit={handleSubmit} className="space-y-6">
-            
+          <form
+            id="edit-meeting-form"
+            onSubmit={handleSubmit}
+            className="space-y-6"
+          >
             {isPartOfSeries && (
               <div className="bg-orange-50 border border-orange-200 rounded-md p-4 mb-6">
-                <p className="text-sm font-medium text-orange-800 mb-2">Jadwal ini merupakan bagian dari rangkaian (berulang).</p>
+                <p className="text-sm font-medium text-orange-800 mb-2">
+                  Jadwal ini merupakan bagian dari rangkaian (berulang).
+                </p>
                 <div className="space-y-2">
                   <label className="flex items-center space-x-3 cursor-pointer">
-                    <input 
-                      type="radio" 
-                      name="editMode" 
-                      value="single" 
-                      checked={editMode === "single"} 
+                    <input
+                      type="radio"
+                      name="editMode"
+                      value="single"
+                      checked={editMode === "single"}
                       onChange={() => setEditMode("single")}
                       className="h-4 w-4 text-blue-600 border-slate-300 focus:ring-blue-500"
                     />
-                    <span className="text-sm text-slate-700">Ubah sesi ini saja</span>
+                    <span className="text-sm text-slate-700">
+                      Ubah sesi ini saja
+                    </span>
                   </label>
                   <label className="flex items-center space-x-3 cursor-pointer">
-                    <input 
-                      type="radio" 
-                      name="editMode" 
-                      value="series" 
-                      checked={editMode === "series"} 
+                    <input
+                      type="radio"
+                      name="editMode"
+                      value="series"
+                      checked={editMode === "series"}
                       onChange={() => setEditMode("series")}
                       className="h-4 w-4 text-blue-600 border-slate-300 focus:ring-blue-500"
                     />
-                    <span className="text-sm text-slate-700">Ubah sesi ini dan seluruh sesi setelahnya (termasuk tanggal akan bergeser mengikuti)</span>
+                    <span className="text-sm text-slate-700">
+                      Ubah sesi ini dan seluruh sesi setelahnya (termasuk
+                      tanggal akan bergeser mengikuti)
+                    </span>
                   </label>
                 </div>
               </div>
@@ -156,47 +186,60 @@ export default function EditMeetingModal({
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-slate-700">Judul Pertemuan</label>
+                <label className="block text-sm font-medium text-slate-700">
+                  Judul Pertemuan
+                </label>
                 <input
                   type="text"
                   required
                   value={title}
-                  onChange={e => setTitle(e.target.value)}
+                  onChange={(e) => setTitle(e.target.value)}
                   className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700">Tanggal & Waktu</label>
+                <label className="block text-sm font-medium text-slate-700">
+                  Tanggal & Waktu
+                </label>
                 <input
                   type="datetime-local"
                   required
                   value={meetingDate}
-                  onChange={e => setMeetingDate(e.target.value)}
+                  onChange={(e) => setMeetingDate(e.target.value)}
                   className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700">Link Pertemuan (Opsional)</label>
+                <label className="block text-sm font-medium text-slate-700">
+                  Link Pertemuan (Opsional)
+                </label>
                 <input
                   type="url"
                   value={linkUrl}
-                  onChange={e => setLinkUrl(e.target.value)}
+                  onChange={(e) => setLinkUrl(e.target.value)}
                   className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700">Pilih Siswa yang Hadir</label>
+              <label className="block text-sm font-medium text-slate-700">
+                Pilih Siswa yang Hadir
+              </label>
               <div className="mt-1 border border-slate-200 rounded-md max-h-48 overflow-y-auto bg-slate-50 p-2">
                 {students.length === 0 ? (
-                  <p className="text-sm text-slate-500 p-2">Belum ada siswa yang terdaftar.</p>
+                  <p className="text-sm text-slate-500 p-2">
+                    Belum ada siswa yang terdaftar.
+                  </p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {students.map(student => (
-                      <label key={student.id} className="flex items-start space-x-3 p-2 hover:bg-white rounded border border-transparent hover:border-slate-200 cursor-pointer transition-colors">
+                    {students.map((student) => (
+                      <label
+                        key={student.id}
+                        className="flex items-start space-x-3 p-2 hover:bg-white rounded border border-transparent hover:border-slate-200 cursor-pointer transition-colors"
+                      >
                         <input
                           type="checkbox"
                           className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
@@ -204,8 +247,12 @@ export default function EditMeetingModal({
                           onChange={() => handleStudentToggle(student.id)}
                         />
                         <div className="flex flex-col">
-                          <span className="text-sm font-medium text-slate-900">{student.full_name}</span>
-                          <span className="text-xs text-slate-500">{student.email_or_phone}</span>
+                          <span className="text-sm font-medium text-slate-900">
+                            {student.full_name}
+                          </span>
+                          <span className="text-xs text-slate-500">
+                            {student.email_or_phone}
+                          </span>
                         </div>
                       </label>
                     ))}
@@ -215,15 +262,22 @@ export default function EditMeetingModal({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700">Catatan Tambahan</label>
+              <label className="block text-sm font-medium text-slate-700">
+                Catatan Tambahan
+              </label>
               <textarea
                 rows={3}
                 value={notes}
-                onChange={e => setNotes(e.target.value)}
+                onChange={(e) => setNotes(e.target.value)}
                 className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
             </div>
-            
+
+            {error && (
+              <p className="text-sm text-red-600 bg-red-50 rounded-md p-2">
+                {error}
+              </p>
+            )}
           </form>
         </div>
 
@@ -244,7 +298,6 @@ export default function EditMeetingModal({
             {loading ? "Menyimpan..." : "Simpan Perubahan"}
           </button>
         </div>
-
       </div>
     </div>
   );

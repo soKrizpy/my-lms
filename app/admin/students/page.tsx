@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import AdminToast, { type AdminNotice } from "../components/AdminToast";
 import AddStudentModal from "./AddStudentModal";
 
 interface AssignedModule {
@@ -23,6 +24,7 @@ export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [notice, setNotice] = useState<AdminNotice | null>(null);
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -45,29 +47,42 @@ export default function StudentsPage() {
 
   const handleExportCSV = () => {
     if (students.length === 0) return;
-    
+
     // CSV Header
-    const headers = ["Nama Lengkap", "Kontak (WA/Email)", "MPIN", "Kelas", "Modul Aktif", "Bio", "Terdaftar"];
-    
+    const headers = [
+      "Nama Lengkap",
+      "Kontak (WA/Email)",
+      "MPIN",
+      "Kelas",
+      "Modul Aktif",
+      "Bio",
+      "Terdaftar",
+    ];
+
     // CSV Rows
-    const rows = students.map(student => [
+    const rows = students.map((student) => [
       `"${student.full_name || ""}"`,
       `"${student.email_or_phone || ""}"`,
       `"${student.mpin || ""}"`,
       `"${student.grade || ""}"`,
-      `"${student.modules.map(m => m.name).join(", ")}"`,
+      `"${student.modules.map((m) => m.name).join(", ")}"`,
       `"${student.bio || ""}"`,
-      `"${new Date(student.created_at).toLocaleDateString("id-ID")}"`
+      `"${new Date(student.created_at).toLocaleDateString("id-ID")}"`,
     ]);
 
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + headers.join(",") + "\n" 
-      + rows.map(e => e.join(",")).join("\n");
+    const csvContent =
+      "data:text/csv;charset=utf-8," +
+      headers.join(",") +
+      "\n" +
+      rows.map((e) => e.join(",")).join("\n");
 
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `Data_Siswa_LMS_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute(
+      "download",
+      `Data_Siswa_LMS_${new Date().toISOString().slice(0, 10)}.csv`,
+    );
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -75,6 +90,7 @@ export default function StudentsPage() {
 
   return (
     <div className="space-y-6">
+      <AdminToast notice={notice} onDismiss={() => setNotice(null)} />
       <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-xl font-semibold text-slate-900">Siswa</h1>
@@ -82,24 +98,44 @@ export default function StudentsPage() {
             Kelola daftar siswa, MPIN, dan modul yang mereka ambil.
           </p>
         </div>
-        
+
         <div className="flex gap-2">
-          <button 
+          <button
             onClick={handleExportCSV}
             disabled={students.length === 0}
             className="inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50 transition-colors"
           >
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+              />
             </svg>
             Export CSV
           </button>
-          <button 
+          <button
             onClick={() => setIsModalOpen(true)}
             className="inline-flex items-center rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 transition-colors"
           >
-            <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+            <svg
+              className="w-4 h-4 mr-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+              />
             </svg>
             Tambah Siswa
           </button>
@@ -111,36 +147,69 @@ export default function StudentsPage() {
           <table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-slate-50">
               <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Nama & Kontak</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Kelas & Akses</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Modul Aktif</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Terdaftar</th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                >
+                  Nama & Kontak
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                >
+                  Kelas & Akses
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                >
+                  Modul Aktif
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                >
+                  Terdaftar
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 bg-white">
               {loading ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-sm text-slate-500">
+                  <td
+                    colSpan={4}
+                    className="px-6 py-12 text-center text-sm text-slate-500"
+                  >
                     Memuat data siswa...
                   </td>
                 </tr>
               ) : students.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-sm text-slate-500">
+                  <td
+                    colSpan={4}
+                    className="px-6 py-12 text-center text-sm text-slate-500"
+                  >
                     Belum ada siswa yang terdaftar.
                   </td>
                 </tr>
               ) : (
                 students.map((student) => (
-                  <tr key={student.id} className="hover:bg-slate-50 transition-colors">
+                  <tr
+                    key={student.id}
+                    className="hover:bg-slate-50 transition-colors"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="h-10 w-10 flex-shrink-0 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold uppercase">
                           {student.full_name?.charAt(0) || "?"}
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-slate-900">{student.full_name}</div>
-                          <div className="text-xs text-slate-500">{student.email_or_phone}</div>
+                          <div className="text-sm font-medium text-slate-900">
+                            {student.full_name}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            {student.email_or_phone}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -149,29 +218,52 @@ export default function StudentsPage() {
                         {student.grade || "Belum diatur"}
                       </span>
                       <div className="text-xs text-slate-500 flex items-center gap-1 mt-1">
-                        <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                          />
                         </svg>
-                        MPIN: <span className="font-mono bg-slate-100 px-1 rounded">{student.mpin || "------"}</span>
+                        MPIN:{" "}
+                        <span className="font-mono bg-slate-100 px-1 rounded">
+                          {student.mpin || "------"}
+                        </span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-wrap gap-1 max-w-[250px]">
                         {student.modules.length > 0 ? (
-                          student.modules.map(mod => (
-                            <span key={mod.id} className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600">
+                          student.modules.map((mod) => (
+                            <span
+                              key={mod.id}
+                              className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600"
+                            >
                               {mod.name}
                             </span>
                           ))
                         ) : (
-                          <span className="text-xs text-slate-400 italic">Belum ada modul</span>
+                          <span className="text-xs text-slate-400 italic">
+                            Belum ada modul
+                          </span>
                         )}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
-                      {new Date(student.created_at).toLocaleDateString("id-ID", {
-                        day: 'numeric', month: 'short', year: 'numeric'
-                      })}
+                      {new Date(student.created_at).toLocaleDateString(
+                        "id-ID",
+                        {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        },
+                      )}
                     </td>
                   </tr>
                 ))
@@ -182,12 +274,13 @@ export default function StudentsPage() {
       </section>
 
       {isModalOpen && (
-        <AddStudentModal 
-          onClose={() => setIsModalOpen(false)} 
+        <AddStudentModal
+          onClose={() => setIsModalOpen(false)}
           onSuccess={() => {
             setIsModalOpen(false);
             fetchStudents();
-          }} 
+            setNotice({ type: "success", text: "Siswa berhasil ditambahkan." });
+          }}
         />
       )}
     </div>

@@ -29,7 +29,11 @@ export default function AddModuleForm({ onSubmit }: AddModuleFormProps) {
       setDescription("");
       setLevel("beginner");
     } catch (err) {
-      setError("Gagal menyimpan modul. Silakan coba lagi.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Gagal menyimpan modul. Silakan coba lagi.",
+      );
       console.error(err);
     } finally {
       setIsSubmitting(false);

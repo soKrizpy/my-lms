@@ -41,7 +41,8 @@ export async function POST(request: Request) {
     const supabaseAdmin = getSupabaseAdmin();
     const body = await request.json();
     const name = typeof body?.name === "string" ? body.name.trim() : "";
-    const description = typeof body?.description === "string" ? body.description : "";
+    const description =
+      typeof body?.description === "string" ? body.description : "";
     const level = typeof body?.level === "string" ? body.level : "beginner";
 
     if (!name) {
@@ -91,11 +92,15 @@ export async function PUT(request: Request) {
     const body = await request.json();
     const id = body?.id;
     const name = typeof body?.name === "string" ? body.name.trim() : "";
-    const description = typeof body?.description === "string" ? body.description : "";
+    const description =
+      typeof body?.description === "string" ? body.description : "";
     const level = typeof body?.level === "string" ? body.level : "beginner";
 
     if (!id || !name) {
-      return NextResponse.json({ error: "ID dan Nama modul wajib diisi." }, { status: 400 });
+      return NextResponse.json(
+        { error: "ID dan Nama modul wajib diisi." },
+        { status: 400 },
+      );
     }
 
     const { data, error } = await supabaseAdmin
@@ -107,12 +112,18 @@ export async function PUT(request: Request) {
 
     if (error) throw error;
     if (!data) {
-      return NextResponse.json({ error: "Modul tidak ditemukan." }, { status: 404 });
+      return NextResponse.json(
+        { error: "Modul tidak ditemukan." },
+        { status: 404 },
+      );
     }
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    return NextResponse.json({ error: getErrorMessage(error, "Permintaan tidak valid.") }, { status: 500 });
+    return NextResponse.json(
+      { error: getErrorMessage(error, "Permintaan tidak valid.") },
+      { status: 500 },
+    );
   }
 }
 
@@ -120,15 +131,83 @@ export async function DELETE(request: Request) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
+    const idParam = searchParams.get("id");
+    const moduleId = Number(idParam);
 
-    if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
+    if (!idParam || !Number.isFinite(moduleId)) {
+      return NextResponse.json(
+        { error: "Missing or invalid module ID" },
+        { status: 400 },
+      );
+    }
 
-    const { error } = await supabaseAdmin.from("modules").delete().eq("id", id);
-    if (error) throw error;
+    const { data: topics, error: topicsError } = await supabaseAdmin
+      .from("topics")
+      .select("id")
+      .eq("module_id", moduleId);
+
+    if (topicsError) throw topicsError;
+
+    const topicIds = (topics ?? [])
+      .map((topic) => topic.id)
+      .filter((id): id is number => Number.isFinite(id));
+
+    let quizIds: number[] = [];
+
+    if (topicIds.length > 0) {
+      const { data: quizzes, error: quizzesError } = await supabaseAdmin
+        .from("quizzes")
+        .select("id")
+        .in("topic_id", topicIds);
+
+      if (quizzesError) throw quizzesError;
+
+      quizIds = (quizzes ?? [])
+        .map((quiz) => quiz.id)
+        .filter((id): id is number => Number.isFinite(id));
+    }
+
+    if (quizIds.length > 0) {
+      const [{ error: attemptsError }, { error: questionsError }] =
+        await Promise.all([
+          supabaseAdmin.from("quiz_attempts").delete().in("quiz_id", quizIds),
+          supabaseAdmin.from("quiz_questions").delete().in("quiz_id", quizIds),
+        ]);
+
+      if (attemptsError) throw attemptsError;
+      if (questionsError) throw questionsError;
+    }
+
+    if (quizIds.length > 0) {
+      const { error: quizzesError } = await supabaseAdmin
+        .from("quizzes")
+        .delete()
+        .in("id", quizIds);
+
+      if (quizzesError) throw quizzesError;
+    }
+
+    if (topicIds.length > 0) {
+      const { error: topicsDeleteError } = await supabaseAdmin
+        .from("topics")
+        .delete()
+        .in("id", topicIds);
+
+      if (topicsDeleteError) throw topicsDeleteError;
+    }
+
+    const { error: moduleError } = await supabaseAdmin
+      .from("modules")
+      .delete()
+      .eq("id", moduleId);
+
+    if (moduleError) throw moduleError;
 
     return NextResponse.json({ success: true });
   } catch (error: unknown) {
-    return NextResponse.json({ error: getErrorMessage(error) }, { status: 500 });
+    return NextResponse.json(
+      { error: getErrorMessage(error) },
+      { status: 500 },
+    );
   }
 }
