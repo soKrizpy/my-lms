@@ -1,0 +1,89 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { getSupabaseAdmin } from "../../../../../lib/supabaseAdmin";
+
+function readString(formData: FormData, key: string) {
+  const value = formData.get(key);
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function topicPath(moduleId: string) {
+  return `/admin/modules/${moduleId}/topics`;
+}
+
+export async function createTopicAction(formData: FormData) {
+  const moduleId = readString(formData, "moduleId");
+  const title = readString(formData, "title");
+  const orderIndex = Number(readString(formData, "orderIndex"));
+  const description = readString(formData, "description");
+  const projectLink = readString(formData, "projectLink");
+
+  if (!moduleId || !title || !Number.isFinite(orderIndex)) {
+    throw new Error("ID modul, judul, dan urutan topik wajib diisi.");
+  }
+
+  const supabaseAdmin = getSupabaseAdmin();
+  const { error } = await supabaseAdmin.from("topics").insert({
+    module_id: Number(moduleId),
+    title,
+    order_index: orderIndex,
+    description: description || null,
+    project_link: projectLink || null,
+  });
+
+  if (error) throw error;
+
+  revalidatePath(topicPath(moduleId));
+  revalidatePath("/admin/modules");
+}
+
+export async function updateTopicAction(formData: FormData) {
+  const moduleId = readString(formData, "moduleId");
+  const topicId = Number(readString(formData, "topicId"));
+  const title = readString(formData, "title");
+  const orderIndex = Number(readString(formData, "orderIndex"));
+  const description = readString(formData, "description");
+  const projectLink = readString(formData, "projectLink");
+
+  if (!moduleId || !topicId || !title || !Number.isFinite(orderIndex)) {
+    throw new Error("ID, judul, dan urutan topik wajib diisi.");
+  }
+
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
+    .from("topics")
+    .update({
+      title,
+      order_index: orderIndex,
+      description: description || null,
+      project_link: projectLink || null,
+    })
+    .eq("id", topicId)
+    .eq("module_id", Number(moduleId))
+    .select("id")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) throw new Error("Topik tidak ditemukan.");
+
+  revalidatePath(topicPath(moduleId));
+  revalidatePath("/admin/modules");
+}
+
+export async function deleteTopicAction(formData: FormData) {
+  const moduleId = readString(formData, "moduleId");
+  const topicId = Number(readString(formData, "topicId"));
+
+  if (!moduleId || !topicId) {
+    throw new Error("ID topik wajib diisi.");
+  }
+
+  const supabaseAdmin = getSupabaseAdmin();
+  const { error } = await supabaseAdmin.from("topics").delete().eq("id", topicId);
+
+  if (error) throw error;
+
+  revalidatePath(topicPath(moduleId));
+  revalidatePath("/admin/modules");
+}

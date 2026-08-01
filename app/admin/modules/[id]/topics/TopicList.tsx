@@ -1,146 +1,189 @@
-"use client";
-
 import Link from "next/link";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { deleteTopicAction, updateTopicAction } from "./actions";
 
-export function TopicList({ initialTopics, moduleId }: { initialTopics: any[], moduleId: string }) {
-  const router = useRouter();
-  const [editingTopic, setEditingTopic] = useState<any | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [projectLink, setProjectLink] = useState("");
-  const [orderIndex, setOrderIndex] = useState<number | "">("");
+type Topic = {
+  id: number;
+  title: string;
+  order_index: number;
+  description?: string | null;
+  project_link?: string | null;
+};
 
-  const handleEdit = (topic: any) => {
-    setEditingTopic(topic);
-    setTitle(topic.title);
-    setDescription(topic.description || "");
-    setProjectLink(topic.project_link || "");
-    setOrderIndex(topic.order_index);
-  };
-
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/modules/${moduleId}/topics`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          id: editingTopic.id,
-          title,
-          description,
-          projectLink,
-          orderIndex: Number(orderIndex)
-        }),
-      });
-      if (res.ok) {
-        setEditingTopic(null);
-        router.refresh();
-      } else {
-        alert("Gagal mengubah topik.");
-      }
-    } catch {
-      alert("Terjadi kesalahan.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async (id: number) => {
-    if (!confirm("Yakin ingin menghapus topik ini beserta semua kuis di dalamnya?")) return;
-    try {
-      const res = await fetch(`/api/modules/${moduleId}/topics?id=${id}`, { method: "DELETE" });
-      if (res.ok) {
-        router.refresh();
-      } else {
-        alert("Gagal menghapus topik.");
-      }
-    } catch {
-      alert("Terjadi kesalahan.");
-    }
-  };
-
+export function TopicList({
+  initialTopics,
+  moduleId,
+}: {
+  initialTopics: Topic[];
+  moduleId: string;
+}) {
   if (!initialTopics || initialTopics.length === 0) {
-    return <p className="text-sm text-slate-500">Belum ada topik untuk modul ini.</p>;
+    return (
+      <p className="text-sm text-slate-500">Belum ada topik untuk modul ini.</p>
+    );
   }
 
   return (
-    <>
-      <ol className="space-y-2">
-        {initialTopics.map((topic: any) => (
-          <li key={topic.id} className="flex flex-col space-y-3 rounded-md border border-slate-200 bg-white p-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-800">
-                {topic.order_index}. {topic.title}
-              </span>
-              <div className="flex gap-2">
-                <button onClick={() => handleEdit(topic)} className="text-slate-400 hover:text-blue-600 p-1">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                </button>
-                <button onClick={() => handleDelete(topic.id)} className="text-slate-400 hover:text-red-600 p-1">
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                </button>
-                <Link href={`/admin/modules/${moduleId}/topics/${topic.id}/quiz`} className="text-sm font-medium text-slate-900 underline ml-2">
+    <ol className="space-y-3">
+      {initialTopics.map((topic) => {
+        const editTitleId = `topic-${topic.id}-title`;
+        const editOrderId = `topic-${topic.id}-order`;
+        const editDescriptionId = `topic-${topic.id}-description`;
+        const editProjectLinkId = `topic-${topic.id}-project-link`;
+
+        return (
+          <li
+            key={topic.id}
+            className="flex flex-col space-y-3 rounded-md border border-slate-200 bg-white p-4"
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <span className="text-sm font-semibold text-slate-800">
+                  {topic.order_index}. {topic.title}
+                </span>
+
+                {topic.description && (
+                  <div
+                    className="prose prose-sm mt-2 max-w-none text-sm text-slate-600"
+                    dangerouslySetInnerHTML={{ __html: topic.description }}
+                  />
+                )}
+
+                {topic.project_link && (
+                  <div className="mt-2">
+                    <a
+                      href={topic.project_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-sm font-medium text-blue-600 hover:underline"
+                    >
+                      <svg
+                        className="mr-1.5 h-4 w-4"
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                        <polyline points="15 3 21 3 21 9" />
+                        <line x1="10" y1="14" x2="21" y2="3" />
+                      </svg>
+                      Buka Project
+                    </a>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex shrink-0 items-center gap-2">
+                <Link
+                  href={`/admin/modules/${moduleId}/topics/${topic.id}/quiz`}
+                  className="text-sm font-medium text-slate-900 underline"
+                >
                   Kelola quiz
                 </Link>
+                <form action={deleteTopicAction}>
+                  <input type="hidden" name="moduleId" value={moduleId} />
+                  <input type="hidden" name="topicId" value={topic.id} />
+                  <button
+                    type="submit"
+                    className="rounded-md border border-red-200 px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-50"
+                  >
+                    Hapus
+                  </button>
+                </form>
               </div>
             </div>
 
-            {topic.description && (
-              <div className="text-sm text-slate-600 prose prose-sm max-w-none" dangerouslySetInnerHTML={{ __html: topic.description }} />
-            )}
-            
-            {topic.project_link && (
-              <div>
-                <a href={topic.project_link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center text-sm font-medium text-blue-600 hover:underline">
-                  <svg className="mr-1.5 h-4 w-4" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
-                  Buka Project
-                </a>
-              </div>
-            )}
-          </li>
-        ))}
-      </ol>
+            <details className="rounded-md border border-slate-200 bg-slate-50 p-3">
+              <summary className="cursor-pointer text-sm font-semibold text-slate-900">
+                Edit Topik
+              </summary>
 
-      {editingTopic && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="bg-white rounded-lg w-full max-w-md shadow-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-slate-900">Edit Topik</h2>
-              <button onClick={() => setEditingTopic(null)} className="text-slate-400 hover:text-slate-600">
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-            </div>
-            <form onSubmit={handleUpdate} className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-slate-700">Judul Topik</label>
-                <input type="text" required value={title} onChange={e => setTitle(e.target.value)} className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700">Urutan (Order)</label>
-                <input type="number" required value={orderIndex} onChange={e => setOrderIndex(Number(e.target.value))} className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700">Deskripsi / Iframe Embed</label>
-                <textarea rows={3} value={description} onChange={e => setDescription(e.target.value)} className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700">Link Project</label>
-                <input type="url" value={projectLink} onChange={e => setProjectLink(e.target.value)} className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm" />
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <button type="button" onClick={() => setEditingTopic(null)} className="px-3 py-2 text-sm text-slate-700 border rounded-md hover:bg-slate-50">Batal</button>
-                <button type="submit" disabled={loading || !title} className="px-3 py-2 text-sm text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50">
-                  {loading ? "Menyimpan..." : "Simpan"}
+              <form action={updateTopicAction} className="mt-4 space-y-4">
+                <input type="hidden" name="moduleId" value={moduleId} />
+                <input type="hidden" name="topicId" value={topic.id} />
+
+                <div>
+                  <label
+                    htmlFor={editTitleId}
+                    className="block text-sm font-medium text-slate-700"
+                  >
+                    Judul Topik
+                  </label>
+                  <input
+                    id={editTitleId}
+                    name="title"
+                    type="text"
+                    required
+                    defaultValue={topic.title}
+                    className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={editOrderId}
+                    className="block text-sm font-medium text-slate-700"
+                  >
+                    Urutan (Order)
+                  </label>
+                  <input
+                    id={editOrderId}
+                    name="orderIndex"
+                    type="number"
+                    required
+                    defaultValue={topic.order_index}
+                    className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={editDescriptionId}
+                    className="block text-sm font-medium text-slate-700"
+                  >
+                    Deskripsi / Iframe Embed
+                  </label>
+                  <textarea
+                    id={editDescriptionId}
+                    name="description"
+                    rows={3}
+                    defaultValue={topic.description ?? ""}
+                    className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={editProjectLinkId}
+                    className="block text-sm font-medium text-slate-700"
+                  >
+                    Link Project
+                  </label>
+                  <input
+                    id={editProjectLinkId}
+                    name="projectLink"
+                    type="url"
+                    defaultValue={topic.project_link ?? ""}
+                    className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                >
+                  Simpan
                 </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </>
+              </form>
+            </details>
+          </li>
+        );
+      })}
+    </ol>
   );
 }

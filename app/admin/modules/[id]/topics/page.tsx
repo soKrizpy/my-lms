@@ -1,7 +1,6 @@
 // app/admin/modules/[id]/topics/page.tsx
 
-import Link from "next/link";
-import { getModuleById, getTopicsByModuleId } from "../../../../../lib/lmsData";
+import { getSupabaseAdmin } from "../../../../../lib/supabaseAdmin";
 import { AddTopicForm } from "./AddTopicForm";
 import { TopicList } from "./TopicList";
 
@@ -35,11 +34,17 @@ export default async function ModuleTopicsPage({ params }: PageProps) {
     );
   }
 
-  const { data: moduleData, error: moduleError } =
-    await getModuleById(moduleIdParam);
-  const { data: topics, error: topicsError } = await getTopicsByModuleId(
-    Number(moduleIdParam),
-  );
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data: moduleData, error: moduleError } = await supabaseAdmin
+    .from("modules")
+    .select("id, title, description")
+    .eq("id", Number(moduleIdParam))
+    .maybeSingle();
+  const { data: topics, error: topicsError } = await supabaseAdmin
+    .from("topics")
+    .select("id, title, module_id, order_index, description, project_link")
+    .eq("module_id", Number(moduleIdParam))
+    .order("order_index", { ascending: true });
 
   if (moduleError) {
     return (
