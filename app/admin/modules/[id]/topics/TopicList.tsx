@@ -20,6 +20,10 @@ export function TopicList({
   moduleId: string;
 }) {
   const [isPending, startTransition] = useTransition();
+  const [openSynopsis, setOpenSynopsis] = useState<Record<number, boolean>>({});
+
+  const toggleSynopsis = (topicId: number) =>
+    setOpenSynopsis((prev) => ({ ...prev, [topicId]: !prev[topicId] }));
 
   if (!initialTopics || initialTopics.length === 0) {
     return (
@@ -47,10 +51,26 @@ export function TopicList({
                 </span>
 
                 {topic.description && (
-                  <div
-                    className="prose prose-sm mt-3 max-w-none text-sm text-slate-600 max-h-48 overflow-y-auto pr-2"
-                    dangerouslySetInnerHTML={{ __html: topic.description.replace(/\n/g, "<br />") }}
-                  />
+                  <>
+                    <button
+                      onClick={() => toggleSynopsis(topic.id)}
+                      className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 mt-2 font-medium"
+                    >
+                      <span>{openSynopsis[topic.id] ? "Tutup sinopsis" : "Lihat sinopsis"}</span>
+                      <svg
+                        className={`w-3.5 h-3.5 transition-transform ${openSynopsis[topic.id] ? "rotate-180" : ""}`}
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {openSynopsis[topic.id] && (
+                      <div
+                        className="prose prose-sm mt-2 max-w-none text-sm text-slate-600 max-h-48 overflow-y-auto pr-2 border-l-2 border-blue-100 pl-2"
+                        dangerouslySetInnerHTML={{ __html: topic.description.replace(/\n/g, "<br />") }}
+                      />
+                    )}
+                  </>
                 )}
 
                 {topic.project_link && (
