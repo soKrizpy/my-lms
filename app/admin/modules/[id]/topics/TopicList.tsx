@@ -48,8 +48,8 @@ export function TopicList({
 
                 {topic.description && (
                   <div
-                    className="prose prose-sm mt-2 max-w-none text-sm text-slate-600"
-                    dangerouslySetInnerHTML={{ __html: topic.description }}
+                    className="prose prose-sm mt-3 max-w-none text-sm text-slate-600 max-h-48 overflow-y-auto pr-2"
+                    dangerouslySetInnerHTML={{ __html: topic.description.replace(/\n/g, "<br />") }}
                   />
                 )}
 

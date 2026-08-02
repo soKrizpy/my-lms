@@ -81,7 +81,7 @@ export async function GET() {
     // - Once budget is 0, remaining modules are fully locked
     const nowMs = Date.now();
     let remainingUnlocks = (meetings || []).filter(
-      m => new Date(m.meeting_date).getTime() <= nowMs && m.completion_status !== 'terlewat'
+      (m: any) => m.meeting_students?.[0]?.has_joined
     ).length;
 
     modulesWithTopics = (studentModules || []).map((sm: any) => {

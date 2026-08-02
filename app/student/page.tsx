@@ -14,6 +14,7 @@ interface Meeting {
   is_completed: boolean;
   progress_report: string | null;
   globalIndex: number;
+  meeting_students?: { student_id: string; has_joined: boolean }[];
 }
 
 interface Topic {
@@ -113,10 +114,22 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
       </div>
 
       {/* Action */}
-      {isCompleted ? (
-        <div className="flex items-center justify-center w-full bg-green-100 text-green-700 rounded-lg py-2 text-sm font-medium border border-green-200">
-          Kelas Selesai
-        </div>
+      {isCompleted || now >= meetTime + 30 * 60 * 1000 ? (
+        meet.meeting_students?.[0]?.has_joined ? (
+          hasAttempted ? (
+            <div className="flex items-center justify-center w-full bg-green-100 text-green-700 rounded-lg py-2 text-sm font-medium border border-green-200">
+              Kelas Selesai
+            </div>
+          ) : (
+            <div className="flex items-center justify-center w-full bg-orange-100 text-orange-700 rounded-lg py-2 text-sm font-medium border border-orange-200">
+              Selesaikan Quiz
+            </div>
+          )
+        ) : (
+          <div className="flex items-center justify-center w-full bg-red-100 text-red-700 rounded-lg py-2 text-sm font-medium border border-red-200">
+            Tidak Hadir (Missing Class)
+          </div>
+        )
       ) : canJoinLive && meet.link_url ? (
         <div className="relative animate-pulse rounded-lg overflow-hidden">
           <a href={meet.link_url} target="_blank" rel="noopener noreferrer"
@@ -133,16 +146,6 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
             Bergabung Sekarang!
           </a>
         </div>
-      ) : now >= meetTime + 30 * 60 * 1000 ? (
-        hasAttempted ? (
-          <div className="flex items-center justify-center w-full bg-green-100 text-green-700 rounded-lg py-2 text-sm font-medium border border-green-200">
-            Pembelajaran Selesai
-          </div>
-        ) : (
-          <div className="flex items-center justify-center w-full bg-orange-100 text-orange-700 rounded-lg py-2 text-sm font-medium border border-orange-200">
-            Selesaikan Quiz
-          </div>
-        )
       ) : (
         <div className="text-center">
           {timeLeft && (
@@ -386,9 +389,10 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
                           </p>
                           {topic.isUnlocked && topic.description && (
                             <div
-                              className="prose prose-sm max-w-none text-xs text-slate-500 mt-2 max-h-24 overflow-y-auto pr-2"
-                              dangerouslySetInnerHTML={{ __html: topic.description }}
-                            />
+                              className="text-xs text-slate-600 mt-3 max-h-48 overflow-y-auto pr-2 whitespace-pre-wrap leading-relaxed"
+                            >
+                              {topic.description.replace(/<[^>]*>?/gm, "")}
+                            </div>
                           )}
                           {topic.isUnlocked && topic.project_link && (
                             <a
