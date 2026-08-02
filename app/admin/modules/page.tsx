@@ -6,6 +6,7 @@ import React, { useEffect, useState } from "react";
 import AdminToast, { type AdminNotice } from "../components/AdminToast";
 import AddModuleForm from "./AddModuleForm";
 import EditModuleModal from "./EditModuleModal";
+import AssignModuleModal from "./AssignModuleModal";
 
 interface TopicSummary {
   id: number;
@@ -25,6 +26,7 @@ export default function ModulesPage() {
   const [topicMap, setTopicMap] = useState<Record<string, TopicSummary[]>>({});
   const [loading, setLoading] = useState(true);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
+  const [assigningModule, setAssigningModule] = useState<Module | null>(null);
   const [notice, setNotice] = useState<AdminNotice | null>(null);
 
   async function handleDeleteModule(id: string) {
@@ -186,6 +188,25 @@ export default function ModulesPage() {
                       </svg>
                     </button>
                     <button
+                      onClick={() => setAssigningModule(mod)}
+                      className="text-slate-400 hover:text-green-600 p-1"
+                      title="Assign Modul ke Siswa"
+                    >
+                      <svg
+                        className="w-4 h-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
+                        />
+                      </svg>
+                    </button>
+                    <button
                       onClick={() => handleDeleteModule(mod.id)}
                       className="text-slate-400 hover:text-red-600 p-1"
                       title="Hapus Modul"
@@ -275,6 +296,16 @@ export default function ModulesPage() {
             setEditingModule(null);
             loadModules();
             setNotice({ type: "success", text: "Modul berhasil diperbarui." });
+          }}
+        />
+      )}
+      {assigningModule && (
+        <AssignModuleModal
+          module={assigningModule}
+          onClose={() => setAssigningModule(null)}
+          onSuccess={() => {
+            setAssigningModule(null);
+            setNotice({ type: "success", text: "Modul berhasil di-assign ke siswa." });
           }}
         />
       )}
