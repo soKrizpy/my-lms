@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useTransition } from "react";
 import { deleteTopicAction, updateTopicAction } from "./actions";
 
 type Topic = {
@@ -18,6 +19,8 @@ export function TopicList({
   initialTopics: Topic[];
   moduleId: string;
 }) {
+  const [isPending, startTransition] = useTransition();
+
   if (!initialTopics || initialTopics.length === 0) {
     return (
       <p className="text-sm text-slate-500">Belum ada topik untuk modul ini.</p>
@@ -105,7 +108,19 @@ export function TopicList({
                 Edit Topik
               </summary>
 
-              <form action={updateTopicAction} className="mt-4 space-y-4">
+              <form
+                action={(formData) => {
+                  startTransition(async () => {
+                    try {
+                      await updateTopicAction(formData);
+                      alert("Topik berhasil disimpan!");
+                    } catch (err: any) {
+                      alert("Gagal menyimpan topik: " + err.message);
+                    }
+                  });
+                }}
+                className="mt-4 space-y-4"
+              >
                 <input type="hidden" name="moduleId" value={moduleId} />
                 <input type="hidden" name="topicId" value={topic.id} />
 
@@ -178,9 +193,10 @@ export function TopicList({
 
                 <button
                   type="submit"
-                  className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                  disabled={isPending}
+                  className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
                 >
-                  Simpan
+                  {isPending ? "Menyimpan..." : "Simpan"}
                 </button>
               </form>
             </details>

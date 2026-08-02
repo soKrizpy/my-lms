@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { updateQuizQuestion, deleteQuizQuestion } from "../../../lib/lmsData";
+import { getSupabaseAdmin } from "../../../lib/supabaseAdmin";
 
 export async function PUT(request: Request) {
   try {
@@ -8,7 +8,15 @@ export async function PUT(request: Request) {
     
     if (!id || !question) return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
 
-    const { error } = await updateQuizQuestion(id, { question, optionA, optionB, optionC, optionD, correct });
+    const supabaseAdmin = getSupabaseAdmin();
+    const { error } = await supabaseAdmin.from("quiz_questions").update({
+      question_text: question,
+      option_a: optionA,
+      option_b: optionB,
+      option_c: optionC,
+      option_d: optionD,
+      correct_option: correct,
+    }).eq("id", id);
     if (error) throw error;
     
     return NextResponse.json({ success: true });
@@ -24,7 +32,8 @@ export async function DELETE(request: Request) {
     
     if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
 
-    const { error } = await deleteQuizQuestion(Number(id));
+    const supabaseAdmin = getSupabaseAdmin();
+    const { error } = await supabaseAdmin.from("quiz_questions").delete().eq("id", Number(id));
     if (error) throw error;
 
     return NextResponse.json({ success: true });
