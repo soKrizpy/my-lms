@@ -384,15 +384,12 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
                           <p className={`text-sm font-medium ${topic.isUnlocked ? "text-slate-800" : "text-slate-400"}`}>
                             {topic.order_index}. {topic.title}
                           </p>
-                          {topic.isUnlocked && (() => {
-                            // Strip HTML tags to show plain-text synopsis only
-                            const synopsis = topic.description
-                              ? topic.description.replace(/<[^>]*>/g, "").trim()
-                              : null;
-                            return synopsis ? (
-                              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed line-clamp-2">{synopsis}</p>
-                            ) : null;
-                          })()}
+                          {topic.isUnlocked && topic.description && (
+                            <div
+                              className="prose prose-sm max-w-none text-xs text-slate-500 mt-2 max-h-24 overflow-y-auto pr-2"
+                              dangerouslySetInnerHTML={{ __html: topic.description }}
+                            />
+                          )}
                           {topic.isUnlocked && topic.project_link && (
                             <a
                               href={topic.project_link}
