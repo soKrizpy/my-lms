@@ -580,6 +580,14 @@ export default function StudentDashboard() {
 
   return (
     <div className="space-y-5">
+      {/* Greeting */}
+      {!loading && data?.studentName && (
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">Halo, {data.studentName}! 👋</h1>
+          <p className="text-sm text-slate-500 mt-1">Semangat belajarnya hari ini.</p>
+        </div>
+      )}
+
       {/* Announcement Banner */}
       {announcement && (
         <div className="bg-blue-600 text-white rounded-xl px-5 py-3.5 flex items-start gap-3 shadow-md">

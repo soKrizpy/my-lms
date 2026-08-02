@@ -125,11 +125,16 @@ export async function GET() {
     .order("created_at", { ascending: false })
     .limit(1);
 
+  const studentName = user.user_metadata?.full_name || "Siswa";
+  // take only first name for casual greeting
+  const firstName = studentName.split(" ")[0];
+
   return NextResponse.json({
     upcomingMeetings,
     pastMeetings,
     modules: modulesWithTopics,
     quizAttempts: quizAttempts || [],
     announcement: announcements?.[0]?.content || null,
+    studentName: firstName,
   });
 }

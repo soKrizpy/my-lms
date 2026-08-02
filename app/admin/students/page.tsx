@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import AdminToast, { type AdminNotice } from "../components/AdminToast";
 import AddStudentModal from "./AddStudentModal";
+import EditStudentModal from "./EditStudentModal";
 
 interface AssignedModule {
   id: number;
@@ -23,8 +24,9 @@ interface Student {
 export default function StudentsPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [notice, setNotice] = useState<AdminNotice | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -86,6 +88,22 @@ export default function StudentsPage() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Yakin ingin menghapus siswa ${name}?`)) return;
+    try {
+      const res = await fetch(`/api/admin/students/${id}`, { method: "DELETE" });
+      if (res.ok) {
+        setNotice({ type: "success", text: "Siswa berhasil dihapus." });
+        fetchStudents();
+      } else {
+        const data = await res.json();
+        setNotice({ type: "error", text: data.error || "Gagal menghapus siswa." });
+      }
+    } catch (err) {
+      setNotice({ type: "error", text: "Terjadi kesalahan sistem." });
+    }
   };
 
   return (
@@ -170,6 +188,12 @@ export default function StudentsPage() {
                   className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider"
                 >
                   Terdaftar
+                </th>
+                <th
+                  scope="col"
+                  className="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider"
+                >
+                  Aksi
                 </th>
               </tr>
             </thead>
@@ -265,6 +289,20 @@ export default function StudentsPage() {
                         },
                       )}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => setEditingStudent(student)}
+                        className="text-blue-600 hover:text-blue-900 mr-4"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(student.id, student.full_name)}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        Hapus
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -280,6 +318,18 @@ export default function StudentsPage() {
             setIsModalOpen(false);
             fetchStudents();
             setNotice({ type: "success", text: "Siswa berhasil ditambahkan." });
+          }}
+        />
+      )}
+
+      {editingStudent && (
+        <EditStudentModal
+          student={editingStudent}
+          onClose={() => setEditingStudent(null)}
+          onSuccess={() => {
+            setEditingStudent(null);
+            fetchStudents();
+            setNotice({ type: "success", text: "Data siswa berhasil diubah." });
           }}
         />
       )}
