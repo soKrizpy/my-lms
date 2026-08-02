@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "../../../../../lib/supabaseAdmin";
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
-    const { id } = params;
+    const { id } = await params;
 
     // 1. Delete student records (student_modules, students) — cascading should handle some, but let's be safe.
     await supabaseAdmin.from("student_modules").delete().eq("student_id", id);
@@ -21,10 +21,10 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
   }
 }
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
-    const { id } = params;
+    const { id } = await params;
     const body = await request.json();
     const { fullName, contact, mpin, grade, bio, moduleIds } = body;
 
