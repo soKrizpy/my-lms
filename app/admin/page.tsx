@@ -21,6 +21,65 @@ function useCountdown(targetDate: string) {
   return timeLeft;
 }
 
+// --- Progress Report Modal (same as riwayat tab) ---
+function ProgressReportModal({ meet, onClose, onSuccess }: { meet: any; onClose: () => void; onSuccess: () => void }) {
+  const [report, setReport] = useState(meet.progress_report || "");
+  const [completionStatus, setCompletionStatus] = useState<"selesai" | "terlewat">("selesai");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/meetings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: meet.id, progressReport: report, completionStatus }),
+      });
+      if (res.ok) { onSuccess(); onClose(); }
+      else alert("Gagal menyimpan laporan.");
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-lg w-full max-w-lg shadow-xl">
+        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 rounded-t-lg">
+          <h2 className="text-lg font-semibold text-slate-900">Report Progress</h2>
+          <p className="text-sm text-slate-500">{meet.title} — {new Date(meet.meeting_date).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" })}</p>
+        </div>
+        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Status Pertemuan</label>
+            <div className="flex items-center gap-4 mt-2 mb-4">
+              <label className="inline-flex items-center">
+                <input type="radio" className="form-radio text-blue-600" name="status" value="selesai" checked={completionStatus === "selesai"} onChange={() => setCompletionStatus("selesai")} />
+                <span className="ml-2 text-sm text-slate-700">Selesai (Hadir)</span>
+              </label>
+              <label className="inline-flex items-center">
+                <input type="radio" className="form-radio text-blue-600" name="status" value="terlewat" checked={completionStatus === "terlewat"} onChange={() => setCompletionStatus("terlewat")} />
+                <span className="ml-2 text-sm text-slate-700">Terlewat</span>
+              </label>
+            </div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">Progress / Catatan</label>
+            <textarea
+              rows={4} required value={report} onChange={(e) => setReport(e.target.value)}
+              placeholder={completionStatus === "selesai" ? "Contoh: Siswa menyelesaikan bab 3..." : "Contoh: Siswa tidak hadir karena sakit..."}
+              className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50">Batal</button>
+            <button type="submit" disabled={loading || !report.trim()} className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 disabled:opacity-50">
+              {loading ? "Menyimpan..." : "Simpan & Tandai Selesai"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function TodayMeetingCard({ meet, onRefresh }: { meet: any; onRefresh: () => void }) {
   const timeLeft = useCountdown(meet.meeting_date);
   const nowMs = Date.now();
@@ -32,27 +91,9 @@ function TodayMeetingCard({ meet, onRefresh }: { meet: any; onRefresh: () => voi
   const isCompleted = meet.is_completed;
   const isPastJoin = nowMs >= thirtyMinMs && !isCompleted;
 
-  const [report, setReport] = React.useState(meet.progress_report || "");
-  const [saving, setSaving] = React.useState(false);
+  const [showModal, setShowModal] = React.useState(false);
 
-  const handleSaveReport = async () => {
-    if (!report.trim()) return;
-    setSaving(true);
-    try {
-      const res = await fetch("/api/admin/meetings", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: meet.id, progressReport: report, completionStatus: "selesai" }),
-      });
-      if (res.ok) {
-        onRefresh();
-      } else {
-        alert("Gagal menyimpan laporan.");
-      }
-    } finally {
-      setSaving(false);
-    }
-  };
+
 
   return (
     <div className={`rounded-lg border p-4 flex flex-col gap-3 ${isCompleted ? 'bg-green-50 border-green-200' : isPastJoin ? 'bg-amber-50 border-amber-200' : isLive ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200'}`}>
@@ -112,25 +153,15 @@ function TodayMeetingCard({ meet, onRefresh }: { meet: any; onRefresh: () => voi
         </div>
       )}
 
-      {/* Progress Report — shown after 30 min (replaces join button) */}
+      {/* Report button — shown after 30 min (replaces join button) */}
       {isPastJoin && (
-        <div className="flex flex-col gap-2">
-          <label className="text-xs font-semibold text-amber-700">Laporan Progress Kelas</label>
-          <textarea
-            rows={3}
-            className="w-full text-sm rounded-md border border-amber-300 bg-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
-            placeholder="Tuliskan materi yang dibahas, catatan penting, atau progress siswa hari ini..."
-            value={report}
-            onChange={(e) => setReport(e.target.value)}
-          />
-          <button
-            onClick={handleSaveReport}
-            disabled={saving || !report.trim()}
-            className="w-full py-2 rounded-md text-sm font-semibold text-white bg-amber-500 hover:bg-amber-600 disabled:opacity-50 transition-colors"
-          >
-            {saving ? "Menyimpan..." : "Simpan & Selesaikan Kelas"}
-          </button>
-        </div>
+        <button
+          onClick={() => setShowModal(true)}
+          className="inline-flex items-center gap-1.5 w-full justify-center px-3 py-2 rounded-md text-sm font-medium bg-orange-500 text-white hover:bg-orange-600 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+          Report Kelas
+        </button>
       )}
 
       {/* Already completed — show saved report */}
@@ -139,6 +170,14 @@ function TodayMeetingCard({ meet, onRefresh }: { meet: any; onRefresh: () => voi
           <p className="text-xs font-semibold text-green-700 mb-1">Laporan Progress:</p>
           <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">{meet.progress_report}</p>
         </div>
+      )}
+
+      {showModal && (
+        <ProgressReportModal
+          meet={meet}
+          onClose={() => setShowModal(false)}
+          onSuccess={onRefresh}
+        />
       )}
     </div>
   );

@@ -298,6 +298,10 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
   const [expandedModule, setExpandedModule] = useState<number | null>(defaultOpen);
   const [expandedTopic, setExpandedTopic] = useState<number | null>(null);
   const [activeQuiz, setActiveQuiz] = useState<Topic["quiz"] | null>(null);
+  const [openSynopsis, setOpenSynopsis] = useState<Record<number, boolean>>({});
+
+  const toggleSynopsis = (topicId: number) =>
+    setOpenSynopsis((prev) => ({ ...prev, [topicId]: !prev[topicId] }));
 
   if (modules.length === 0) {
     return <p className="text-slate-500 italic text-sm">Belum ada modul yang di-assign untukmu.</p>;
@@ -388,11 +392,25 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
                             {topic.order_index}. {topic.title}
                           </p>
                           {topic.isUnlocked && topic.description && (
-                            <div
-                              className="text-xs text-slate-600 mt-3 max-h-48 overflow-y-auto pr-2 whitespace-pre-wrap leading-relaxed"
-                            >
-                              {topic.description.replace(/<[^>]*>?/gm, "")}
-                            </div>
+                            <>
+                              <button
+                                onClick={() => toggleSynopsis(topic.id)}
+                                className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 mt-1 font-medium"
+                              >
+                                <span>{openSynopsis[topic.id] ? "Tutup sinopsis" : "Lihat sinopsis"}</span>
+                                <svg
+                                  className={`w-3.5 h-3.5 transition-transform ${openSynopsis[topic.id] ? "rotate-180" : ""}`}
+                                  fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </button>
+                              {openSynopsis[topic.id] && (
+                                <div className="text-xs text-slate-600 mt-2 max-h-48 overflow-y-auto pr-2 whitespace-pre-wrap leading-relaxed border-l-2 border-blue-100 pl-2">
+                                  {topic.description.replace(/<[^>]*>?/gm, "")}
+                                </div>
+                              )}
+                            </>
                           )}
                           {topic.isUnlocked && topic.project_link && (
                             <a
