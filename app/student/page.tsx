@@ -489,7 +489,8 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
 }
 
 // --- Parent Hub ---
-function ParentHub({ pastMeetings, quizAttempts }: { pastMeetings: Meeting[]; quizAttempts: QuizAttempt[] }) {
+function ParentHub({ pastMeetings, quizAttempts, modules }: { pastMeetings: Meeting[]; quizAttempts: QuizAttempt[]; modules: Module[] }) {
+  const allTopics = modules.flatMap(m => m.topics);
   return (
     <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col md:flex-row gap-6">
       {/* Progress Reports */}
@@ -501,17 +502,21 @@ function ParentHub({ pastMeetings, quizAttempts }: { pastMeetings: Meeting[]; qu
           <div className="space-y-3">
             {pastMeetings
               .filter(m => m.is_completed && m.progress_report)
-              .map(meet => (
-                <div key={meet.id} className="bg-white rounded-xl border border-green-200 p-4 shadow-sm">
+              .map(meet => {
+                const topic = allTopics[meet.globalIndex];
+                const cardTitle = topic?.title || meet.title;
+                return (
+                <div key={meet.id} className="rounded-xl border border-green-200 bg-green-50/40 p-4 shadow-sm">
                   <div className="flex items-start justify-between gap-2 mb-2">
-                    <p className="font-semibold text-slate-900 text-sm">{meet.title}</p>
+                    <p className="font-semibold text-slate-900 text-sm">{cardTitle}</p>
                     <span className="text-xs text-slate-400 whitespace-nowrap">
                       {new Date(meet.meeting_date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
                     </span>
                   </div>
                   <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{meet.progress_report}</p>
                 </div>
-              ))}
+                );
+              })}
           </div>
         )}
       </div>
@@ -659,7 +664,7 @@ export default function StudentDashboard() {
           {activeTab === "parent" && (
             <div className="space-y-4">
               <h2 className="font-bold text-slate-900">Parent Hub</h2>
-              <ParentHub pastMeetings={data.pastMeetings} quizAttempts={data.quizAttempts} />
+              <ParentHub pastMeetings={data.pastMeetings} quizAttempts={data.quizAttempts} modules={data.modules || []} />
             </div>
           )}
         </>
