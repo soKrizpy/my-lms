@@ -491,67 +491,64 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
 // --- Parent Hub ---
 function ParentHub({ pastMeetings, quizAttempts, modules }: { pastMeetings: Meeting[]; quizAttempts: QuizAttempt[]; modules: Module[] }) {
   const allTopics = modules.flatMap(m => m.topics);
-  return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col md:flex-row gap-6">
-      {/* Progress Reports */}
-      <div className="flex-1">
-        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Laporan Progress Guru</h3>
-        {pastMeetings.filter(m => m.is_completed && m.progress_report).length === 0 ? (
-          <p className="text-sm text-slate-400 italic">Belum ada laporan progress.</p>
-        ) : (
-          <div className="space-y-3">
-            {pastMeetings
-              .filter(m => m.is_completed && m.progress_report)
-              .map(meet => {
-                const topic = allTopics[meet.globalIndex];
-                const cardTitle = topic?.title || meet.title;
-                return (
-                <div key={meet.id} className="rounded-xl border border-green-200 bg-green-50/40 p-4 shadow-sm">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <p className="font-semibold text-slate-900 text-sm">{cardTitle}</p>
-                    <span className="text-xs text-slate-400 whitespace-nowrap">
-                      {new Date(meet.meeting_date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
-                    </span>
-                  </div>
-                  <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{meet.progress_report}</p>
-                </div>
-                );
-              })}
-          </div>
-        )}
-      </div>
-      {/* Divider */}
-      <div className="hidden md:block w-px bg-slate-200 shrink-0"></div>
-      <div className="md:hidden h-px w-full bg-slate-200 shrink-0"></div>
 
-      {/* Quiz Scores */}
-      <div className="flex-1">
-        <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Nilai Quiz</h3>
-        {quizAttempts.length === 0 ? (
-          <p className="text-sm text-slate-400 italic">Belum ada quiz yang dikerjakan.</p>
-        ) : (
-          <div className="space-y-2">
-            {quizAttempts.map(attempt => (
-              <div key={attempt.id} className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm flex items-center gap-3">
-                <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg flex-shrink-0 ${attempt.score >= 70 ? "bg-green-100 text-green-700" : attempt.score >= 50 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-600"}`}>
-                  {attempt.score}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-slate-900 text-sm truncate">
-                    {attempt.quizzes?.title || "Quiz"}
-                  </p>
-                  <p className="text-xs text-slate-500 mt-0.5">
-                    {attempt.quizzes?.topics?.title} · {attempt.total_questions} soal
-                  </p>
-                </div>
-                <span className="text-xs text-slate-400">
-                  {new Date(attempt.created_at).toLocaleDateString("id-ID", { day: "numeric", month: "short" })}
-                </span>
+  // Only show completed meetings
+  const completedMeetings = pastMeetings.filter(m => m.is_completed);
+
+  if (completedMeetings.length === 0) {
+    return (
+      <p className="text-sm text-slate-400 italic text-center py-10">Belum ada kelas yang selesai.</p>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {completedMeetings.map(meet => {
+        const topic = allTopics[meet.globalIndex];
+        const cardTitle = topic?.title || meet.title;
+        const quizId = topic?.quiz?.id;
+        const quizAttempt = quizId ? quizAttempts.find(qa => qa.quiz_id === quizId) : null;
+
+        return (
+          <div key={meet.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            {/* Card Header */}
+            <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-100">
+              <p className="font-semibold text-slate-800 text-sm">{cardTitle}</p>
+              <span className="text-xs text-slate-400 whitespace-nowrap">
+                {new Date(meet.meeting_date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+              </span>
+            </div>
+
+            {/* Card Body */}
+            <div className="flex divide-x divide-slate-100">
+              {/* Teacher Report */}
+              <div className="flex-1 p-4 min-w-0">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Laporan Guru</p>
+                {meet.progress_report ? (
+                  <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{meet.progress_report}</p>
+                ) : (
+                  <p className="text-sm text-slate-400 italic">Laporan belum tersedia.</p>
+                )}
               </div>
-            ))}
+
+              {/* Quiz Score */}
+              <div className="w-36 shrink-0 p-4 flex flex-col items-center justify-center gap-1 text-center">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Nilai Quiz</p>
+                {quizAttempt ? (
+                  <>
+                    <span className={`text-2xl font-bold ${quizAttempt.score >= 70 ? "text-green-600" : quizAttempt.score >= 50 ? "text-yellow-500" : "text-red-500"}`}>
+                      {quizAttempt.score}
+                    </span>
+                    <span className="text-xs text-slate-400">{quizAttempt.total_questions} soal</span>
+                  </>
+                ) : (
+                  <p className="text-xs text-slate-400 italic leading-snug">Quiz belum dikerjakan.</p>
+                )}
+              </div>
+            </div>
           </div>
-        )}
-      </div>
+        );
+      })}
     </div>
   );
 }
