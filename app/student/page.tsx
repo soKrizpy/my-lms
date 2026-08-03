@@ -490,7 +490,11 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
 
 // --- Parent Hub ---
 function ParentHub({ pastMeetings, quizAttempts, modules }: { pastMeetings: Meeting[]; quizAttempts: QuizAttempt[]; modules: Module[] }) {
-  const allTopics = modules.flatMap(m => m.topics);
+  const [openModules, setOpenModules] = useState<Record<number, boolean>>({});
+  
+  const toggleModule = (id: number) => {
+    setOpenModules(prev => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Only show completed meetings
   const completedMeetings = pastMeetings.filter(m => m.is_completed);
@@ -501,51 +505,85 @@ function ParentHub({ pastMeetings, quizAttempts, modules }: { pastMeetings: Meet
     );
   }
 
+  let globalIndexCounter = 0;
+
   return (
     <div className="space-y-4">
-      {completedMeetings.map(meet => {
-        const topic = allTopics[meet.globalIndex];
-        const cardTitle = topic?.title || meet.title;
-        const quizId = topic?.quiz?.id;
-        const quizAttempt = quizId ? quizAttempts.find(qa => qa.quiz_id === quizId) : null;
+      {modules.map((mod) => {
+        const startIndex = globalIndexCounter;
+        const endIndex = startIndex + mod.topics.length;
+        globalIndexCounter = endIndex;
+        
+        const moduleMeetings = completedMeetings.filter(m => m.globalIndex >= startIndex && m.globalIndex < endIndex);
+        
+        if (moduleMeetings.length === 0) return null;
+
+        const isOpen = openModules[mod.id] ?? true; // Default open
 
         return (
-          <div key={meet.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-            {/* Card Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-100">
-              <p className="font-semibold text-slate-800 text-sm">{cardTitle}</p>
-              <span className="text-xs text-slate-400 whitespace-nowrap">
-                {new Date(meet.meeting_date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
-              </span>
+          <div key={mod.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+            {/* Module Header */}
+            <div 
+              className="flex items-center justify-between px-5 py-4 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors border-b border-slate-100"
+              onClick={() => toggleModule(mod.id)}
+            >
+              <h3 className="font-bold text-slate-900">{mod.title}</h3>
+              <svg className={`w-5 h-5 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </div>
+            
+            {/* Module Content */}
+            {isOpen && (
+              <div className="p-4 space-y-4 bg-slate-50/50">
+                {moduleMeetings.map(meet => {
+                  const topic = mod.topics[meet.globalIndex - startIndex];
+                  const cardTitle = topic?.title || meet.title;
+                  const quizId = topic?.quiz?.id;
+                  const quizAttempt = quizId ? quizAttempts.find(qa => qa.quiz_id === quizId) : null;
 
-            {/* Card Body */}
-            <div className="flex divide-x divide-slate-100">
-              {/* Teacher Report */}
-              <div className="flex-1 p-4 min-w-0">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Laporan Guru</p>
-                {meet.progress_report ? (
-                  <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{meet.progress_report}</p>
-                ) : (
-                  <p className="text-sm text-slate-400 italic">Laporan belum tersedia.</p>
-                )}
-              </div>
+                  return (
+                    <div key={meet.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                      {/* Card Header */}
+                      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-100">
+                        <p className="font-semibold text-slate-800 text-sm">{cardTitle}</p>
+                        <span className="text-xs text-slate-400 whitespace-nowrap">
+                          {new Date(meet.meeting_date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
+                        </span>
+                      </div>
 
-              {/* Quiz Score */}
-              <div className="w-36 shrink-0 p-4 flex flex-col items-center justify-center gap-1 text-center">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Nilai Quiz</p>
-                {quizAttempt ? (
-                  <>
-                    <span className={`text-2xl font-bold ${quizAttempt.score >= 70 ? "text-green-600" : quizAttempt.score >= 50 ? "text-yellow-500" : "text-red-500"}`}>
-                      {quizAttempt.score}
-                    </span>
-                    <span className="text-xs text-slate-400">{quizAttempt.total_questions} soal</span>
-                  </>
-                ) : (
-                  <p className="text-xs text-slate-400 italic leading-snug">Quiz belum dikerjakan.</p>
-                )}
+                      {/* Card Body */}
+                      <div className="flex divide-x divide-slate-100">
+                        {/* Teacher Report */}
+                        <div className="flex-1 p-4 min-w-0">
+                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Laporan Guru</p>
+                          {meet.progress_report ? (
+                            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{meet.progress_report}</p>
+                          ) : (
+                            <p className="text-sm text-slate-400 italic">Laporan belum tersedia.</p>
+                          )}
+                        </div>
+
+                        {/* Quiz Score */}
+                        <div className="w-36 shrink-0 p-4 flex flex-col items-center justify-center gap-1 text-center bg-slate-50/30">
+                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Nilai Quiz</p>
+                          {quizAttempt ? (
+                            <>
+                              <span className={`text-2xl font-bold ${quizAttempt.score >= 70 ? "text-green-600" : quizAttempt.score >= 50 ? "text-yellow-500" : "text-red-500"}`}>
+                                {quizAttempt.score}
+                              </span>
+                              <span className="text-xs text-slate-400">{quizAttempt.total_questions} soal</span>
+                            </>
+                          ) : (
+                            <p className="text-xs text-slate-400 italic leading-snug">Quiz belum dikerjakan.</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
+            )}
           </div>
         );
       })}
