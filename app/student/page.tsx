@@ -491,9 +491,9 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
 // --- Parent Hub ---
 function ParentHub({ pastMeetings, quizAttempts }: { pastMeetings: Meeting[]; quizAttempts: QuizAttempt[] }) {
   return (
-    <div className="space-y-6">
+    <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-6 flex flex-col md:flex-row gap-6">
       {/* Progress Reports */}
-      <div>
+      <div className="flex-1">
         <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Laporan Progress Guru</h3>
         {pastMeetings.filter(m => m.is_completed && m.progress_report).length === 0 ? (
           <p className="text-sm text-slate-400 italic">Belum ada laporan progress.</p>
@@ -515,9 +515,12 @@ function ParentHub({ pastMeetings, quizAttempts }: { pastMeetings: Meeting[]; qu
           </div>
         )}
       </div>
+      {/* Divider */}
+      <div className="hidden md:block w-px bg-slate-200 shrink-0"></div>
+      <div className="md:hidden h-px w-full bg-slate-200 shrink-0"></div>
 
       {/* Quiz Scores */}
-      <div>
+      <div className="flex-1">
         <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wide mb-3">Nilai Quiz</h3>
         {quizAttempts.length === 0 ? (
           <p className="text-sm text-slate-400 italic">Belum ada quiz yang dikerjakan.</p>
