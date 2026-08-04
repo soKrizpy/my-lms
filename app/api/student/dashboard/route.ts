@@ -75,30 +75,21 @@ export async function GET() {
       .select("id, topic_id, title")
       .in("topic_id", (topics || []).map((t: any) => t.id));
 
-    // Sequential module unlock:
-    // - Count started meetings (meeting_date <= now) as "unlock budget"
-    // - Distribute budget across modules in order
-    // - Each module consumes up to its topic count from the budget
-    // - Once budget is 0, remaining modules are fully locked
-    const nowMs = Date.now();
-    let remainingUnlocks = (meetings || []).filter(
-      (m: any) => m.meeting_students?.[0]?.has_joined
-    ).length;
+    let globalTopicIndex = 0;
 
     modulesWithTopics = (studentModules || []).map((sm: any) => {
       const mod = sm.modules;
       const modTopics = (topics || [])
         .filter((t: any) => t.module_id === sm.module_id)
         .sort((a: any, b: any) => a.order_index - b.order_index)
-        .map((t: any, idx: number) => {
+        .map((t: any) => {
           const quiz = (quizzes || []).find((q: any) => q.topic_id === t.id);
-          const isUnlocked = idx < remainingUnlocks;
+          const correspondingMeeting = sortedMeetings.find((m: any) => m.globalIndex === globalTopicIndex);
+          const isUnlocked = correspondingMeeting?.meeting_students?.[0]?.has_joined || false;
+          
+          globalTopicIndex++;
           return { ...t, quiz, isUnlocked };
         });
-
-      // Consume this module's unlocks from the budget
-      const used = Math.min(remainingUnlocks, modTopics.length);
-      remainingUnlocks = Math.max(0, remainingUnlocks - used);
 
       // A module is "active" if it has at least one unlocked topic but isn't fully unlocked
       const unlockedCount = modTopics.filter((t: any) => t.isUnlocked).length;
