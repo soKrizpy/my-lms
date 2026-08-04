@@ -80,6 +80,59 @@ function ProgressReportModal({ meet, onClose, onSuccess }: { meet: any; onClose:
   );
 }
 
+// --- Synopsis Floating Panel for Teacher ---
+function TeacherSynopsisPanel({ topic, onClose }: { topic: any; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/30" onClick={onClose}>
+      <div
+        className="relative h-full w-full max-w-md bg-white shadow-2xl flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-blue-600">
+          <div>
+            <p className="text-xs font-medium text-blue-100 uppercase tracking-wide font-sans">Sinopsis Materi</p>
+            <h3 className="font-bold text-white text-base mt-0.5 leading-snug font-sans">{topic.title}</h3>
+          </div>
+          <button onClick={onClose} className="text-white/70 hover:text-white p-1 rounded">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-5 font-sans">
+          {topic.description ? (
+            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+              {topic.description.replace(/<[^>]*>?/gm, "")}
+            </p>
+          ) : (
+            <p className="text-sm text-slate-400 italic">Tidak ada sinopsis untuk topik ini.</p>
+          )}
+        </div>
+
+        {/* Footer - project link */}
+        {topic.project_link && (
+          <div className="p-4 border-t border-slate-100">
+            <a
+              href={topic.project_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-2.5 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-700 transition-colors font-sans"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6m0 0v6m0-6L10 14" />
+              </svg>
+              Buka Link Project
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function TodayMeetingCard({ meet, onRefresh }: { meet: any; onRefresh: () => void }) {
   const timeLeft = useCountdown(meet.meeting_date);
   const nowMs = Date.now();
@@ -92,94 +145,144 @@ function TodayMeetingCard({ meet, onRefresh }: { meet: any; onRefresh: () => voi
   const isPastJoin = nowMs >= thirtyMinMs && !isCompleted;
 
   const [showModal, setShowModal] = React.useState(false);
+  const [synopsisOpen, setSynopsisOpen] = React.useState(false);
+  const [topic, setTopic] = React.useState<any>(null);
 
-
+  React.useEffect(() => {
+    async function fetchTopic() {
+      try {
+        const res = await fetch(`/api/admin/meetings/${meet.id}/topic`);
+        if (res.ok) {
+          const data = await res.json();
+          setTopic(data.topic);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    fetchTopic();
+  }, [meet.id]);
 
   return (
-    <div className={`rounded-lg border p-4 flex flex-col gap-3 ${isCompleted ? 'bg-green-50 border-green-200' : isPastJoin ? 'bg-amber-50 border-amber-200' : isLive ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200'}`}>
-      <div className="flex justify-between items-start gap-2">
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-slate-900 truncate">{meet.title}</h3>
-          <p className="text-xs text-slate-500 mt-0.5">
-            {new Date(meet.meeting_date).toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' })} WIB
-            {meet.session_count > 1 && ` · Sesi ${meet.session_number}/${meet.session_count}`}
-          </p>
-        </div>
-        <div className="flex-shrink-0">
-          {isLive && <span className="text-[10px] px-2 py-0.5 rounded bg-red-600 text-white font-bold animate-pulse">LIVE</span>}
-          {isPastJoin && !isCompleted && <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500 text-white font-bold">Lapor Progress</span>}
-          {isCompleted && <span className="text-[10px] px-2 py-0.5 rounded bg-green-600 text-white font-bold">✓ Selesai</span>}
-        </div>
-      </div>
-
-      {meet.students?.length > 0 && (
-        <div className="flex flex-wrap gap-1">
-          {meet.students.map((s: any) => (
-            <span key={s.id} className="text-[10px] bg-slate-100 border border-slate-200 text-slate-600 px-1.5 py-0.5 rounded">{s.name}</span>
-          ))}
-        </div>
+    <>
+      {synopsisOpen && topic && (
+        <TeacherSynopsisPanel topic={topic} onClose={() => setSynopsisOpen(false)} />
       )}
 
-      {isUpcoming && timeLeft && (
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500">Mulai dalam:</span>
-          <div className="flex gap-1 font-mono">
-            {timeLeft.h > 0 && (
-              <span className="bg-slate-900 text-white text-xs px-2 py-0.5 rounded font-bold">{String(timeLeft.h).padStart(2,'0')}j</span>
-            )}
-            <span className="bg-slate-900 text-white text-xs px-2 py-0.5 rounded font-bold">{String(timeLeft.m).padStart(2,'0')}m</span>
-            <span className="bg-slate-800 text-white text-xs px-2 py-0.5 rounded font-bold">{String(timeLeft.s).padStart(2,'0')}d</span>
+      <div className={`rounded-lg border p-4 flex flex-col gap-3 ${isCompleted ? 'bg-green-50 border-green-200' : isPastJoin ? 'bg-amber-50 border-amber-200' : isLive ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200'}`}>
+        <div className="flex justify-between items-start gap-2">
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-slate-900 truncate">{meet.title}</h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {new Date(meet.meeting_date).toLocaleTimeString("id-ID", { hour: '2-digit', minute: '2-digit' })} WIB
+              {meet.session_count > 1 && ` · Sesi ${meet.session_number}/${meet.session_count}`}
+            </p>
+          </div>
+          <div className="flex-shrink-0">
+            {isLive && <span className="text-[10px] px-2 py-0.5 rounded bg-red-600 text-white font-bold animate-pulse">LIVE</span>}
+            {isPastJoin && !isCompleted && <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500 text-white font-bold">Lapor Progress</span>}
+            {isCompleted && <span className="text-[10px] px-2 py-0.5 rounded bg-green-600 text-white font-bold">✓ Selesai</span>}
           </div>
         </div>
-      )}
 
-      {/* Join button — only shown before 30 min mark */}
-      {!isCompleted && !isPastJoin && meet.link_url && (
-        <a
-          href={meet.link_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`inline-flex items-center justify-center gap-2 w-full px-3 py-2 rounded-md text-sm font-semibold text-white transition-colors ${
-            isLive ? 'bg-red-600 hover:bg-red-700 animate-pulse' : 'bg-blue-600 hover:bg-blue-700'
-          }`}
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-          {isLive ? 'Join Kelas (LIVE)' : 'Buka Link'}
-        </a>
-      )}
-      {!isCompleted && !isPastJoin && !meet.link_url && (
-        <div className="w-full px-3 py-2 rounded-md text-sm text-slate-400 text-center bg-slate-100 border border-slate-200">
-          Tidak ada link
-        </div>
-      )}
+        {meet.students?.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {meet.students.map((s: any) => (
+              <span key={s.id} className="text-[10px] bg-slate-100 border border-slate-200 text-slate-600 px-1.5 py-0.5 rounded">{s.name}</span>
+            ))}
+          </div>
+        )}
 
-      {/* Report button — shown after 30 min (replaces join button) */}
-      {isPastJoin && (
-        <button
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-1.5 w-full justify-center px-3 py-2 rounded-md text-sm font-medium bg-orange-500 text-white hover:bg-orange-600 transition-colors"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-          Report Kelas
-        </button>
-      )}
+        {topic && (topic.description || topic.project_link) && (
+          <div className="flex gap-2 border-t border-slate-100 pt-3">
+            {topic.description && (
+              <button
+                onClick={() => setSynopsisOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Sinopsis
+              </button>
+            )}
+            {topic.project_link && (
+              <a
+                href={topic.project_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs font-semibold hover:bg-slate-700 transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6m0 0v6m0-6L10 14" />
+                </svg>
+                Link Project
+              </a>
+            )}
+          </div>
+        )}
 
-      {/* Already completed — show saved report */}
-      {isCompleted && meet.progress_report && (
-        <div className="bg-white border border-green-200 rounded-md p-3">
-          <p className="text-xs font-semibold text-green-700 mb-1">Laporan Progress:</p>
-          <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">{meet.progress_report}</p>
-        </div>
-      )}
+        {isUpcoming && timeLeft && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500">Mulai dalam:</span>
+            <div className="flex gap-1 font-mono">
+              {timeLeft.h > 0 && (
+                <span className="bg-slate-900 text-white text-xs px-2 py-0.5 rounded font-bold">{String(timeLeft.h).padStart(2,'0')}j</span>
+              )}
+              <span className="bg-slate-900 text-white text-xs px-2 py-0.5 rounded font-bold">{String(timeLeft.m).padStart(2,'0')}m</span>
+              <span className="bg-slate-800 text-white text-xs px-2 py-0.5 rounded font-bold">{String(timeLeft.s).padStart(2,'0')}d</span>
+            </div>
+          </div>
+        )}
 
-      {showModal && (
-        <ProgressReportModal
-          meet={meet}
-          onClose={() => setShowModal(false)}
-          onSuccess={onRefresh}
-        />
-      )}
-    </div>
+        {/* Join button — only shown before 30 min mark */}
+        {!isCompleted && !isPastJoin && meet.link_url && (
+          <a
+            href={meet.link_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`inline-flex items-center justify-center gap-2 w-full px-3 py-2 rounded-md text-sm font-semibold text-white transition-colors ${
+              isLive ? 'bg-red-600 hover:bg-red-700 animate-pulse' : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+            {isLive ? 'Join Kelas (LIVE)' : 'Buka Link'}
+          </a>
+        )}
+        {!isCompleted && !isPastJoin && !meet.link_url && (
+          <div className="w-full px-3 py-2 rounded-md text-sm text-slate-400 text-center bg-slate-100 border border-slate-200">
+            Tidak ada link
+          </div>
+        )}
+
+        {/* Report button — shown after 30 min (replaces join button) */}
+        {isPastJoin && (
+          <button
+            onClick={() => setShowModal(true)}
+            className="inline-flex items-center gap-1.5 w-full justify-center px-3 py-2 rounded-md text-sm font-medium bg-orange-500 text-white hover:bg-orange-600 transition-colors"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            Report Kelas
+          </button>
+        )}
+
+        {/* Already completed — show saved report */}
+        {isCompleted && meet.progress_report && (
+          <div className="bg-white border border-green-200 rounded-md p-3">
+            <p className="text-xs font-semibold text-green-700 mb-1">Laporan Progress:</p>
+            <p className="text-xs text-slate-700 whitespace-pre-wrap leading-relaxed">{meet.progress_report}</p>
+          </div>
+        )}
+
+        {showModal && (
+          <ProgressReportModal
+            meet={meet}
+            onClose={() => setShowModal(false)}
+            onSuccess={onRefresh}
+          />
+        )}
+      </div>
+    </>
   );
 }
 
