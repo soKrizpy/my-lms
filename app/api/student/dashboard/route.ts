@@ -30,21 +30,22 @@ export async function GET() {
   const sortedMeetings = meetings || [];
   sortedMeetings.forEach((m: any, idx: number) => m.globalIndex = idx);
   
-  // Find the index of the latest meeting the student has joined
-  let latestJoinedIdx = -1;
-  for (let i = sortedMeetings.length - 1; i >= 0; i--) {
-    if (sortedMeetings[i].meeting_students[0]?.has_joined) {
-      latestJoinedIdx = i;
-      break;
-    }
-  }
+  // Filter upcoming meetings based on visibility rules
+  const visibleUpcomingMeetings = sortedMeetings.filter(m => {
+    const hasJoined = m.meeting_students[0]?.has_joined;
+    
+    // 1. Remove if teacher has submitted report / marked completed
+    if (m.is_completed) return false;
 
-  // We show meetings starting from latestJoinedIdx (if any), otherwise from the first uncompleted meeting.
-  // Wait, if latestJoinedIdx is -1, we just find the first uncompleted meeting.
-  let startIndex = latestJoinedIdx !== -1 ? latestJoinedIdx : sortedMeetings.findIndex(m => !m.is_completed);
-  if (startIndex === -1) startIndex = sortedMeetings.length; // all completed and none joined?
+    // 2. Remove if student missed class and 65 minutes have passed since meeting started (1 hr duration + 5 mins)
+    const meetingTime = new Date(m.meeting_date).getTime();
+    const isMissingAndExpired = !hasJoined && now.getTime() > meetingTime + (65 * 60 * 1000);
+    if (isMissingAndExpired) return false;
 
-  const upcomingMeetings = sortedMeetings.slice(startIndex, startIndex + 3);
+    return true;
+  });
+
+  const upcomingMeetings = visibleUpcomingMeetings.slice(0, 3);
 
   const pastMeetings = (meetings || []).filter(
     m => m.is_completed || new Date(m.meeting_date).getTime() + 60 * 60 * 1000 <= now.getTime()
