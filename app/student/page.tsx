@@ -172,35 +172,56 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
           </div>
         </div>
 
-        {/* Material quick-access buttons — shown for any upcoming/live meeting with a topic */}
-        {!isCompleted && topicForThisMeeting && (topicForThisMeeting.description || topicForThisMeeting.project_link) && (
-          <div className="flex gap-2 mt-3">
-            {topicForThisMeeting.description && (
-              <button
-                onClick={() => setSynopsisOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition-colors"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                Sinopsis
-              </button>
-            )}
-            {topicForThisMeeting.project_link && (
-              <a
-                href={topicForThisMeeting.project_link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs font-semibold hover:bg-slate-700 transition-colors"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6m0 0v6m0-6L10 14" />
-                </svg>
-                Link Project
-              </a>
-            )}
-          </div>
-        )}
+        {/* Material quick-access buttons — locked until student has joined */}
+        {!isCompleted && topicForThisMeeting && (topicForThisMeeting.description || topicForThisMeeting.project_link) && (() => {
+          const hasJoined = meet.meeting_students?.[0]?.has_joined;
+          return (
+            <div className="flex gap-2 mt-3">
+              {topicForThisMeeting.description && (
+                hasJoined ? (
+                  <button
+                    onClick={() => setSynopsisOpen(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-100 text-blue-700 text-xs font-semibold hover:bg-blue-100 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    Sinopsis
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-400 text-xs font-semibold cursor-not-allowed select-none" title="Bergabung ke kelas untuk membuka">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Sinopsis
+                  </div>
+                )
+              )}
+              {topicForThisMeeting.project_link && (
+                hasJoined ? (
+                  <a
+                    href={topicForThisMeeting.project_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 text-white text-xs font-semibold hover:bg-slate-700 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6m0 0v6m0-6L10 14" />
+                    </svg>
+                    Link Project
+                  </a>
+                ) : (
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-400 text-xs font-semibold cursor-not-allowed select-none" title="Bergabung ke kelas untuk membuka">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                    Link Project
+                  </div>
+                )
+              )}
+            </div>
+          );
+        })()}
 
         {/* Action */}
         {isCompleted || now >= meetTime + 30 * 60 * 1000 ? (
