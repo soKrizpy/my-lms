@@ -58,7 +58,8 @@ export async function GET() {
       module_id,
       modules(id, title, description, level)
     `)
-    .eq("student_id", studentId);
+    .eq("student_id", studentId)
+    .order("module_id", { ascending: true });
 
   const moduleIds = (studentModules || []).map((sm: any) => sm.module_id);
 

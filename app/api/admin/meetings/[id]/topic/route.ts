@@ -42,11 +42,12 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return NextResponse.json({ topic: null });
     }
 
-    // 3. Fetch all modules for this student
+    // 3. Fetch all modules for this student — ordered consistently by module id
     const { data: studentModules, error: smError } = await supabaseAdmin
       .from("student_modules")
-      .select("module_id")
-      .eq("student_id", studentId);
+      .select("module_id, modules(id)")
+      .eq("student_id", studentId)
+      .order("module_id", { ascending: true });
 
     if (smError || !studentModules || studentModules.length === 0) {
       return NextResponse.json({ topic: null });
@@ -54,17 +55,18 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
     const moduleIds = studentModules.map(sm => sm.module_id);
 
-    // 4. Fetch all topics for these modules
+    // 4. Fetch all topics for these modules with consistent order
     const { data: topics, error: topicsError } = await supabaseAdmin
       .from("topics")
       .select("id, module_id, title, description, project_link, order_index")
-      .in("module_id", moduleIds);
+      .in("module_id", moduleIds)
+      .order("order_index", { ascending: true });
 
     if (topicsError || !topics) {
       return NextResponse.json({ topic: null });
     }
 
-    // Sort and flatten topics identical to how the dashboard does
+    // Flatten topics in module_id order (ascending), then by order_index within each module
     const flattenedTopics: any[] = [];
     moduleIds.forEach(modId => {
       const modTopics = topics
