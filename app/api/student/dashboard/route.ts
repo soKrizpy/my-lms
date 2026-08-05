@@ -63,6 +63,16 @@ export async function GET() {
 
   const moduleIds = (studentModules || []).map((sm: any) => sm.module_id);
 
+  // 3. Quiz scores — fetch early so unlock logic can use it
+  const { data: quizAttempts } = await supabaseAdmin
+    .from("quiz_attempts")
+    .select(`id, quiz_id, score, total_questions, attempts_count, created_at, quizzes(title, topic_id, topics(title))`)
+    .eq("student_id", studentId)
+    .order("created_at", { ascending: false });
+
+  // Build a set of quiz_ids the student has attempted
+  const attemptedQuizIds = new Set((quizAttempts || []).map((qa: any) => qa.quiz_id));
+
   let modulesWithTopics: any[] = [];
   if (moduleIds.length > 0) {
     const { data: topics } = await supabaseAdmin
@@ -76,6 +86,15 @@ export async function GET() {
       .select("id, topic_id, title")
       .in("topic_id", (topics || []).map((t: any) => t.id));
 
+    // Total topics across all modules (for meeting→topic modulo mapping)
+    const allTopicsFlat = (topics || [])
+      .filter((t: any) => moduleIds.includes(t.module_id))
+      .sort((a: any, b: any) => {
+        if (a.module_id !== b.module_id) return a.module_id - b.module_id;
+        return a.order_index - b.order_index;
+      });
+    const totalTopicsCount = allTopicsFlat.length;
+
     let globalTopicIndex = 0;
 
     modulesWithTopics = (studentModules || []).map((sm: any) => {
@@ -85,9 +104,17 @@ export async function GET() {
         .sort((a: any, b: any) => a.order_index - b.order_index)
         .map((t: any) => {
           const quiz = (quizzes || []).find((q: any) => q.topic_id === t.id);
-          const correspondingMeeting = sortedMeetings.find((m: any) => m.globalIndex === globalTopicIndex);
-          const isUnlocked = correspondingMeeting?.meeting_students?.[0]?.has_joined || false;
-          
+
+          // Unlock if: student attempted this topic's quiz
+          const unlockedByQuiz = quiz ? attemptedQuizIds.has(quiz.id) : false;
+
+          // Fallback: unlock if student joined the corresponding meeting (cycled if more meetings than topics)
+          const meetingIdx = totalTopicsCount > 0 ? globalTopicIndex % totalTopicsCount : globalTopicIndex;
+          const correspondingMeeting = sortedMeetings.find((m: any) => m.globalIndex === meetingIdx);
+          const unlockedByJoin = correspondingMeeting?.meeting_students?.[0]?.has_joined || false;
+
+          const isUnlocked = unlockedByQuiz || unlockedByJoin;
+
           globalTopicIndex++;
           return { ...t, quiz, isUnlocked };
         });
@@ -101,13 +128,6 @@ export async function GET() {
       return { ...mod, topics: modTopics, isModuleLocked, isModuleActive, isModuleComplete };
     });
   }
-
-  // 3. Quiz scores
-  const { data: quizAttempts } = await supabaseAdmin
-    .from("quiz_attempts")
-    .select(`id, quiz_id, score, total_questions, attempts_count, created_at, quizzes(title, topic_id, topics(title))`)
-    .eq("student_id", studentId)
-    .order("created_at", { ascending: false });
 
   // 4. Active announcements
   const now2 = new Date().toISOString();
