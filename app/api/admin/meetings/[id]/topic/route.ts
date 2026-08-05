@@ -75,7 +75,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       flattenedTopics.push(...modTopics);
     });
 
-    const topic = flattenedTopics[globalIndex] || null;
+    const topic = flattenedTopics.length > 0
+      ? flattenedTopics[globalIndex % flattenedTopics.length]
+      : null;
 
     return NextResponse.json({ topic });
   } catch (error: any) {

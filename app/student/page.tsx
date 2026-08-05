@@ -140,9 +140,11 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
   const canReportProgress = !isCompleted && now > meetEndTime && !meet.progress_report;
   const hasJoined = !!meet.meeting_students?.[0]?.has_joined;
 
-  // Find the topic corresponding to this meeting's global index
+  // Find the topic corresponding to this meeting's global index (cycles through topics)
   const allTopics = modules.flatMap(m => m.topics);
-  const topicForThisMeeting = allTopics[meet.globalIndex];
+  const topicForThisMeeting = allTopics.length > 0
+    ? allTopics[meet.globalIndex % allTopics.length]
+    : undefined;
   const quizId = topicForThisMeeting?.quiz?.id;
   const hasAttempted = quizId ? quizAttempts.some(qa => qa.quiz_id === quizId) : false;
 
