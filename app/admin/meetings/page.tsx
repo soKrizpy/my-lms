@@ -5,6 +5,54 @@ import AdminToast, { type AdminNotice } from "../components/AdminToast";
 import AddMeetingModal from "./AddMeetingModal";
 import EditMeetingModal from "./EditMeetingModal";
 
+// --- Teacher Synopsis Panel ---
+function TeacherSynopsisPanel({ topic, onClose }: { topic: any; onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/30" onClick={onClose}>
+      <div
+        className="relative h-full w-full max-w-md bg-white shadow-2xl flex flex-col"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-blue-600">
+          <div>
+            <p className="text-xs font-medium text-blue-100 uppercase tracking-wide">Sinopsis Materi</p>
+            <h3 className="font-bold text-white text-base mt-0.5 leading-snug">{topic.title}</h3>
+          </div>
+          <button onClick={onClose} className="text-white/70 hover:text-white p-1 rounded">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-5">
+          {topic.description ? (
+            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+              {topic.description.replace(/<[^>]*>?/gm, "")}
+            </p>
+          ) : (
+            <p className="text-sm text-slate-400 italic">Tidak ada sinopsis untuk topik ini.</p>
+          )}
+        </div>
+        {topic.project_link && (
+          <div className="p-4 border-t border-slate-100">
+            <a
+              href={topic.project_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-2.5 bg-slate-900 text-white rounded-lg text-sm font-semibold hover:bg-slate-700 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6m0 0v6m0-6L10 14" />
+              </svg>
+              Buka Link Project
+            </a>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 interface StudentMinimal {
   id: string;
   name: string;
@@ -154,6 +202,219 @@ function ProgressReportModal({
         </form>
       </div>
     </div>
+  );
+}
+
+// --- Calendar Meeting Card (with topic fetching) ---
+function CalendarMeetingCard({
+  meet,
+  onEdit,
+  onDelete,
+  onReport,
+}: {
+  meet: Meeting;
+  onEdit: (m: Meeting) => void;
+  onDelete: (m: Meeting) => void;
+  onReport: (m: Meeting) => void;
+}) {
+  const nowMs = Date.now();
+  const meetMs = new Date(meet.meeting_date).getTime();
+  const endMs = meetMs + 60 * 60 * 1000;
+  const isLive = nowMs >= meetMs && nowMs < endMs && !meet.is_completed;
+  const canReport = !meet.is_completed && nowMs >= meetMs + 20 * 60 * 1000;
+
+  const [synopsisOpen, setSynopsisOpen] = useState(false);
+  const [topic, setTopic] = useState<any>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchTopic() {
+      try {
+        const res = await fetch(`/api/admin/meetings/${meet.id}/topic`);
+        if (res.ok && !cancelled) {
+          const data = await res.json();
+          setTopic(data.topic);
+        }
+      } catch {
+        // non-critical, ignore
+      }
+    }
+    fetchTopic();
+    return () => { cancelled = true; };
+  }, [meet.id]);
+
+  return (
+    <>
+      {synopsisOpen && topic && (
+        <TeacherSynopsisPanel topic={topic} onClose={() => setSynopsisOpen(false)} />
+      )}
+      <div
+        className={`rounded-lg border p-3 text-sm ${meet.is_completed ? "border-green-200 bg-green-50" : isLive ? "border-red-200 bg-red-50" : "border-slate-200 bg-white"}`}
+      >
+        <div className="flex items-start justify-between gap-2 mb-1.5">
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-slate-900 truncate">
+              {meet.title}
+            </p>
+            <p className="text-xs text-slate-500">
+              {new Date(meet.meeting_date).toLocaleTimeString("id-ID", {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}{" "}
+              WIB
+              {meet.session_count > 1 &&
+                ` · Sesi ${meet.session_number}/${meet.session_count}`}
+            </p>
+          </div>
+          <div className="flex gap-1 flex-shrink-0 mt-0.5">
+            {isLive && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-600 text-white font-bold animate-pulse">
+                LIVE
+              </span>
+            )}
+            {meet.is_completed && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-600 text-white font-bold">
+                ✓
+              </span>
+            )}
+          </div>
+        </div>
+
+        {meet.students.length > 0 && (
+          <div className="flex flex-wrap gap-1 mb-2">
+            {meet.students.map((s) => (
+              <span
+                key={s.id}
+                className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded"
+              >
+                {s.name}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {meet.progress_report && (
+          <p className="text-[11px] italic text-slate-600 border-l-2 border-slate-300 pl-2 mb-2 line-clamp-2">
+            {meet.progress_report}
+          </p>
+        )}
+
+        {/* Sinopsis & Project Link buttons */}
+        {topic && (topic.description || topic.project_link) && (
+          <div className="flex gap-1.5 mb-2 flex-wrap">
+            {topic.description && (
+              <button
+                onClick={() => setSynopsisOpen(true)}
+                className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-blue-50 border border-blue-100 text-blue-700 hover:bg-blue-100"
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Sinopsis
+              </button>
+            )}
+            {topic.project_link && (
+              <a
+                href={topic.project_link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-slate-800 text-white hover:bg-slate-700"
+              >
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6m0 0v6m0-6L10 14" />
+                </svg>
+                Link Project
+              </a>
+            )}
+          </div>
+        )}
+
+        <div className="flex gap-1.5 mt-2 flex-wrap">
+          {meet.link_url && !meet.is_completed && (
+            <a
+              href={meet.link_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium text-white ${isLive ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}`}
+            >
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+                />
+              </svg>
+              {isLive ? "Join LIVE" : "Link"}
+            </a>
+          )}
+          {canReport && (
+            <button
+              onClick={() => onReport(meet)}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-orange-500 text-white hover:bg-orange-600"
+            >
+              <svg
+                className="w-3 h-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              Report
+            </button>
+          )}
+          <button
+            onClick={() => onEdit(meet)}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-slate-100 text-slate-600 hover:bg-slate-200"
+          >
+            <svg
+              className="w-3 h-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+              />
+            </svg>
+            Edit
+          </button>
+          <button
+            onClick={() => onDelete(meet)}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-red-50 text-red-600 hover:bg-red-100"
+          >
+            <svg
+              className="w-3 h-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+            Hapus
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -396,154 +657,15 @@ function CalendarView({
                     new Date(a.meeting_date).getTime() -
                     new Date(b.meeting_date).getTime(),
                 )
-                .map((meet) => {
-                  const nowMs = Date.now();
-                  const meetMs = new Date(meet.meeting_date).getTime();
-                  const endMs = meetMs + 60 * 60 * 1000;
-                  const isLive =
-                    nowMs >= meetMs && nowMs < endMs && !meet.is_completed;
-                  const canReport =
-                    !meet.is_completed && nowMs >= meetMs + 20 * 60 * 1000;
-                  return (
-                    <div
-                      key={meet.id}
-                      className={`rounded-lg border p-3 text-sm ${meet.is_completed ? "border-green-200 bg-green-50" : isLive ? "border-red-200 bg-red-50" : "border-slate-200 bg-white"}`}
-                    >
-                      <div className="flex items-start justify-between gap-2 mb-1.5">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-slate-900 truncate">
-                            {meet.title}
-                          </p>
-                          <p className="text-xs text-slate-500">
-                            {new Date(meet.meeting_date).toLocaleTimeString(
-                              "id-ID",
-                              { hour: "2-digit", minute: "2-digit" },
-                            )}{" "}
-                            WIB
-                            {meet.session_count > 1 &&
-                              ` · Sesi ${meet.session_number}/${meet.session_count}`}
-                          </p>
-                        </div>
-                        <div className="flex gap-1 flex-shrink-0 mt-0.5">
-                          {isLive && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-600 text-white font-bold animate-pulse">
-                              LIVE
-                            </span>
-                          )}
-                          {meet.is_completed && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-green-600 text-white font-bold">
-                              ✓
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {meet.students.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {meet.students.map((s) => (
-                            <span
-                              key={s.id}
-                              className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded"
-                            >
-                              {s.name}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {meet.progress_report && (
-                        <p className="text-[11px] italic text-slate-600 border-l-2 border-slate-300 pl-2 mb-2 line-clamp-2">
-                          {meet.progress_report}
-                        </p>
-                      )}
-
-                      <div className="flex gap-1.5 mt-2 flex-wrap">
-                        {meet.link_url && !meet.is_completed && (
-                          <a
-                            href={meet.link_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium text-white ${isLive ? "bg-red-600 hover:bg-red-700" : "bg-blue-600 hover:bg-blue-700"}`}
-                          >
-                            <svg
-                              className="w-3 h-3"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
-                              />
-                            </svg>
-                            {isLive ? "Join LIVE" : "Link"}
-                          </a>
-                        )}
-                        {canReport && (
-                          <button
-                            onClick={() => onReport(meet)}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-orange-500 text-white hover:bg-orange-600"
-                          >
-                            <svg
-                              className="w-3 h-3"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                              />
-                            </svg>
-                            Report
-                          </button>
-                        )}
-                        <button
-                          onClick={() => onEdit(meet)}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-slate-100 text-slate-600 hover:bg-slate-200"
-                        >
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                            />
-                          </svg>
-                          Edit
-                        </button>
-                        <button
-                          onClick={() => onDelete(meet)}
-                          className="inline-flex items-center gap-1 px-2 py-1 rounded text-[11px] font-medium bg-red-50 text-red-600 hover:bg-red-100"
-                        >
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
-                          Hapus
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })
+                .map((meet) => (
+                  <CalendarMeetingCard
+                    key={meet.id}
+                    meet={meet}
+                    onEdit={onEdit}
+                    onDelete={onDelete}
+                    onReport={onReport}
+                  />
+                ))
             )}
           </div>
         </div>

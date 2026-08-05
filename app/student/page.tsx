@@ -172,8 +172,8 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
           </div>
         </div>
 
-        {/* Live material quick-access buttons */}
-        {isLive && topicForThisMeeting && (
+        {/* Material quick-access buttons — shown for any upcoming/live meeting with a topic */}
+        {!isCompleted && topicForThisMeeting && (topicForThisMeeting.description || topicForThisMeeting.project_link) && (
           <div className="flex gap-2 mt-3">
             {topicForThisMeeting.description && (
               <button
