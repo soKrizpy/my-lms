@@ -10,6 +10,7 @@ type Topic = {
   order_index: number;
   description?: string | null;
   project_link?: string | null;
+  topic_link?: string | null;
 };
 
 export function TopicList({
@@ -38,6 +39,7 @@ export function TopicList({
         const editOrderId = `topic-${topic.id}-order`;
         const editDescriptionId = `topic-${topic.id}-description`;
         const editProjectLinkId = `topic-${topic.id}-project-link`;
+        const editTopicLinkId = `topic-${topic.id}-topic-link`;
 
         return (
           <li
@@ -66,8 +68,8 @@ export function TopicList({
                     </button>
                     {openSynopsis[topic.id] && (
                       <div
-                        className="prose prose-sm mt-2 max-w-none text-sm text-slate-600 max-h-48 overflow-y-auto pr-2 border-l-2 border-blue-100 pl-2"
-                        dangerouslySetInnerHTML={{ __html: topic.description.replace(/\n/g, "<br />") }}
+                        className="prose prose-sm mt-2 max-w-none text-sm text-slate-600 max-h-48 overflow-y-auto pr-2 border-l-2 border-blue-100 pl-2 whitespace-pre-wrap"
+                        dangerouslySetInnerHTML={{ __html: topic.description }}
                       />
                     )}
                   </>
@@ -183,7 +185,7 @@ export function TopicList({
                     htmlFor={editDescriptionId}
                     className="block text-sm font-medium text-slate-700"
                   >
-                    Deskripsi / Iframe Embed
+                    Deskripsi Topik
                   </label>
                   <textarea
                     id={editDescriptionId}
@@ -208,6 +210,23 @@ export function TopicList({
                     defaultValue={topic.project_link ?? ""}
                     className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="https://github.com/..."
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={editTopicLinkId}
+                    className="block text-sm font-medium text-slate-700"
+                  >
+                    Embed Canva / Topic Link
+                  </label>
+                  <textarea
+                    id={editTopicLinkId}
+                    name="topicLink"
+                    rows={3}
+                    defaultValue={topic.topic_link ?? ""}
+                    className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Paste kode embed iframe Canva di sini"
                   />
                 </div>
 

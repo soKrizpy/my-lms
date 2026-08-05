@@ -34,13 +34,13 @@ export function AddTopicForm({ moduleId }: { moduleId: string }) {
           htmlFor="new-topic-description"
           className="mb-1 block text-sm font-medium text-slate-700"
         >
-          Deskripsi Topik / Slide Embed (Canva)
+          Deskripsi Topik
         </label>
         <textarea
           id="new-topic-description"
           name="description"
           className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
-          placeholder="Contoh: Pada sesi ini kita akan... atau paste kode embed iframe Canva di sini"
+          placeholder="Contoh: Pada sesi ini kita akan..."
           rows={3}
         />
       </div>
@@ -58,6 +58,22 @@ export function AddTopicForm({ moduleId }: { moduleId: string }) {
           type="text"
           className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
           placeholder="https://github.com/..."
+        />
+      </div>
+
+      <div>
+        <label
+          htmlFor="new-topic-topic-link"
+          className="mb-1 block text-sm font-medium text-slate-700"
+        >
+          Embed Canva / Topic Link
+        </label>
+        <textarea
+          id="new-topic-topic-link"
+          name="topicLink"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+          placeholder="Paste kode embed iframe Canva di sini"
+          rows={3}
         />
       </div>
 

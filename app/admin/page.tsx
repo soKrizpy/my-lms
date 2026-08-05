@@ -85,13 +85,13 @@ function TeacherSynopsisPanel({ topic, onClose }: { topic: any; onClose: () => v
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/30" onClick={onClose}>
       <div
-        className="relative h-full w-full max-w-md bg-white shadow-2xl flex flex-col"
+        className="relative h-full w-full max-w-3xl bg-white shadow-2xl flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-blue-600">
           <div>
-            <p className="text-xs font-medium text-blue-100 uppercase tracking-wide font-sans">Sinopsis Materi</p>
+            <p className="text-xs font-medium text-blue-100 uppercase tracking-wide font-sans">Materi Topik</p>
             <h3 className="font-bold text-white text-base mt-0.5 leading-snug font-sans">{topic.title}</h3>
           </div>
           <button onClick={onClose} className="text-white/70 hover:text-white p-1 rounded">
@@ -102,14 +102,24 @@ function TeacherSynopsisPanel({ topic, onClose }: { topic: any; onClose: () => v
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto p-5 font-sans">
-          {topic.description ? (
-            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
-              {topic.description.replace(/<[^>]*>?/gm, "")}
-            </p>
-          ) : (
-            <p className="text-sm text-slate-400 italic">Tidak ada sinopsis untuk topik ini.</p>
+        <div className="flex-1 overflow-y-auto p-5 font-sans flex flex-col gap-6">
+          {topic.topic_link && (
+            <div 
+              className="w-full bg-slate-50 rounded-lg"
+              dangerouslySetInnerHTML={{ __html: topic.topic_link }}
+            />
           )}
+
+          {topic.description ? (
+            <div>
+              <h4 className="text-sm font-semibold text-slate-800 mb-2">Deskripsi Topik</h4>
+              <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                {topic.description}
+              </p>
+            </div>
+          ) : !topic.topic_link ? (
+            <p className="text-sm text-slate-400 italic">Tidak ada materi atau deskripsi untuk topik ini.</p>
+          ) : null}
         </div>
 
         {/* Footer - project link */}
@@ -180,7 +190,7 @@ function TodayMeetingCard({ meet, onRefresh }: { meet: any; onRefresh: () => voi
           </div>
           {/* Sinopsis & Project buttons — always accessible for admin */}
           <div className="flex flex-col gap-1 flex-shrink-0">
-            {topic?.description && (
+            {(topic?.topic_link || topic?.description) && (
               <button
                 onClick={() => setSynopsisOpen(true)}
                 className="flex items-center gap-1 px-2 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-700 text-[11px] font-semibold hover:bg-blue-100 transition-colors whitespace-nowrap"
@@ -188,7 +198,7 @@ function TodayMeetingCard({ meet, onRefresh }: { meet: any; onRefresh: () => voi
                 <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
-                Embed
+                {topic?.topic_link ? 'Embed' : 'Sinopsis'}
               </button>
             )}
             {topic?.project_link && (

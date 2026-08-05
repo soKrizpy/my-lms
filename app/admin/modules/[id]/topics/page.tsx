@@ -42,7 +42,7 @@ export default async function ModuleTopicsPage({ params }: PageProps) {
     .maybeSingle();
   const { data: topics, error: topicsError } = await supabaseAdmin
     .from("topics")
-    .select("id, title, module_id, order_index, description, project_link")
+    .select("id, title, module_id, order_index, description, project_link, topic_link")
     .eq("module_id", Number(moduleIdParam))
     .order("order_index", { ascending: true });
 

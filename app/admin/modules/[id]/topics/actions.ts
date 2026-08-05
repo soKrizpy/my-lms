@@ -18,6 +18,7 @@ export async function createTopicAction(formData: FormData) {
   const orderIndex = Number(readString(formData, "orderIndex"));
   const description = readString(formData, "description");
   const projectLink = readString(formData, "projectLink");
+  const topicLink = readString(formData, "topicLink");
 
   if (!moduleId || !title || !Number.isFinite(orderIndex)) {
     throw new Error("ID modul, judul, dan urutan topik wajib diisi.");
@@ -30,6 +31,7 @@ export async function createTopicAction(formData: FormData) {
     order_index: orderIndex,
     description: description || null,
     project_link: projectLink || null,
+    topic_link: topicLink || null,
   });
 
   if (error) throw error;
@@ -45,6 +47,7 @@ export async function updateTopicAction(formData: FormData) {
   const orderIndex = Number(readString(formData, "orderIndex"));
   const description = readString(formData, "description");
   const projectLink = readString(formData, "projectLink");
+  const topicLink = readString(formData, "topicLink");
 
   if (!moduleId || !topicId || !title || !Number.isFinite(orderIndex)) {
     throw new Error("ID, judul, dan urutan topik wajib diisi.");
@@ -58,6 +61,7 @@ export async function updateTopicAction(formData: FormData) {
       order_index: orderIndex,
       description: description || null,
       project_link: projectLink || null,
+      topic_link: topicLink || null,
     })
     .eq("id", topicId)
     .eq("module_id", Number(moduleId));

@@ -58,7 +58,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     // 4. Fetch all topics for these modules with consistent order
     const { data: topics, error: topicsError } = await supabaseAdmin
       .from("topics")
-      .select("id, module_id, title, description, project_link, order_index")
+      .select("id, module_id, title, description, project_link, topic_link, order_index")
       .in("module_id", moduleIds)
       .order("order_index", { ascending: true });
 
