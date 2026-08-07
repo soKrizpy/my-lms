@@ -80,6 +80,45 @@ function ProgressReportModal({ meet, onClose, onSuccess }: { meet: any; onClose:
   );
 }
 
+// --- Smart Embed Component ---
+function SmartEmbed({ link }: { link: string }) {
+  if (!link) return null;
+
+  // If it looks like HTML (has tags)
+  if (/<[a-z][\s\S]*>/i.test(link)) {
+    return (
+      <div 
+        className="w-full bg-slate-50 rounded-lg overflow-hidden [&>div]:!mt-0 [&>div]:!mb-0"
+        dangerouslySetInnerHTML={{ __html: link }} 
+      />
+    );
+  }
+
+  // Otherwise assume it's a direct URL
+  const isCanva = link.includes("canva.com");
+  let src = link.trim();
+  
+  if (isCanva && !src.includes("embed")) {
+    if (src.includes("?")) {
+      src += "&embed";
+    } else {
+      src += "?embed";
+    }
+  }
+
+  return (
+    <div className="relative w-full rounded-lg shadow-sm overflow-hidden" style={{ paddingTop: "56.25%" }}>
+      <iframe 
+        loading="lazy" 
+        style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", border: "none" }}
+        src={src}
+        allowFullScreen 
+        allow="fullscreen"
+      />
+    </div>
+  );
+}
+
 // --- Synopsis Floating Panel for Teacher ---
 function TeacherSynopsisPanel({ topic, onClose }: { topic: any; onClose: () => void }) {
   return (
@@ -103,12 +142,7 @@ function TeacherSynopsisPanel({ topic, onClose }: { topic: any; onClose: () => v
 
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-5 font-sans flex flex-col gap-6">
-          {topic.topic_link && (
-            <div 
-              className="w-full bg-slate-50 rounded-lg"
-              dangerouslySetInnerHTML={{ __html: topic.topic_link }}
-            />
-          )}
+          {topic.topic_link && <SmartEmbed link={topic.topic_link} />}
 
           {topic.description ? (
             <div>
