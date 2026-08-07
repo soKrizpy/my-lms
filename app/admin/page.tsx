@@ -310,7 +310,8 @@ export default function AdminDashboardPage() {
   const [durationDays, setDurationDays] = useState("7");
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
-  const [todayMeetings, setTodayMeetings] = useState<any[]>([]);
+  const [allMeetings, setAllMeetings] = useState<any[]>([]);
+  const [dateFilter, setDateFilter] = useState<"yesterday" | "today" | "tomorrow">("today");
 
   const fetchData = async () => {
     setFetchLoading(true);
@@ -327,13 +328,7 @@ export default function AdminDashboardPage() {
       
       if (resMeet.ok) {
         const data = await resMeet.json();
-        const todayStr = new Date().toLocaleDateString("id-ID", { year: "numeric", month: "2-digit", day: "2-digit" });
-        const today = data.filter((m: any) => {
-          const mDate = new Date(m.meeting_date);
-          const mStr = mDate.toLocaleDateString("id-ID", { year: "numeric", month: "2-digit", day: "2-digit" });
-          return mStr === todayStr;
-        });
-        setTodayMeetings(today);
+        setAllMeetings(data);
       }
     } catch (error) {
       console.error("Failed to fetch dashboard data", error);
@@ -385,6 +380,18 @@ export default function AdminDashboardPage() {
     }
   };
 
+  const targetDate = new Date();
+  if (dateFilter === "yesterday") targetDate.setDate(targetDate.getDate() - 1);
+  if (dateFilter === "tomorrow") targetDate.setDate(targetDate.getDate() + 1);
+  const targetDateStr = targetDate.toLocaleDateString("id-ID", { year: "numeric", month: "2-digit", day: "2-digit" });
+
+  const filteredMeetings = allMeetings.filter((m: any) => {
+    const mDate = new Date(m.meeting_date);
+    return mDate.toLocaleDateString("id-ID", { year: "numeric", month: "2-digit", day: "2-digit" }) === targetDateStr;
+  });
+
+  const headingText = dateFilter === "yesterday" ? "Jadwal Kemarin" : dateFilter === "tomorrow" ? "Jadwal Besok" : "Jadwal Hari Ini";
+
   return (
     <div className="space-y-8">
       <div>
@@ -394,19 +401,30 @@ export default function AdminDashboardPage() {
         </p>
       </div>
 
-      {/* Jadwal Hari Ini */}
+      {/* Jadwal Pertemuan */}
       <section className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-        <h2 className="text-lg font-medium text-slate-900 mb-4 flex items-center gap-2">
-          <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-          Jadwal Hari Ini
-        </h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-medium text-slate-900 flex items-center gap-2">
+            <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            {headingText}
+          </h2>
+          <select
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value as any)}
+            className="text-sm border-slate-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          >
+            <option value="yesterday">Kemarin</option>
+            <option value="today">Hari Ini</option>
+            <option value="tomorrow">Besok</option>
+          </select>
+        </div>
         {fetchLoading ? (
           <p className="text-sm text-slate-500">Memuat jadwal...</p>
-        ) : todayMeetings.length === 0 ? (
-          <p className="text-sm text-slate-500 italic">Tidak ada jadwal pertemuan untuk hari ini.</p>
+        ) : filteredMeetings.length === 0 ? (
+          <p className="text-sm text-slate-500 italic">Tidak ada jadwal pertemuan untuk periode ini.</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {todayMeetings.map((meet) => (
+            {filteredMeetings.map((meet) => (
               <TodayMeetingCard key={meet.id} meet={meet} onRefresh={fetchData} />
             ))}
           </div>
