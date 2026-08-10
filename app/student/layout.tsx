@@ -1,6 +1,7 @@
 // app/student/layout.tsx
 import React from "react";
 import { logout } from "./actions";
+import LogoutButton from "./LogoutButton";
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -17,16 +18,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
             </div>
             <span className="font-bold text-slate-900">LMS Student</span>
           </div>
-          <form action={logout}>
-            <button type="submit" className="text-sm text-slate-500 hover:text-slate-800 flex items-center gap-1.5">
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-              </svg>
-              Keluar
-            </button>
-          </form>
+          <LogoutButton />
         </div>
       </header>
 
