@@ -2,6 +2,7 @@
 import React from "react";
 import { logout } from "./actions";
 import LogoutButton from "./LogoutButton";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -16,9 +17,12 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
               </svg>
             </div>
-            <span className="font-bold text-slate-900">LMS Student</span>
+            <span className="font-bold text-slate-900 dark:text-white">LMS Student</span>
           </div>
-          <LogoutButton />
+          <div className="flex items-center gap-4">
+            <ThemeToggle />
+            <LogoutButton />
+          </div>
         </div>
       </header>
 

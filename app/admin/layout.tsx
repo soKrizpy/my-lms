@@ -3,6 +3,7 @@
 import React from "react";
 import { logout } from "./actions";
 import LogoutButton from "./components/LogoutButton";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export default function AdminLayout({
   children,
@@ -42,8 +43,9 @@ export default function AdminLayout({
           </a>
         </nav>
 
-        <div className="mt-auto pt-4 border-t border-[var(--glass-border)]">
+        <div className="mt-auto pt-4 border-t border-[var(--glass-border)] flex items-center justify-between">
           <LogoutButton />
+          <ThemeToggle />
         </div>
       </aside>
 

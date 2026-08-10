@@ -15,8 +15,7 @@
   --glass-border: rgba(255, 255, 255, 0.5);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
+.dark, [data-theme="dark"] {
     /* Dark Mode (Synthwave) */
     --background: #09090b; /* Very dark slate/zinc */
     --foreground: #fafafa;
@@ -29,7 +28,6 @@
 
     --glass-bg: rgba(24, 24, 27, 0.4);
     --glass-border: rgba(255, 255, 255, 0.1);
-  }
 }
 
 @theme inline {
