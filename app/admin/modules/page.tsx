@@ -130,7 +130,7 @@ export default function ModulesPage() {
         <AddModuleForm onSubmit={createModule} />
       </section>
 
-      <section className="bg-white border border-slate-200 rounded-lg p-4">
+      <section className="glass-panel border border-[var(--glass-border)] rounded-xl p-4 shadow-sm">
         <h2 className="text-sm font-medium text-slate-900 mb-3">
           Daftar Modul
         </h2>
@@ -265,7 +265,7 @@ export default function ModulesPage() {
                           {(topicMap[mod.id] ?? []).map((topic) => (
                             <li
                               key={topic.id}
-                              className="flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-white px-2.5 py-2"
+                              className="flex items-center justify-between gap-2 rounded-md border border-[var(--glass-border)] bg-black/20 px-2.5 py-2 hover:bg-black/30 transition-colors"
                             >
                               <span className="text-sm text-slate-700">
                                 {topic.order_index}. {topic.title}

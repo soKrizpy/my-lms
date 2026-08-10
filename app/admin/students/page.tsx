@@ -162,7 +162,7 @@ export default function StudentsPage() {
         </div>
       </header>
 
-      <section className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
+      <section className="glass-panel border border-[var(--glass-border)] rounded-2xl overflow-hidden shadow-lg">
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-slate-200">
             <thead className="bg-slate-50">
@@ -199,7 +199,7 @@ export default function StudentsPage() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-200 bg-white">
+            <tbody className="divide-y divide-[var(--glass-border)] bg-transparent">
               {loading ? (
                 <tr>
                   <td

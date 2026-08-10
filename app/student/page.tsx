@@ -76,7 +76,7 @@ function SynopsisPanel({ topic, onClose }: { topic: Topic; onClose: () => void }
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/30" onClick={onClose}>
       <div
-        className="relative h-full w-full max-w-md bg-white shadow-2xl flex flex-col"
+        className="relative h-full w-full max-w-md glass-panel shadow-2xl flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -154,7 +154,7 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
         <SynopsisPanel topic={topicForThisMeeting} onClose={() => setSynopsisOpen(false)} />
       )}
 
-      <div className={`bg-white rounded-lg border shadow-sm p-4 hover:shadow-md transition-shadow relative group ${isCompleted ? "border-green-200 bg-green-50/30" : canReportProgress ? "border-orange-200" : "border-slate-200"}`}>
+      <div className={`glass-panel rounded-lg shadow-sm p-4 hover:-translate-y-1 transition-all duration-300 relative group ${isCompleted ? "border-brand-secondary/30 bg-brand-secondary/10" : canReportProgress ? "border-orange-500/30 bg-orange-500/10" : ""}`}>
         <div className="flex items-start justify-between gap-2">
           <div>
             <p className="font-semibold text-slate-900 text-sm">{meet.title}</p>
@@ -327,7 +327,7 @@ function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-      <div className="bg-white rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]">
+      <div className="glass-panel rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]">
         <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-blue-600 rounded-t-2xl">
           <h2 className="text-lg font-bold text-white">{quiz?.title || "Quiz"}</h2>
           <button onClick={onClose} className="text-white/80 hover:text-white">
@@ -434,7 +434,7 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
         const isComplete = mod.isModuleComplete;
 
         return (
-          <div key={mod.id} className={`rounded-xl border overflow-hidden shadow-sm transition-all ${isLocked ? "bg-slate-50 border-slate-200 opacity-70" : isComplete ? "bg-white border-green-200" : "bg-white border-blue-200 ring-1 ring-blue-100"}`}>
+          <div key={mod.id} className={`rounded-xl overflow-hidden shadow-lg transition-all duration-300 ${isLocked ? "glass-panel opacity-50 cursor-not-allowed" : isComplete ? "glass-panel border border-brand-secondary/50 hover:shadow-brand-secondary/20" : "glass-panel border border-brand-primary glow-primary hover:-translate-y-1"}`}>
             <button
               onClick={() => !isLocked && setExpandedModule(isOpen ? null : mod.id)}
               disabled={isLocked}
@@ -638,7 +638,7 @@ function ParentHub({ pastMeetings, quizAttempts, modules }: { pastMeetings: Meet
         const isOpen = openModules[mod.id] ?? true; // Default open
 
         return (
-          <div key={mod.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+          <div key={mod.id} className="glass-panel rounded-xl shadow-sm overflow-hidden">
             {/* Module Header */}
             <div 
               className="flex items-center justify-between px-5 py-4 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors border-b border-slate-100"
@@ -660,9 +660,9 @@ function ParentHub({ pastMeetings, quizAttempts, modules }: { pastMeetings: Meet
                   const quizAttempt = quizId ? quizAttempts.find(qa => qa.quiz_id === quizId) : null;
 
                   return (
-                    <div key={meet.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div key={meet.id} className="glass-panel rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow">
                       {/* Card Header */}
-                      <div className="flex items-center justify-between px-4 py-3 bg-white border-b border-slate-100">
+                      <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--glass-border)] bg-black/5">
                         <p className="font-semibold text-slate-800 text-sm">{cardTitle}</p>
                         <span className="text-xs text-slate-400 whitespace-nowrap">
                           {new Date(meet.meeting_date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
@@ -765,7 +765,7 @@ export default function StudentDashboard() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-semibold transition-all ${activeTab === tab.id ? "bg-white text-blue-600 shadow-sm" : "text-slate-600 hover:text-slate-900"}`}
+            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-semibold transition-all ${activeTab === tab.id ? "bg-brand-primary text-white glow-primary" : "text-slate-400 hover:text-white hover:bg-white/10"}`}
           >
             <svg className="w-4 h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} />
@@ -792,7 +792,7 @@ export default function StudentDashboard() {
                 <span className="text-xs text-slate-500">{data.upcomingMeetings.length} jadwal</span>
               </div>
               {data.upcomingMeetings.length === 0 ? (
-                <div className="text-center py-12 bg-white rounded-xl border border-slate-200">
+                <div className="text-center py-12 glass-panel rounded-xl">
                   <svg className="w-12 h-12 text-slate-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                   <p className="text-slate-400 text-sm">Tidak ada jadwal mendatang</p>
                 </div>

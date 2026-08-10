@@ -37,34 +37,34 @@ export default function LogoutButton() {
       {/* Confirmation Modal */}
       {showConfirm && !isLoggingOut && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-          style={{ backgroundColor: "rgba(0,0,0,0.5)", animation: "fadeIn 0.2s ease-out" }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 backdrop-blur-sm bg-black/40"
+          style={{ animation: "fadeIn 0.2s ease-out" }}
         >
           <div
-            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center"
+            className="glass-panel rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.5)] w-full max-w-sm p-6 text-center border border-[var(--glass-border)]"
             style={{ animation: "scaleIn 0.2s ease-out" }}
           >
             {/* Icon */}
-            <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+            <div className="w-14 h-14 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mx-auto mb-4 glow-primary" style={{boxShadow: '0 0 15px rgba(239, 68, 68, 0.4)'}}>
               <svg className="w-7 h-7 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mb-1">Yakin ingin keluar?</h3>
-            <p className="text-sm text-slate-500 mb-6">
+            <h3 className="text-lg font-bold text-[var(--foreground)] mb-1">Yakin ingin keluar?</h3>
+            <p className="text-sm text-slate-400 mb-6">
               Kamu akan keluar dari sesi ini dan diarahkan ke halaman login.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowConfirm(false)}
-                className="flex-1 py-2.5 rounded-lg border border-slate-200 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+                className="flex-1 py-2.5 rounded-lg border border-[var(--glass-border)] text-sm font-semibold text-[var(--foreground)] hover:bg-white/5 transition-colors"
               >
                 Batal
               </button>
               <button
                 onClick={handleConfirm}
-                className="flex-1 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-sm font-semibold text-white transition-colors"
+                className="flex-1 py-2.5 rounded-lg bg-red-500/80 hover:bg-red-500 border border-red-500 text-sm font-semibold text-white transition-all hover:shadow-[0_0_15px_rgba(239,68,68,0.6)]"
               >
                 Ya, Keluar
               </button>

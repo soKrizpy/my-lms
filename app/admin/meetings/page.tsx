@@ -10,7 +10,7 @@ function TeacherSynopsisPanel({ topic, onClose }: { topic: any; onClose: () => v
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/30" onClick={onClose}>
       <div
-        className="relative h-full w-full max-w-md bg-white shadow-2xl flex flex-col"
+        className="relative h-full w-full max-w-md glass-panel shadow-2xl border-l border-[var(--glass-border)] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-blue-600">
@@ -122,7 +122,7 @@ function ProgressReportModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-lg shadow-xl">
+      <div className="glass-panel rounded-xl w-full max-w-lg shadow-xl border border-[var(--glass-border)] overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 rounded-t-lg">
           <h2 className="text-lg font-semibold text-slate-900">
             Report Progress
@@ -249,7 +249,7 @@ function CalendarMeetingCard({
         <TeacherSynopsisPanel topic={topic} onClose={() => setSynopsisOpen(false)} />
       )}
       <div
-        className={`rounded-lg border p-3 text-sm ${meet.is_completed ? "border-green-200 bg-green-50" : isLive ? "border-red-200 bg-red-50" : "border-slate-200 bg-white"}`}
+        className={`rounded-xl border p-3 text-sm transition-all hover:shadow-lg ${meet.is_completed ? "border-brand-secondary/30 bg-brand-secondary/10" : isLive ? "border-red-500/30 bg-red-500/10" : "border-[var(--glass-border)] glass-panel"}`}
       >
         <div className="flex items-start justify-between gap-2 mb-1.5">
           <div className="flex-1 min-w-0">
@@ -506,7 +506,7 @@ function CalendarView({
 
   return (
     <div className="flex gap-6 flex-col lg:flex-row">
-      <div className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden min-w-0">
+      <div className="flex-1 glass-panel rounded-xl border border-[var(--glass-border)] shadow-sm overflow-hidden min-w-0">
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50">
           <button
             onClick={prevMonth}
@@ -623,7 +623,7 @@ function CalendarView({
       </div>
 
       <div className="w-full lg:w-80 flex-shrink-0">
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="glass-panel rounded-xl border border-[var(--glass-border)] shadow-sm overflow-hidden">
           <div className="px-5 py-4 border-b border-slate-100 bg-slate-50">
             <h3 className="font-semibold text-slate-900 text-sm">
               {selectedDay
@@ -706,7 +706,7 @@ function PastMeetingsByStudent({
       {Object.entries(grouped).map(([studentName, meets]) => (
         <div
           key={studentName}
-          className="bg-white border border-slate-200 rounded-lg p-5 shadow-sm"
+          className="glass-panel border border-[var(--glass-border)] rounded-2xl p-6 shadow-lg"
         >
           <h2 className="text-base font-bold text-slate-800 mb-4 pb-2 border-b border-slate-100 flex items-center gap-2">
             <svg

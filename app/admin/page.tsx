@@ -43,8 +43,8 @@ function ProgressReportModal({ meet, onClose, onSuccess }: { meet: any; onClose:
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-lg w-full max-w-lg shadow-xl">
-        <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 rounded-t-lg">
+      <div className="glass-panel rounded-xl w-full max-w-lg shadow-[0_0_40px_rgba(0,0,0,0.5)] border border-[var(--glass-border)] overflow-hidden">
+        <div className="px-6 py-4 border-b border-[var(--glass-border)] bg-black/20">
           <h2 className="text-lg font-semibold text-slate-900">Report Progress</h2>
           <p className="text-sm text-slate-500">{meet.title} — {new Date(meet.meeting_date).toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long" })}</p>
         </div>
@@ -124,7 +124,7 @@ function TeacherSynopsisPanel({ topic, onClose }: { topic: any; onClose: () => v
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/30" onClick={onClose}>
       <div
-        className="relative h-full w-full max-w-3xl bg-white shadow-2xl flex flex-col"
+        className="relative h-full w-full max-w-3xl glass-panel shadow-2xl border-l border-[var(--glass-border)] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
@@ -213,7 +213,7 @@ function TodayMeetingCard({ meet, onRefresh }: { meet: any; onRefresh: () => voi
         <TeacherSynopsisPanel topic={topic} onClose={() => setSynopsisOpen(false)} />
       )}
 
-      <div className={`rounded-lg border p-4 flex flex-col gap-3 ${isCompleted ? 'bg-green-50 border-green-200' : isPastJoin ? 'bg-amber-50 border-amber-200' : isLive ? 'bg-red-50 border-red-200' : 'bg-white border-slate-200'}`}>
+      <div className={`rounded-xl border p-4 flex flex-col gap-3 transition-all hover:shadow-lg ${isCompleted ? 'bg-brand-secondary/10 border-brand-secondary/30' : isPastJoin ? 'bg-orange-500/10 border-orange-500/30' : isLive ? 'bg-red-500/10 border-red-500/30' : 'glass-panel border-[var(--glass-border)]'}`}>
         <div className="flex justify-between items-start gap-2">
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-slate-900 truncate">{meet.title}</h3>
@@ -283,8 +283,8 @@ function TodayMeetingCard({ meet, onRefresh }: { meet: any; onRefresh: () => voi
             href={meet.link_url}
             target="_blank"
             rel="noopener noreferrer"
-            className={`inline-flex items-center justify-center gap-2 w-full px-3 py-2 rounded-md text-sm font-semibold text-white transition-colors ${
-              isLive ? 'bg-red-600 hover:bg-red-700 animate-pulse' : 'bg-blue-600 hover:bg-blue-700'
+            className={`inline-flex items-center justify-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-semibold text-white transition-all ${
+              isLive ? 'bg-red-600 hover:bg-red-500 animate-pulse shadow-[0_0_15px_rgba(220,38,38,0.5)]' : 'bg-brand-primary hover:bg-brand-primary/90 glow-primary'
             }`}
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
@@ -436,7 +436,7 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* Jadwal Pertemuan */}
-      <section className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+      <section className="glass-panel p-6 rounded-2xl shadow-lg border border-[var(--glass-border)] hover:shadow-xl transition-shadow">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-medium text-slate-900 flex items-center gap-2">
             <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
@@ -467,7 +467,7 @@ export default function AdminDashboardPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Form Pengumuman */}
-        <section className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+        <section className="glass-panel p-6 rounded-2xl shadow-lg border border-[var(--glass-border)] hover:shadow-xl transition-shadow">
           <h2 className="text-lg font-medium text-slate-900 mb-4">Buat Pengumuman Baru</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -501,7 +501,7 @@ export default function AdminDashboardPage() {
             <button
               type="submit"
               disabled={loading || !content.trim()}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-bold text-white bg-brand-primary hover:bg-brand-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-primary disabled:opacity-50 glow-primary transition-all hover:-translate-y-0.5"
             >
               {loading ? "Menyimpan..." : "Kirim Pengumuman"}
             </button>
@@ -509,7 +509,7 @@ export default function AdminDashboardPage() {
         </section>
 
         {/* Daftar Pengumuman */}
-        <section className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
+        <section className="glass-panel p-6 rounded-2xl shadow-lg border border-[var(--glass-border)] hover:shadow-xl transition-shadow">
           <h2 className="text-lg font-medium text-slate-900 mb-4">Pengumuman Aktif & Riwayat</h2>
           <div className="space-y-4">
             {fetchLoading ? (
@@ -520,9 +520,9 @@ export default function AdminDashboardPage() {
               announcements.map((ann) => {
                 const isExpired = new Date(ann.expires_at) < new Date();
                 return (
-                  <div key={ann.id} className={`p-4 rounded-md border ${isExpired ? 'bg-slate-50 border-slate-200' : 'bg-blue-50 border-blue-100'}`}>
+                  <div key={ann.id} className={`p-4 rounded-xl border ${isExpired ? 'glass-panel opacity-60 border-[var(--glass-border)]' : 'glass-panel bg-brand-primary/10 border-brand-primary/30 shadow-[0_0_15px_var(--color-primary-glow)]'}`}>
                     <div className="flex justify-between items-start gap-4">
-                      <p className={`text-sm ${isExpired ? 'text-slate-600' : 'text-blue-900'}`}>
+                      <p className={`text-sm ${isExpired ? 'text-slate-500' : 'text-[var(--foreground)] font-medium'}`}>
                         {ann.content}
                       </p>
                       <button

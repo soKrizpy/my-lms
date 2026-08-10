@@ -184,7 +184,7 @@ export default function StudentDetailPanel({ studentId, onClose, onEdit, onDelet
     >
       {/* Panel */}
       <div
-        className="relative flex flex-col h-full w-full max-w-xl bg-white shadow-2xl overflow-hidden"
+        className="relative flex flex-col h-full w-full max-w-xl glass-panel shadow-2xl overflow-hidden border-l border-[var(--glass-border)]"
         onClick={(e) => e.stopPropagation()}
         style={{ animation: "slideInRight 0.25s ease-out" }}
       >
@@ -290,8 +290,8 @@ export default function StudentDetailPanel({ studentId, onClose, onEdit, onDelet
               onClick={() => setActiveTab(tab.key)}
               className={`flex-1 flex flex-col items-center gap-0.5 px-2 py-3 text-[11px] font-semibold transition-colors border-b-2 ${
                 activeTab === tab.key
-                  ? "border-blue-600 text-blue-600 bg-white"
-                  : "border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                  ? "border-brand-primary text-brand-primary border-b-2 shadow-[0_4px_15px_-3px_var(--color-primary-glow)]"
+                  : "border-transparent text-slate-500 hover:text-slate-300 hover:border-slate-300"
               }`}
             >
               {tab.icon}
@@ -483,7 +483,7 @@ export default function StudentDetailPanel({ studentId, onClose, onEdit, onDelet
                       return (
                         <div
                           key={attempt.id}
-                          className="border border-slate-200 rounded-xl p-4 bg-white shadow-sm"
+                          className="glass-panel border border-[var(--glass-border)] rounded-xl p-4 shadow-sm"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
