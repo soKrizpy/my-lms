@@ -389,72 +389,86 @@ img, svg, video, canvas, * [class*="animate-"] {
 }
 
 /* ----------------------------------------------------------
-   10. DARK MODE SURFACE FIXES
-       bg-white and other non-remapped classes need overrides
+   10. DARK MODE — Bright readable text on all surfaces
    ---------------------------------------------------------- */
 
-/* bg-white inside dark mode → dark surface */
-.dark .bg-white {
-  background-color: var(--p-slate-100) !important;
-}
+/* All slate text → bright in dark mode */
+.dark .text-slate-900,
+.dark .text-slate-800,
+.dark .text-slate-700 { color: #f1f1ff !important; }
 
-/* Ensure text is readable on all surfaces */
-.dark .text-slate-900 { color: #f0f0ff !important; }
-.dark .text-slate-800 { color: #e0e0f0 !important; }
-.dark .text-slate-700 { color: #d0d0e8 !important; }
-.dark .text-slate-600 { color: #b8b8d0 !important; }
-.dark .text-slate-500 { color: #9090b0 !important; }
-.dark .text-slate-400 { color: #8888aa !important; }
+.dark .text-slate-600,
+.dark .text-slate-500 { color: #b8b8d8 !important; }
 
-/* Badge bg overrides — keep text readable on colored bg */
-/* green badges: light green bg + dark text → invert in dark */
-.dark .bg-green-50  { background-color: #052e16 !important; }
-.dark .bg-green-100 { background-color: #064e22 !important; }
-.dark .text-green-700 { color: #6ee7b7 !important; }
-.dark .text-green-800 { color: #a7f3d0 !important; }
-.dark .border-green-200 { border-color: #065f46 !important; }
+.dark .text-slate-400 { color: #9090b8 !important; }
 
-/* red badges */
-.dark .bg-red-50  { background-color: #1f0a0d !important; }
-.dark .bg-red-100 { background-color: #2d0e12 !important; }
-.dark .text-red-700 { color: #fda4af !important; }
-.dark .text-red-600 { color: #fb7185 !important; }
-.dark .border-red-200 { border-color: #4c1320 !important; }
+/* Surfaces — keep bg-white / bg-slate-* dark so text stays readable */
+.dark .bg-white        { background-color: #1a1a2e !important; }
+.dark .bg-slate-50     { background-color: #14142a !important; }
+.dark .bg-slate-100    { background-color: #1a1a2e !important; }
+.dark .bg-slate-200    { background-color: #22223a !important; }
 
-/* orange badges */
-.dark .bg-orange-50  { background-color: #1c0e02 !important; }
-.dark .bg-orange-100 { background-color: #2d1806 !important; }
-.dark .text-orange-700 { color: #fdba74 !important; }
-.dark .text-orange-600 { color: #fb923c !important; }
-.dark .border-orange-200 { border-color: #431d08 !important; }
+/* Borders */
+.dark .border-slate-100 { border-color: #2a2a3e !important; }
+.dark .border-slate-200 { border-color: #32324a !important; }
+.dark .border-slate-300 { border-color: #3e3e5a !important; }
 
-/* blue badges / highlights */
-.dark .bg-blue-50  { background-color: #1a0a2e !important; }
-.dark .bg-blue-100 { background-color: #220d3a !important; }
-.dark .text-blue-700 { color: #c084fc !important; }
-.dark .text-blue-600 { color: #a855f7 !important; }
-.dark .border-blue-100 { border-color: #3b1a5c !important; }
-.dark .border-blue-200 { border-color: #3b1a5c !important; }
+/* Hover surfaces */
+.dark .hover\:bg-white:hover     { background-color: #22223a !important; }
+.dark .hover\:bg-slate-50:hover  { background-color: #22223a !important; }
+.dark .hover\:bg-slate-100:hover { background-color: #26263e !important; }
+.dark .hover\:bg-slate-200:hover { background-color: #2e2e4a !important; }
+.dark .hover\:text-slate-600:hover { color: #c084fc !important; }
 
-/* Slate bg surfaces */
-.dark .bg-slate-50  { background-color: #18182a !important; }
-.dark .bg-slate-100 { background-color: #1e1e30 !important; }
-.dark .bg-slate-200 { background-color: #26263a !important; }
-.dark .border-slate-100 { border-color: #26263a !important; }
-.dark .border-slate-200 { border-color: #2e2e42 !important; }
-.dark .border-slate-300 { border-color: #3a3a50 !important; }
+/* Slate-900 used as button bg → remap to purple */
+.dark .bg-slate-900 { background-color: #a855f7 !important; }
+.dark .hover\:bg-slate-800:hover { background-color: #9333ea !important; }
+.dark .bg-slate-100.text-slate-600 { background-color: #26263e !important; color: #c084fc !important; }
 
-/* Input fields in dark mode */
-.dark input,
+/* Inputs */
+.dark input:not([type="checkbox"]):not([type="radio"]),
 .dark textarea,
 .dark select {
-  background-color: var(--input-bg) !important;
-  color: var(--text-primary) !important;
-  border-color: var(--input-border) !important;
+  background-color: rgba(15,15,30,0.85) !important;
+  color: #f1f1ff !important;
+  border-color: rgba(168,85,247,0.45) !important;
 }
+.dark input::placeholder,
+.dark textarea::placeholder { color: #7070a0 !important; }
 
-/* Modal / panel backgrounds */
-.dark .bg-slate-50.rounded-t-lg,
-.dark .bg-slate-50.rounded-lg {
-  background-color: #1e1e30 !important;
-}
+/* Badge colours — keep semantic meaning, ensure readability */
+.dark .bg-green-50  { background-color: #052e16 !important; }
+.dark .bg-green-100 { background-color: #063f1a !important; }
+.dark .text-green-700, .dark .text-green-800 { color: #6ee7b7 !important; }
+.dark .text-green-600 { color: #34d399 !important; }
+.dark .border-green-200 { border-color: #065f46 !important; }
+
+.dark .bg-red-50  { background-color: #1f0a0d !important; }
+.dark .bg-red-100 { background-color: #2d0e12 !important; }
+.dark .text-red-700, .dark .text-red-800 { color: #fca5a5 !important; }
+.dark .text-red-600 { color: #f87171 !important; }
+.dark .border-red-200 { border-color: #4c1320 !important; }
+.dark .border-red-100 { border-color: #3d1018 !important; }
+
+.dark .bg-orange-50  { background-color: #1c0e02 !important; }
+.dark .bg-orange-100 { background-color: #2d1806 !important; }
+.dark .text-orange-700, .dark .text-orange-800 { color: #fdba74 !important; }
+.dark .text-orange-600 { color: #fb923c !important; }
+.dark .border-orange-100 { border-color: #3a1505 !important; }
+.dark .border-orange-200 { border-color: #431d08 !important; }
+
+.dark .bg-blue-50  { background-color: #1a0a2e !important; }
+.dark .bg-blue-100 { background-color: #220d3a !important; }
+.dark .text-blue-700, .dark .text-blue-800 { color: #d8b4fe !important; }
+.dark .text-blue-600 { color: #c084fc !important; }
+.dark .border-blue-100 { border-color: #3b1a5c !important; }
+.dark .border-blue-200 { border-color: #4a2070 !important; }
+
+/* Modal overlays */
+.dark .bg-black\/50 { background-color: rgba(0,0,0,0.65) !important; }
+.dark .bg-black\/60 { background-color: rgba(0,0,0,0.70) !important; }
+.dark .bg-black\/30 { background-color: rgba(0,0,0,0.45) !important; }
+.dark .bg-slate-900\/50 { background-color: rgba(5,5,16,0.75) !important; }
+
+/* Dividers */
+.dark .divide-y > * + * { border-color: #2a2a3e !important; }
