@@ -2,32 +2,32 @@
 
 :root {
   /* Light Mode (Clean Tech) */
-  --background: #f8fafc;
+  --background: #f4f7fe; /* Soft light blue/grey */
   --foreground: #0f172a;
   
-  --color-primary: #3b82f6; /* Electric Blue */
-  --color-primary-glow: rgba(59, 130, 246, 0.5);
+  --color-primary: #7c3aed; /* Violet */
+  --color-primary-glow: rgba(124, 58, 237, 0.5);
   
-  --color-secondary: #10b981; /* Emerald Green */
-  --color-secondary-glow: rgba(16, 185, 129, 0.5);
+  --color-secondary: #0ea5e9; /* Light blue */
+  --color-secondary-glow: rgba(14, 165, 233, 0.5);
 
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-bg: rgba(255, 255, 255, 0.95); /* Highly opaque white */
+  --glass-border: rgba(255, 255, 255, 0.8);
 }
 
 .dark, [data-theme="dark"] {
     /* Dark Mode (Synthwave) */
-    --background: #09090b; /* Very dark slate/zinc */
-    --foreground: #fafafa;
+    --background: #0b0b14; /* Deep dark violet/slate */
+    --foreground: #ffffff;
     
-    --color-primary: #b026ff; /* Electric Purple */
-    --color-primary-glow: rgba(176, 38, 255, 0.5);
+    --color-primary: #7c3aed; /* Violet */
+    --color-primary-glow: rgba(124, 58, 237, 0.6);
     
-    --color-secondary: #00f3ff; /* Neon Cyan */
-    --color-secondary-glow: rgba(0, 243, 255, 0.5);
+    --color-secondary: #0ea5e9; 
+    --color-secondary-glow: rgba(14, 165, 233, 0.5);
 
-    --glass-bg: rgba(24, 24, 27, 0.4);
-    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-bg: rgba(20, 20, 30, 0.95); /* Highly opaque dark slate */
+    --glass-border: rgba(255, 255, 255, 0.15);
 }
 
 @theme inline {
