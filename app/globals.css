@@ -1,68 +1,389 @@
 @import "tailwindcss";
 
+/* ==========================================================
+   THEME — Purple/Violet neon (dark) · Blue neon (light)
+   Source: shared.css / Kelas Coding design system
+   next-themes sets class="dark" on <html>
+   ========================================================== */
+
+/* ----------------------------------------------------------
+   1.  DARK-MODE VARIANT  (class-based via next-themes)
+   ---------------------------------------------------------- */
+@variant dark (&:where(.dark, .dark *));
+
+/* ----------------------------------------------------------
+   2.  INTERMEDIATE PALETTE VARIABLES
+       Tailwind @theme points to these; we swap them in .dark
+   ---------------------------------------------------------- */
 :root {
-  /* Light Mode (Clean Tech) */
-  --background: #f4f7fe; /* Soft light blue/grey */
-  --foreground: #0f172a;
-  
-  --color-primary: #7c3aed; /* Violet */
-  --color-primary-glow: rgba(124, 58, 237, 0.5);
-  
-  --color-secondary: #0ea5e9; /* Light blue */
-  --color-secondary-glow: rgba(14, 165, 233, 0.5);
+  /* Backgrounds */
+  --bg-from: #fdfcff;
+  --bg-mid:  #f4f6fc;
+  --bg-to:   #e2e8f0;
 
-  --glass-bg: rgba(255, 255, 255, 0.95); /* Highly opaque white */
-  --glass-border: rgba(255, 255, 255, 0.8);
+  /* Neon accent */
+  --neon:       #3b82f6;
+  --neon-hover: #60a5fa;
+
+  /* Glass */
+  --glass-bg:           rgba(255,255,255,0.88);
+  --glass-bg-hover:     rgba(255,255,255,0.97);
+  --glass-border:       rgba(59,130,246,0.40);
+  --glass-border-hover: rgba(96,165,250,0.65);
+  --glass-shadow:
+    0 0 10px rgba(59,130,246,0.25),
+    inset 0 0 8px rgba(59,130,246,0.08);
+
+  /* Text */
+  --text-primary:   #0f172a;
+  --text-secondary: #334155;
+  --text-muted:     #64748b;
+
+  /* Accent */
+  --accent:       #3b82f6;
+  --accent-light: #60a5fa;
+  --accent-dark:  #2563eb;
+  --accent-glow:  rgba(59,130,246,0.28);
+
+  /* Inputs */
+  --input-bg:     rgba(255,255,255,0.92);
+  --input-border: rgba(59,130,246,0.50);
+  --input-focus:  rgba(96,165,250,0.70);
+
+  /* Status */
+  --success: #059669;
+  --error:   #e11d48;
+  --warning: #d97706;
+
+  /* Legacy compat (used by existing layouts) */
+  --background:         #fdfcff;
+  --foreground:         #0f172a;
+  --color-primary-glow: rgba(59,130,246,0.40);
+
+  /* ---- Palette bridge vars — swapped by .dark below ---- */
+  /* slate scale */
+  --p-slate-50:  #f8faff;
+  --p-slate-100: #f0f4ff;
+  --p-slate-200: #e2e8f8;
+  --p-slate-300: #c4cfe8;
+  --p-slate-400: #8898c0;
+  --p-slate-500: #64748b;
+  --p-slate-600: #475569;
+  --p-slate-700: #334155;
+  --p-slate-800: #1e293b;
+  --p-slate-900: #0f172a;
+  --p-slate-950: #020617;
+
+  /* blue scale (= light-blue / dark-purple) */
+  --p-blue-50:  #eff6ff;
+  --p-blue-100: #dbeafe;
+  --p-blue-200: #bfdbfe;
+  --p-blue-300: #93c5fd;
+  --p-blue-400: #60a5fa;
+  --p-blue-500: #3b82f6;
+  --p-blue-600: #2563eb;
+  --p-blue-700: #1d4ed8;
+  --p-blue-800: #1e40af;
+  --p-blue-900: #1e3a8a;
+
+  /* violet */
+  --p-violet-300: #c4b5fd;
+  --p-violet-400: #a78bfa;
+  --p-violet-500: #8b5cf6;
+  --p-violet-600: #7c3aed;
+  --p-violet-700: #6d28d9;
+
+  /* indigo */
+  --p-indigo-400: #818cf8;
+  --p-indigo-500: #6366f1;
+  --p-indigo-600: #4f46e5;
+
+  /* green */
+  --p-green-50:  #f0fdf4;
+  --p-green-100: #dcfce7;
+  --p-green-200: #bbf7d0;
+  --p-green-500: #22c55e;
+  --p-green-600: #16a34a;
+  --p-green-700: #15803d;
+  --p-green-800: #166534;
+
+  /* red */
+  --p-red-50:  #fff1f2;
+  --p-red-100: #ffe4e6;
+  --p-red-200: #fecdd3;
+  --p-red-500: #ef4444;
+  --p-red-600: #dc2626;
+  --p-red-700: #b91c1c;
+  --p-red-800: #991b1b;
+
+  /* orange */
+  --p-orange-50:  #fff7ed;
+  --p-orange-100: #ffedd5;
+  --p-orange-200: #fed7aa;
+  --p-orange-500: #f97316;
+  --p-orange-600: #ea580c;
+  --p-orange-700: #c2410c;
 }
 
-.dark, [data-theme="dark"] {
-    /* Dark Mode (Synthwave) */
-    --background: #0b0b14; /* Deep dark violet/slate */
-    --foreground: #ffffff;
-    
-    --color-primary: #7c3aed; /* Violet */
-    --color-primary-glow: rgba(124, 58, 237, 0.6);
-    
-    --color-secondary: #0ea5e9; 
-    --color-secondary-glow: rgba(14, 165, 233, 0.5);
+/* ----------------------------------------------------------
+   3.  DARK MODE OVERRIDES
+       Purple/Violet neon on near-black
+   ---------------------------------------------------------- */
+.dark {
+  /* Backgrounds */
+  --bg-from: #050510;
+  --bg-mid:  #0a0a1a;
+  --bg-to:   #110d21;
 
-    --glass-bg: rgba(20, 20, 30, 0.95); /* Highly opaque dark slate */
-    --glass-border: rgba(255, 255, 255, 0.15);
+  /* Neon */
+  --neon:       #a855f7;
+  --neon-hover: #c084fc;
+
+  /* Glass */
+  --glass-bg:           rgba(10,10,20,0.70);
+  --glass-bg-hover:     rgba(15,15,30,0.85);
+  --glass-border:       rgba(168,85,247,0.50);
+  --glass-border-hover: rgba(192,132,252,0.72);
+  --glass-shadow:
+    0 0 10px rgba(168,85,247,0.35),
+    inset 0 0 10px rgba(168,85,247,0.12);
+
+  /* Text */
+  --text-primary:   #ffffff;
+  --text-secondary: #cbd5e1;
+  --text-muted:     #94a3b8;
+
+  /* Accent */
+  --accent:       #a855f7;
+  --accent-light: #c084fc;
+  --accent-dark:  #9333ea;
+  --accent-glow:  rgba(168,85,247,0.42);
+
+  /* Inputs */
+  --input-bg:     rgba(15,15,30,0.80);
+  --input-border: rgba(168,85,247,0.55);
+  --input-focus:  rgba(192,132,252,0.75);
+
+  /* Status */
+  --success: #10b981;
+  --error:   #f43f5e;
+  --warning: #f59e0b;
+
+  /* Legacy compat */
+  --background:         #050510;
+  --foreground:         #ffffff;
+  --color-primary-glow: rgba(168,85,247,0.45);
+
+  /* ---- Dark palette bridge ---- */
+  --p-slate-50:  #f4f4ff;
+  --p-slate-100: #e8e8f8;
+  --p-slate-200: #ccccee;
+  --p-slate-300: #aaaacc;
+  --p-slate-400: #8888aa;
+  --p-slate-500: #6b6b8a;
+  --p-slate-600: #4a4a6a;
+  --p-slate-700: #252535;
+  --p-slate-800: #1a1a2e;
+  --p-slate-900: #12121e;
+  --p-slate-950: #0d0d1f;
+
+  /* blue → purple neon in dark */
+  --p-blue-50:  #1a0a2e;
+  --p-blue-100: #220d3a;
+  --p-blue-200: #3b1a5c;
+  --p-blue-300: #6b3aaa;
+  --p-blue-400: #9333ea;
+  --p-blue-500: #a855f7;
+  --p-blue-600: #9333ea;
+  --p-blue-700: #7c22ce;
+  --p-blue-800: #6b21a8;
+  --p-blue-900: #581c87;
+
+  --p-violet-300: #d8b4fe;
+  --p-violet-400: #c084fc;
+  --p-violet-500: #a855f7;
+  --p-violet-600: #9333ea;
+  --p-violet-700: #7e22ce;
+
+  --p-indigo-400: #a78bfa;
+  --p-indigo-500: #8b5cf6;
+  --p-indigo-600: #7c3aed;
+
+  --p-green-50:  #052e16;
+  --p-green-100: #064e22;
+  --p-green-200: #166534;
+  --p-green-500: #10b981;
+  --p-green-600: #059669;
+  --p-green-700: #047857;
+  --p-green-800: #065f46;
+
+  --p-red-50:  #1f0a0d;
+  --p-red-100: #2d0e12;
+  --p-red-200: #4c1320;
+  --p-red-500: #f43f5e;
+  --p-red-600: #e11d48;
+  --p-red-700: #be123c;
+  --p-red-800: #9f1239;
+
+  --p-orange-50:  #1c0e02;
+  --p-orange-100: #2d1806;
+  --p-orange-200: #431d08;
+  --p-orange-500: #f59e0b;
+  --p-orange-600: #d97706;
+  --p-orange-700: #b45309;
 }
 
+/* ----------------------------------------------------------
+   4.  TAILWIND v4 @theme
+       All color tokens point to bridge vars → theme-aware
+   ---------------------------------------------------------- */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  
-  --color-brand-primary: var(--color-primary);
-  --color-brand-secondary: var(--color-secondary);
-  
-  --color-glass-bg: var(--glass-bg);
-  --color-glass-border: var(--glass-border);
-
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* Brand / semantic */
+  --color-brand-primary:   var(--accent);
+  --color-brand-secondary: var(--accent-light);
+  --color-glass-bg:        var(--glass-bg);
+  --color-glass-border:    var(--glass-border);
+  --color-accent:          var(--accent);
+  --color-accent-light:    var(--accent-light);
+  --color-accent-dark:     var(--accent-dark);
+
+  /* slate */
+  --color-slate-50:  var(--p-slate-50);
+  --color-slate-100: var(--p-slate-100);
+  --color-slate-200: var(--p-slate-200);
+  --color-slate-300: var(--p-slate-300);
+  --color-slate-400: var(--p-slate-400);
+  --color-slate-500: var(--p-slate-500);
+  --color-slate-600: var(--p-slate-600);
+  --color-slate-700: var(--p-slate-700);
+  --color-slate-800: var(--p-slate-800);
+  --color-slate-900: var(--p-slate-900);
+  --color-slate-950: var(--p-slate-950);
+
+  /* blue */
+  --color-blue-50:  var(--p-blue-50);
+  --color-blue-100: var(--p-blue-100);
+  --color-blue-200: var(--p-blue-200);
+  --color-blue-300: var(--p-blue-300);
+  --color-blue-400: var(--p-blue-400);
+  --color-blue-500: var(--p-blue-500);
+  --color-blue-600: var(--p-blue-600);
+  --color-blue-700: var(--p-blue-700);
+  --color-blue-800: var(--p-blue-800);
+  --color-blue-900: var(--p-blue-900);
+
+  /* violet */
+  --color-violet-300: var(--p-violet-300);
+  --color-violet-400: var(--p-violet-400);
+  --color-violet-500: var(--p-violet-500);
+  --color-violet-600: var(--p-violet-600);
+  --color-violet-700: var(--p-violet-700);
+
+  /* indigo */
+  --color-indigo-400: var(--p-indigo-400);
+  --color-indigo-500: var(--p-indigo-500);
+  --color-indigo-600: var(--p-indigo-600);
+
+  /* green */
+  --color-green-50:  var(--p-green-50);
+  --color-green-100: var(--p-green-100);
+  --color-green-200: var(--p-green-200);
+  --color-green-500: var(--p-green-500);
+  --color-green-600: var(--p-green-600);
+  --color-green-700: var(--p-green-700);
+  --color-green-800: var(--p-green-800);
+
+  /* red */
+  --color-red-50:  var(--p-red-50);
+  --color-red-100: var(--p-red-100);
+  --color-red-200: var(--p-red-200);
+  --color-red-500: var(--p-red-500);
+  --color-red-600: var(--p-red-600);
+  --color-red-700: var(--p-red-700);
+  --color-red-800: var(--p-red-800);
+
+  /* orange */
+  --color-orange-50:  var(--p-orange-50);
+  --color-orange-100: var(--p-orange-100);
+  --color-orange-200: var(--p-orange-200);
+  --color-orange-500: var(--p-orange-500);
+  --color-orange-600: var(--p-orange-600);
+  --color-orange-700: var(--p-orange-700);
 }
+
+/* ----------------------------------------------------------
+   5.  BASE STYLES
+   ---------------------------------------------------------- */
+html             { color-scheme: light; }
+html.dark        { color-scheme: dark;  }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  background: linear-gradient(
+    160deg,
+    var(--bg-from) 0%,
+    var(--bg-mid)  55%,
+    var(--bg-to)   100%
+  );
+  color: var(--text-primary);
+  font-family: var(--font-sans), "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  min-height: 100vh;
+  transition: background 0.4s ease, color 0.3s ease;
 }
 
-/* Glassmorphism Utilities (can be used directly or via Tailwind classes) */
+/* ----------------------------------------------------------
+   6.  UTILITY CLASSES
+   ---------------------------------------------------------- */
 .glass-panel {
   background: var(--glass-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
   border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow);
 }
 
-.glow-primary {
-  box-shadow: 0 0 15px var(--color-primary-glow);
+.glow-primary,
+.glow-secondary { box-shadow: 0 0 16px var(--accent-glow); }
+
+/* ----------------------------------------------------------
+   7.  INPUT FOCUS — accent ring
+   ---------------------------------------------------------- */
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-glow) !important;
+  border-color: var(--input-focus) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.glow-secondary {
-  box-shadow: 0 0 15px var(--color-secondary-glow);
+input[type="datetime-local"],
+input[type="date"],
+input[type="time"]      { color-scheme: light; }
+.dark input[type="datetime-local"],
+.dark input[type="date"],
+.dark input[type="time"] { color-scheme: dark; }
+
+/* ----------------------------------------------------------
+   8.  SCROLLBAR
+   ---------------------------------------------------------- */
+::-webkit-scrollbar       { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: rgba(59,130,246,0.05); border-radius: 99px; }
+::-webkit-scrollbar-thumb { background: rgba(59,130,246,0.25); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-light); }
+
+.dark ::-webkit-scrollbar-track { background: rgba(168,85,247,0.05); }
+.dark ::-webkit-scrollbar-thumb { background: rgba(168,85,247,0.28); }
+.dark ::-webkit-scrollbar-thumb:hover { background: var(--accent-light); }
+
+/* ----------------------------------------------------------
+   9.  SMOOTH THEME TRANSITION
+   ---------------------------------------------------------- */
+*, *::before, *::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease;
+}
+img, svg, video, canvas, * [class*="animate-"] {
+  transition: none !important;
 }
