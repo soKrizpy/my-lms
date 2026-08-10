@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import AdminToast, { type AdminNotice } from "../components/AdminToast";
 import AddStudentModal from "./AddStudentModal";
 import EditStudentModal from "./EditStudentModal";
+import StudentDetailPanel from "./StudentDetailPanel";
 
 interface AssignedModule {
   id: number;
@@ -27,6 +28,7 @@ export default function StudentsPage() {
   const [notice, setNotice] = useState<AdminNotice | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [detailStudentId, setDetailStudentId] = useState<string | null>(null);
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -290,18 +292,31 @@ export default function StudentsPage() {
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <button
-                        onClick={() => setEditingStudent(student)}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDelete(student.id, student.full_name)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Hapus
-                      </button>
+                      <div className="flex items-center justify-end gap-3">
+                        <button
+                          onClick={() => setDetailStudentId(student.id)}
+                          title="Lihat Detail"
+                          className="inline-flex items-center gap-1.5 text-slate-600 hover:text-blue-700 text-xs font-semibold px-2.5 py-1.5 rounded-md border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                          Detail
+                        </button>
+                        <button
+                          onClick={() => setEditingStudent(student)}
+                          className="text-blue-600 hover:text-blue-900 text-xs font-semibold"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(student.id, student.full_name)}
+                          className="text-red-600 hover:text-red-900 text-xs font-semibold"
+                        >
+                          Hapus
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -330,6 +345,25 @@ export default function StudentsPage() {
             setEditingStudent(null);
             fetchStudents();
             setNotice({ type: "success", text: "Data siswa berhasil diubah." });
+          }}
+        />
+      )}
+
+      {detailStudentId && (
+        <StudentDetailPanel
+          studentId={detailStudentId}
+          onClose={() => setDetailStudentId(null)}
+          onEdit={(student) => {
+            // Find the full student object to open edit modal
+            const found = students.find((s) => s.id === student.id);
+            if (found) {
+              setDetailStudentId(null);
+              setEditingStudent(found);
+            }
+          }}
+          onDelete={async (id, name) => {
+            setDetailStudentId(null);
+            await handleDelete(id, name);
           }}
         />
       )}
