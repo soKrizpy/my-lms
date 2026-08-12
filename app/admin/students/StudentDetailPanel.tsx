@@ -189,7 +189,7 @@ export default function StudentDetailPanel({ studentId, onClose, onEdit, onDelet
         style={{ animation: "slideInRight 0.25s ease-out" }}
       >
         {/* ── Header ── */}
-        <div className="bg-gradient-to-r from-slate-900 to-slate-700 px-5 py-4 text-white flex-shrink-0">
+        <div className="bg-slate-900 px-5 py-4 text-white flex-shrink-0">
           <div className="flex items-center justify-between mb-3">
             <span className="text-xs font-semibold uppercase tracking-widest text-slate-400">
               Detail Siswa
