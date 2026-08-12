@@ -1,0 +1,933 @@
+/* =========================================
+   STUDENT.CSS — Student Dashboard
+   ========================================= */
+
+/* ---- Header — 2-row layout ---- */
+header {
+    position: relative;
+    z-index: 100;
+}
+
+.student-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.student-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+/* Right column: actions on top, gamify row below — full width of right side */
+.header-right {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;   /* stretch so gamify row fills same width */
+    gap: 10px;
+    min-width: 0;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Streak + XP — LEFT-aligned, starting from same x as first action button */
+.student-header-gamify {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: nowrap;
+    justify-content: flex-start;   /* left-aligned = lines up with GMT button */
+    width: 100%;
+}
+
+/* XP bar widget stretches to fill remaining space */
+#xpBarWidget {
+    flex: 1;
+    min-width: 200px;
+}
+
+/* -------------------------------------------------------
+   Override shared.css icon-btn inside .header-actions
+   so ALL buttons are exactly 40px tall, consistent
+   ------------------------------------------------------- */
+.header-actions .icon-btn,
+.header-actions #studentTzWidget .btn {
+    height: 40px !important;
+    min-width: 40px !important;
+    border-radius: 10px !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 6px !important;
+    cursor: pointer !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease !important;
+}
+
+/* icon-only square buttons (notif + theme) */
+.header-actions .icon-btn:not(.btn-logout) {
+    width: 40px !important;
+    padding: 0 !important;
+}
+
+/* Timezone widget button matches */
+.header-actions #studentTzWidget .btn,
+#studentTzWidget .btn {
+    height: 40px !important;
+    border-radius: 10px !important;
+    padding: 0 14px !important;
+    font-size: 0.8125rem !important;
+}
+
+/* Logout button — wider with text */
+.header-actions .icon-btn.btn-logout {
+    width: auto !important;
+    padding: 0 16px !important;
+    background: linear-gradient(135deg, #f43f5e 0%, #be123c 100%) !important;
+    border-color: transparent !important;
+    color: #fff !important;
+    box-shadow: 0 3px 10px rgba(244, 63, 94, 0.35) !important;
+}
+
+.header-actions .icon-btn.btn-logout:hover {
+    background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%) !important;
+    box-shadow: 0 5px 16px rgba(244, 63, 94, 0.5) !important;
+    transform: translateY(-2px) !important;
+}
+
+@media (max-width: 640px) {
+    .header-right {
+        width: 100%;
+    }
+    .header-actions .icon-btn.btn-logout .hide-on-mobile {
+        display: none;
+    }
+    .header-actions .icon-btn.btn-logout {
+        width: 40px !important;
+        padding: 0 !important;
+    }
+    #xpBarWidget {
+        min-width: 140px;
+    }
+}
+
+/* ---- Timezone widget ---- */
+.tz-widget {
+    position: relative;
+    z-index: 200;
+}
+
+/* ---- Header card ---- */
+.header-card h1 {
+    font-size: 1.625rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    background: linear-gradient(120deg, var(--text-primary) 0%, var(--accent-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ---- Student name greeting ---- */
+#studentName {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-top: 3px;
+}
+
+/* ---- JOIN MEETING button ---- */
+.join-btn-active {
+    animation: joinPulse 1.8s ease-in-out infinite;
+    box-shadow:
+        0 0 0 0 rgba(16, 185, 129, 0.5),
+        0 6px 20px rgba(16, 185, 129, 0.4) !important;
+    position: relative;
+}
+
+.join-btn-active::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: rgba(16, 185, 129, 0.15);
+    animation: joinRipple 1.8s ease-in-out infinite;
+}
+
+@keyframes joinPulse {
+    0%, 100% {
+        box-shadow:
+            0 0 0 0 rgba(16, 185, 129, 0.45),
+            0 6px 20px rgba(16, 185, 129, 0.4);
+    }
+    50% {
+        box-shadow:
+            0 0 0 10px rgba(16, 185, 129, 0),
+            0 8px 28px rgba(16, 185, 129, 0.55);
+    }
+}
+
+@keyframes joinRipple {
+    0%   { transform: scale(1); opacity: 0.5; }
+    100% { transform: scale(1.06); opacity: 0; }
+}
+
+/* ---- LATE button (after 20 min window) ---- */
+.btn-late {
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.15) 0%, rgba(239, 68, 68, 0.1) 100%);
+    color: rgb(251, 146, 60);
+    border: 1px solid rgba(251, 146, 60, 0.3);
+    cursor: not-allowed;
+}
+
+.btn-late:hover {
+    background: linear-gradient(135deg, rgba(251, 146, 60, 0.15) 0%, rgba(239, 68, 68, 0.1) 100%);
+    border-color: rgba(251, 146, 60, 0.3);
+}
+
+/* ---- Schedule card ---- */
+#nextSchedule {
+    padding-top: 0.5rem;
+}
+
+.schedule-card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    text-align: left;
+}
+
+.student-schedule-card {
+    min-height: 290px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1.25rem;
+}
+
+#nextSchedule .student-schedule-card {
+    border-radius: 18px;
+    background: linear-gradient(135deg,
+        rgba(139, 92, 246, 0.1) 0%,
+        rgba(109, 40, 217, 0.06) 100%);
+}
+
+#nextSchedule h3 {
+    font-size: 1.375rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+
+.schedule-card-topline {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+}
+
+.schedule-card-actions {
+    display: grid;
+    gap: 0.75rem;
+}
+
+@media (max-width: 980px) {
+    .schedule-card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .student-schedule-card {
+        min-height: auto;
+    }
+}
+
+/* ---- History items ---- */
+#historyList .glass {
+    border-radius: 14px;
+    padding: 14px 18px;
+    transition: background 0.2s ease, transform 0.2s ease;
+    border-left: 3px solid transparent;
+}
+
+#historyList .glass:hover {
+    transform: translateX(4px);
+    border-left-color: var(--accent-light);
+    background: var(--glass-bg-hover);
+}
+
+#historyList h3 {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+#historyList p {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    margin-top: 3px;
+}
+
+/* ---- Learning path items ---- */
+#learningPathList .glass {
+    border-radius: 14px;
+    padding: 12px 16px;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+#learningPathList .glass:hover {
+    background: var(--glass-bg-hover);
+    transform: translateX(3px);
+}
+
+/* ---- Progress section ---- */
+#progressFill {
+    min-width: 4px;
+}
+
+#progressText {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+/* ---- Section headers ---- */
+.glass > h2 {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* ---- Locked tab (Materi — requires completed session) ---- */
+.tab-btn.tab-locked {
+    opacity: 0.45;
+    cursor: not-allowed;
+    position: relative;
+}
+
+.tab-btn.tab-locked::after {
+    content: '🔒';
+    font-size: 0.65rem;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    line-height: 1;
+}
+
+.tab-btn.tab-locked:hover {
+    background: transparent;
+    color: inherit;
+}
+
+/* =========================================
+   HOME TAB — Two-column layout
+   ========================================= */
+.student-home-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 1.25rem;
+    align-items: start;
+}
+
+.student-sidebar {
+    position: sticky;
+    top: 1.5rem;
+}
+
+@media (max-width: 860px) {
+    .student-home-layout {
+        grid-template-columns: 1fr;
+    }
+    .student-sidebar {
+        position: static;
+    }
+}
+
+/* =========================================
+   MINI CALENDAR
+   ========================================= */
+.mini-cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.mini-cal-hdr {
+    text-align: center;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    padding-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.mini-cal-day {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    border-radius: 8px;
+    cursor: default;
+    transition: background 0.15s ease;
+}
+
+.mini-cal-day.has-session {
+    background: var(--glass-bg-hover);
+}
+
+.mini-cal-day.cal-today .cal-num {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 50%;
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+.mini-cal-day.empty {
+    pointer-events: none;
+}
+
+.cal-num {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1;
+}
+
+.cal-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.cal-dot-upcoming  { background: var(--accent-light); }
+.cal-dot-completed { background: var(--success); }
+.cal-dot-cancelled { background: var(--error); opacity: 0.7; }
+
+.cal-legend {
+    display: flex;
+    gap: 1rem;
+    margin-top: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.cal-legend span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+/* =========================================
+   PACKAGE PROGRESS WIDGET
+   ========================================= */
+.pkg-widget {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.pkg-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem 1rem;
+    flex: 1;
+}
+
+.pkg-stat {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.pkg-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 3px;
+}
+
+.pkg-stat-num {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+}
+
+.pkg-stat-lbl {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.pkg-donut-wrap {
+    flex-shrink: 0;
+}
+
+.pkg-donut {
+    display: block;
+    overflow: visible;
+}
+
+/* =========================================
+   CLEANUP & UTILITIES
+   ========================================= */
+.cal-month-label {
+    color: var(--accent-light);
+}
+
+.cal-nav-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+}
+
+.pkg-loading {
+    padding: 1.5rem 0;
+}
+
+.lock-icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+}
+
+
+/* =========================================
+   GAMIFICATION — XP Bar, Streak, Badges
+   ========================================= */
+
+/* ---- XP Bar Widget (header row 2) ---- */
+.xp-bar-widget {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-radius: 999px;
+    padding: 5px 16px 5px 8px;
+    backdrop-filter: blur(12px);
+    width: 100%;       /* fill the flex:1 from #xpBarWidget */
+}
+
+.xp-level-badge {
+    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 999px;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.xp-bar-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    min-width: 80px;
+}
+
+.xp-bar-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(139, 92, 246, 0.15);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.xp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #8b5cf6, #c084fc);
+    border-radius: 999px;
+    transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 0 8px rgba(139, 92, 246, 0.5);
+}
+
+.xp-bar-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* ---- Streak Badge (header) ---- */
+.streak-badge {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--glass-bg);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    border-radius: 999px;
+    padding: 5px 10px;
+    cursor: default;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.streak-badge:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+}
+
+.streak-badge.streak-hot {
+    border-color: rgba(239, 68, 68, 0.5);
+    background: rgba(239, 68, 68, 0.08);
+    animation: streakGlow 2s ease-in-out infinite;
+}
+
+@keyframes streakGlow {
+    0%, 100% { box-shadow: 0 0 6px rgba(239, 68, 68, 0.2); }
+    50%       { box-shadow: 0 0 16px rgba(239, 68, 68, 0.5); }
+}
+
+.streak-flame {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+.streak-count {
+    font-size: 0.875rem;
+    font-weight: 800;
+    color: var(--warning);
+    letter-spacing: -0.02em;
+}
+
+/* ---- XP Summary Card (badges tab) ---- */
+.xp-summary-card {
+    border-radius: 16px;
+}
+
+.xp-level-large {
+    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 800;
+    padding: 6px 14px;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(109, 40, 217, 0.4);
+}
+
+.streak-badge-lg {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--warning);
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 999px;
+    padding: 4px 10px;
+    white-space: nowrap;
+}
+
+/* ---- Badges Grid ---- */
+.badges-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 1rem;
+}
+
+.badge-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    background: var(--glass-bg);
+    border: 1.5px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 18px 12px 14px;
+    text-align: center;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    cursor: default;
+    position: relative;
+    overflow: hidden;
+}
+
+.badge-item.earned {
+    border-color: var(--accent);
+    background: rgba(139, 92, 246, 0.08);
+    box-shadow: 0 0 14px rgba(139, 92, 246, 0.2);
+}
+
+.badge-item.earned:hover {
+    transform: translateY(-4px) scale(1.03);
+    box-shadow: 0 8px 24px rgba(139, 92, 246, 0.35);
+    border-color: var(--accent-light);
+}
+
+.badge-item.earned::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    animation: badgeShine 3s ease-in-out infinite;
+}
+
+@keyframes badgeShine {
+    0%   { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.badge-item.locked {
+    opacity: 0.42;
+    filter: grayscale(0.6);
+}
+
+.badge-item.locked:hover {
+    opacity: 0.6;
+    filter: grayscale(0.3);
+}
+
+.badge-emoji {
+    font-size: 2rem;
+    line-height: 1;
+    display: block;
+    transition: transform 0.2s ease;
+}
+
+.badge-item.earned:hover .badge-emoji {
+    transform: scale(1.15) rotate(-5deg);
+}
+
+.badge-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+.badge-item.earned .badge-label {
+    color: var(--text-primary);
+}
+
+/* ---- XP pop animation (for toast) ---- */
+@keyframes xpPop {
+    0%   { transform: scale(0.5) translateY(10px); opacity: 0; }
+    60%  { transform: scale(1.2) translateY(-4px); opacity: 1; }
+    100% { transform: scale(1)   translateY(0);    opacity: 1; }
+}
+
+.xp-pop {
+    animation: xpPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* ---- Mobile adjustments ---- */
+@media (max-width: 768px) {
+    .xp-bar-widget {
+        min-width: 110px;
+        padding: 4px 8px 4px 6px;
+    }
+
+    .xp-bar-wrap {
+        min-width: 60px;
+    }
+
+    .badges-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+        gap: 0.75rem;
+    }
+
+    .badge-item {
+        padding: 14px 8px 10px;
+    }
+
+    .badge-emoji {
+        font-size: 1.6rem;
+    }
+}
+
+/* Light mode adjustments */
+body.light-mode .xp-bar-track {
+    background: rgba(59, 130, 246, 0.12);
+}
+
+body.light-mode .xp-bar-fill {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+
+body.light-mode .xp-level-badge,
+body.light-mode .xp-level-large {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+}
+
+body.light-mode .badge-item.earned {
+    border-color: var(--accent);
+    background: rgba(59, 130, 246, 0.06);
+    box-shadow: 0 0 14px rgba(59, 130, 246, 0.15);
+}
+
+body.light-mode .badge-item.earned::after {
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+/* =========================================
+   MORE SCHEDULING OPTIONS
+   Below mini calendar — collapsible panel
+   ========================================= */
+
+.sched-options-wrap {
+    border-top: 1px solid var(--glass-border);
+    padding-top: 12px;
+}
+
+/* Toggle button — dashed border style like the reference */
+.sched-options-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border: 1.5px dashed var(--glass-border);
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-family: "Inter", sans-serif;
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.sched-options-toggle:hover,
+.sched-options-toggle.active {
+    color: var(--accent-light);
+    border-color: var(--accent);
+    background: rgba(139, 92, 246, 0.06);
+}
+
+.sched-chevron {
+    margin-left: auto;
+    transition: transform 0.25s ease;
+    flex-shrink: 0;
+}
+
+/* Collapsible panel */
+.sched-options-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.28s ease;
+    overflow: hidden;
+}
+
+.sched-options-panel.open {
+    grid-template-rows: 1fr;
+}
+
+.sched-options-panel > * {
+    min-height: 0;
+}
+
+/* Wrapper needed for grid animation trick */
+.sched-options-panel {
+    margin-top: 0;
+}
+
+.sched-options-panel.open {
+    margin-top: 8px;
+}
+
+/* Each option row */
+.sched-option-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 14px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    cursor: pointer;
+    font-family: "Inter", sans-serif;
+    text-align: left;
+    transition: background 0.18s ease, transform 0.15s ease;
+    margin-bottom: 2px;
+}
+
+.sched-option-item:hover {
+    background: var(--glass-bg-hover);
+    transform: translateX(3px);
+}
+
+.sched-option-item:last-child {
+    margin-bottom: 0;
+}
+
+.sched-option-icon {
+    font-size: 1.25rem;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.sched-option-title {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.3;
+}
+
+.sched-option-desc {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+    line-height: 1.4;
+}
+
+.sched-option-danger .sched-option-title {
+    color: var(--error);
+}
+
+.sched-option-danger:hover {
+    background: rgba(244, 63, 94, 0.06);
+}
+
+/* Light mode */
+body.light-mode .sched-options-toggle {
+    border-color: var(--glass-border);
+    color: var(--text-secondary);
+}
+
+body.light-mode .sched-options-toggle:hover,
+body.light-mode .sched-options-toggle.active {
+    border-color: var(--accent);
+    background: rgba(59, 130, 246, 0.05);
+    color: var(--accent);
+}

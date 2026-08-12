@@ -408,6 +408,15 @@ img, svg, video, canvas, * [class*="animate-"] {
 .dark .bg-slate-100    { background-color: #1a1a2e !important; }
 .dark .bg-slate-200    { background-color: #22223a !important; }
 
+/* ---- bg-slate-800/900 used as dark badge/countdown bg → stay dark in dark mode ---- */
+/* In light mode these are very dark surfaces with white text.
+   In dark mode they must STAY dark (not flip to near-white) so text-white remains readable. */
+.dark .bg-slate-800   { background-color: #2a0a4a !important; }  /* deep violet-dark */
+.dark .bg-slate-900   { background-color: #1e0838 !important; }  /* near-black violet */
+.dark .hover\:bg-slate-700:hover { background-color: #3a1060 !important; }
+.dark .hover\:bg-slate-800:hover { background-color: #2a0a4a !important; }
+.dark .hover\:bg-slate-900:hover { background-color: #3a0f5e !important; }
+
 /* Borders */
 .dark .border-slate-100 { border-color: #2a2a3e !important; }
 .dark .border-slate-200 { border-color: #32324a !important; }
@@ -420,10 +429,15 @@ img, svg, video, canvas, * [class*="animate-"] {
 .dark .hover\:bg-slate-200:hover { background-color: #2e2e4a !important; }
 .dark .hover\:text-slate-600:hover { color: #c084fc !important; }
 
-/* Slate-900 used as button bg → remap to purple */
-.dark .bg-slate-900 { background-color: #a855f7 !important; }
-.dark .hover\:bg-slate-800:hover { background-color: #9333ea !important; }
+/* Combo fix: bg-slate-100 with text-slate-600 (student name chip) */
 .dark .bg-slate-100.text-slate-600 { background-color: #26263e !important; color: #c084fc !important; }
+
+/* Tab bar container bg-slate-200 */
+.dark .bg-slate\[\#1e293b\] { background-color: #22223a !important; }
+
+/* text-white on .bg-slate-800/.bg-slate-900 must remain white */
+.dark .bg-slate-800 .text-white,
+.dark .bg-slate-900 .text-white { color: #ffffff !important; }
 
 /* Inputs */
 .dark input:not([type="checkbox"]):not([type="radio"]),
@@ -435,6 +449,18 @@ img, svg, video, canvas, * [class*="animate-"] {
 }
 .dark input::placeholder,
 .dark textarea::placeholder { color: #7070a0 !important; }
+
+/* Label text in forms */
+.dark label { color: #b8b8d8; }
+
+/* border-slate-300 used in form borders */
+.dark .border-slate-300 { border-color: #3e3e5a !important; }
+
+/* rounded-md border inputs that use hardcoded border-slate-300 */
+.dark input[class*="border-slate-300"],
+.dark textarea[class*="border-slate-300"] {
+  border-color: rgba(168,85,247,0.45) !important;
+}
 
 /* Badge colours — keep semantic meaning, ensure readability */
 .dark .bg-green-50  { background-color: #052e16 !important; }
@@ -472,3 +498,124 @@ img, svg, video, canvas, * [class*="animate-"] {
 
 /* Dividers */
 .dark .divide-y > * + * { border-color: #2a2a3e !important; }
+
+/* ----------------------------------------------------------
+   11. DARK MODE — Component-specific fixes
+   ---------------------------------------------------------- */
+
+/* ---- Quiz panel inside glass-panel ---- */
+/* bg-slate-50/50 transparent bg in expanded topic */
+.dark [class*="bg-slate-50\\/"] { background-color: rgba(20, 20, 42, 0.5) !important; }
+
+/* ---- "Belum Waktunya" lock button: bg-slate-100 text-slate-400 ---- */
+/* Already handled by .dark .bg-slate-100 + .dark .text-slate-400 */
+
+/* ---- Tabs container: bg-slate-200 rounded-xl ---- */
+/* Already handled by .dark .bg-slate-200. Ensure active tab text stays readable */
+.dark .text-slate-400.hover\:text-white { color: #9090b8 !important; }
+
+/* ---- Session badge: bg-orange-50 border-orange-100 text-orange-600 ---- */
+/* Already handled via .dark .bg-orange-50 + .dark .text-orange-600 */
+
+/* ---- Module status badges in LearningPath ---- */
+/* "Terkunci" badge: bg-slate-200 text-slate-400 */
+.dark .bg-slate-200.text-slate-400 {
+  background-color: #22223a !important;
+  color: #9090b8 !important;
+}
+/* "Selesai" badge: bg-green-100 text-green-700 — already covered */
+/* "Aktif" badge: bg-blue-50 text-blue-600 — already covered */
+
+/* ---- Module progress bar track: bg-slate-100 ---- */
+/* Already handled */
+
+/* ---- Module button hover:bg-slate-50/80 ---- */
+.dark .hover\:bg-slate-50\/80:hover { background-color: rgba(30,30,50,0.8) !important; }
+
+/* ---- Synopsis & Quiz modal panels ---- */
+/* border-slate-200 rounded-xl used in quiz result */
+.dark .border-slate-200.rounded-xl { border-color: #32324a !important; }
+/* bg-slate-50 header in quiz result "Kunci Jawaban" */
+/* .dark .bg-slate-50 already covered */
+
+/* ---- Parent Hub: module header bg-slate-50 cursor-pointer ---- */
+/* .dark .bg-slate-50 → #14142a, hover bg-slate-100 → #1a1a2e — ok */
+
+/* ---- Riwayat quiz expanded: bg-white border-slate-200 shadow-sm ---- */
+/* .dark .bg-white → #1a1a2e — ok. text-slate-700/600/800 covered */
+
+/* ---- Admin TodayMeetingCard: Embed button bg-blue-50 text-blue-700 ---- */
+/* .dark .bg-blue-50 + .dark .text-blue-700 — already covered */
+
+/* ---- Admin: "Projek" link bg-slate-800 text-white ---- */
+/* .dark .bg-slate-800 → #2a0a4a (dark violet). text-white → stays white — ok */
+
+/* ---- Admin: student chip bg-slate-100 border-slate-200 text-slate-600 ---- */
+/* Multiple classes individually covered */
+
+/* ---- Admin: countdown bg-slate-900/bg-slate-800 text-white ---- */
+/* .dark .bg-slate-900 → #1e0838, .dark .bg-slate-800 → #2a0a4a — ok */
+
+/* ---- Admin: ProgressReportModal — text-slate-900 h2, labels ---- */
+/* .dark .text-slate-900 → #f1f1ff — ok */
+
+/* ---- Admin: "Tidak ada link" bg-slate-100 border-slate-200 text-slate-400 ---- */
+/* All covered individually */
+
+/* ---- Form: rounded-md border-slate-300 (admin forms) ---- */
+/* Covered by input/textarea override above */
+
+/* ---- Synopsis panel body: text-slate-700 / text-slate-400 italic ---- */
+/* .dark .text-slate-700 → #f1f1ff — ok */
+
+/* ---- bg-black/20 used inside modal header ---- */
+.dark .bg-black\/20 { background-color: rgba(0, 0, 0, 0.35) !important; }
+
+/* ---- Progress report: bg-white border-green-200 text-green-700/xs text-slate-700 ---- */
+/* .dark .bg-white → #1a1a2e, green colours covered */
+
+/* ---- Announcement list text-slate-500 date info ---- */
+/* Covered by .dark .text-slate-500 */
+
+/* ---- Admin heading: text-slate-900 on the h1 ---- */
+/* .dark .text-slate-900 → #f1f1ff — ok */
+
+/* ---- Ensure text-white inside bg-slate-800 and bg-slate-900 is always visible ---- */
+/* The .dark .bg-slate-800 and .dark .bg-slate-900 now stay dark, so text-white
+   is naturally readable. The explicit rule below is a safety net. */
+.dark span.bg-slate-900.text-white,
+.dark span.bg-slate-800.text-white {
+  color: #ffffff !important;
+}
+
+/* ---- Learning path: topic text colors ---- */
+/* text-slate-800 (topic title unlocked) → #f1f1ff — ok */
+/* text-slate-400 (topic title locked) → #9090b8 — ok */
+
+/* ---- Learning path: synopsis text ---- */
+/* text-slate-600 (synopsis content) → #b8b8d8 — ok via text-slate-600 */
+/* border-blue-100 → #3b1a5c — ok */
+
+/* ---- Quiz option buttons: border-slate-200 hover:bg-slate-50 ---- */
+/* .dark .border-slate-200 + .dark .hover:bg-slate-50 covered */
+
+/* ---- Quiz: score circle bg-green-100 text-green-700 / bg-red-100 text-red-600 ---- */
+/* Covered via green/red overrides */
+
+/* ---- bg-blue-600 header panels (Synopsis, Quiz modal header) ---- */
+/* These use a solid blue-600 which is fine in both modes */
+
+/* ---- sm:grid-cols-3 meeting card: glass-panel borders already purple ---- */
+
+/* ---- Student page: "3 Jadwal Mendatang" h2, jadwal count ---- */
+/* text-slate-900 (h2) + text-slate-500 (count) — covered */
+
+/* ---- "Learning Path Saya" h2 + "Parent Hub" h2 ---- */
+/* text-slate-900 — covered */
+
+/* ---- Learning path: h4 "Riwayat Kuis" text-slate-700 ---- */
+/* covered */
+
+/* ---- text-blue-600 links and synopsid toggle: stays readable via blue bridge var ---- */
+/* In dark mode --p-blue-600 = #9333ea (purple-ish), ok for links */
+.dark .text-blue-600 { color: #c084fc !important; }
