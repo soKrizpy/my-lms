@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useTheme } from "next-themes";
+import { flushSync } from "react-dom";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -19,9 +20,24 @@ export function ThemeToggle() {
 
   const isDark = theme === "dark";
 
+  const toggleTheme = () => {
+    const newTheme = isDark ? "light" : "dark";
+    
+    if (!document.startViewTransition) {
+      setTheme(newTheme);
+      return;
+    }
+
+    document.startViewTransition(() => {
+      flushSync(() => {
+        setTheme(newTheme);
+      });
+    });
+  };
+
   return (
     <button
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={toggleTheme}
       className="relative flex items-center justify-center w-9 h-9 rounded-full glass-panel hover:bg-black/10 transition-colors border border-[var(--glass-border)]"
       title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
     >

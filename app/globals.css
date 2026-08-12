@@ -379,14 +379,9 @@ input[type="time"]      { color-scheme: light; }
 .dark ::-webkit-scrollbar-thumb:hover { background: var(--accent-light); }
 
 /* ----------------------------------------------------------
-   9.  SMOOTH THEME TRANSITION
+   9.  SMOOTH THEME TRANSITION (Handled by View Transitions API)
    ---------------------------------------------------------- */
-*, *::before, *::after {
-  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.2s ease;
-}
-img, svg, video, canvas, * [class*="animate-"] {
-  transition: none !important;
-}
+/* Wildcard transitions removed to prevent INP blocking / Layout thrashing */
 
 /* ----------------------------------------------------------
    10. DARK MODE — Bright readable text on all surfaces
