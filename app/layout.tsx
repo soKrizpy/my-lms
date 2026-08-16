@@ -14,8 +14,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "My LMS",
-  description: "Platform manajemen pembelajaran - kelola modul, topik, dan kuis.",
+  title: "bits2bytes — Platform Belajar Coding Terstruktur",
+  description: "Kuasai coding dari nol hingga siap kerja. Kurikulum terstruktur, mentor berpengalaman, quiz interaktif, dan sistem belajar yang terbukti menghasilkan developer profesional.",
+  keywords: ["belajar coding", "kursus pemrograman", "web development", "bits2bytes", "belajar javascript", "bootcamp coding indonesia"],
+  openGraph: {
+    title: "bits2bytes — Platform Belajar Coding Terstruktur",
+    description: "Dari Bits ke Bytes, dari Pemula ke Developer Profesional.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({
@@ -25,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
