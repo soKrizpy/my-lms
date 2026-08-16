@@ -708,12 +708,88 @@ function ParentHub({ pastMeetings, quizAttempts, modules }: { pastMeetings: Meet
   );
 }
 
+// --- Invoice Banner Component ---
+function InvoiceBanner({ invoice }: { invoice: any }) {
+  const [visible, setVisible] = useState(true);
+  const [paidState, setPaidState] = useState(invoice.status === 'paid');
+
+  useEffect(() => {
+    // If it's paid, we show the success banner for 5 seconds, then hide permanently
+    if (invoice.status === 'paid') {
+      const isDismissed = localStorage.getItem(`invoice_dismissed_${invoice.id}`);
+      if (isDismissed) {
+        setVisible(false);
+      } else {
+        const timer = setTimeout(() => {
+          setVisible(false);
+          localStorage.setItem(`invoice_dismissed_${invoice.id}`, 'true');
+        }, 5000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [invoice]);
+
+  if (!visible) return null;
+
+  if (paidState) {
+    return (
+      <div className="bg-green-600 text-white p-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-bottom-5">
+        <div className="bg-white/20 p-2 rounded-full">
+          <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+        </div>
+        <div className="flex-1">
+          <p className="font-bold">Terima Kasih!</p>
+          <p className="text-sm text-green-100">Tagihan bulan {invoice.month_year} sudah dibayar lunas.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 rounded-xl shadow-2xl flex items-start gap-4 animate-in fade-in slide-in-from-bottom-5">
+      <div className="bg-white/20 p-2 rounded-full flex-shrink-0">
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex justify-between items-start">
+          <p className="font-bold">Tagihan Bulan {invoice.month_year}</p>
+        </div>
+        <p className="text-sm text-blue-100 mt-1">
+          {invoice.attended_meetings} Kehadiran x Rp {invoice.price_per_meeting.toLocaleString('id-ID')}
+        </p>
+        <p className="text-lg font-bold mt-2">Rp {invoice.total_amount.toLocaleString('id-ID')}</p>
+        <div className="mt-3 pt-3 border-t border-blue-400/50">
+          <p className="text-xs text-blue-100 mb-1">Transfer ke rekening:</p>
+          <p className="text-sm font-semibold tracking-wide bg-black/20 p-2 rounded-lg text-center break-all">
+            {invoice.bank_account}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // --- Main Student Dashboard Page ---
 export default function StudentDashboard() {
   const [data, setData] = useState<any>(null);
+  const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"jadwal" | "learning" | "parent">("jadwal");
   const [announcement, setAnnouncement] = useState<string | null>(null);
+
+  const fetchInvoices = async () => {
+    try {
+      const res = await fetch("/api/student/invoices");
+      if (res.ok) {
+        const invs = await res.json();
+        setInvoices(invs);
+      }
+    } catch (err) {
+      console.error("Failed to fetch invoices", err);
+    }
+  };
 
   const fetchData = useCallback(async () => {
     try {
@@ -730,7 +806,10 @@ export default function StudentDashboard() {
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { 
+    fetchData(); 
+    fetchInvoices();
+  }, [fetchData]);
 
   const tabs = [
     { id: "jadwal" as const, label: "Jadwal Belajar", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
@@ -739,7 +818,14 @@ export default function StudentDashboard() {
   ];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 relative">
+      {/* Invoice Banners */}
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-full max-w-lg z-50 flex flex-col gap-3 px-4">
+        {invoices.map((inv) => (
+          <InvoiceBanner key={inv.id} invoice={inv} />
+        ))}
+      </div>
+
       {/* Greeting */}
       {!loading && data?.studentName && (
         <div>

@@ -41,6 +41,12 @@ export default function AdminLayout({
           >
             Jadwal
           </a>
+          <a
+            href="/admin/invoices"
+            className="px-4 py-2.5 rounded-xl hover:bg-brand-primary/20 hover:text-brand-primary transition-all hover:shadow-[0_0_10px_var(--color-primary-glow)]"
+          >
+            Invoice
+          </a>
         </nav>
 
         <div className="mt-auto pt-4 border-t border-[var(--glass-border)] flex items-center justify-between">
