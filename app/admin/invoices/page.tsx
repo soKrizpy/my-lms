@@ -63,6 +63,9 @@ export default function InvoicesPage() {
   const handleGenerate = async () => {
     if (!confirm(`Generate invoice untuk bulan ${selectedMonth}?`)) return;
     setGenerating(true);
+    // Yield a macrotask so the browser can repaint (disabled button state)
+    // before the fetch blocks the main thread — fixes INP regression.
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
     try {
       const res = await fetch("/api/admin/invoices/generate", {
         method: "POST",
