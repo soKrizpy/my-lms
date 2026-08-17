@@ -22,7 +22,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-6">
+      <main className="max-w-5xl mx-auto px-4 py-6 pb-24 md:pb-6">
         {children}
       </main>
     </div>

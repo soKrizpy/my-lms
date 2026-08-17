@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { Calendar, BookOpen, Users } from "lucide-react";
 
 // --- Types ---
 interface Meeting {
@@ -847,25 +848,27 @@ export default function StudentDashboard() {
   }, [fetchData]);
 
   const tabs = [
-    { id: "jadwal" as const, label: "Jadwal Belajar", icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" },
-    { id: "learning" as const, label: "Learning Path", icon: "M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" },
-    { id: "parent" as const, label: "Parent Hub", icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" },
+    { id: "jadwal" as const, label: "Jadwal Belajar", icon: Calendar },
+    { id: "learning" as const, label: "Learning Path", icon: BookOpen },
+    { id: "parent" as const, label: "Parent Hub", icon: Users },
   ];
 
   return (
     <div className="space-y-5 relative">
       {/* Invoice Banners */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-full max-w-lg z-50 flex flex-col gap-3 px-4">
+      <div className="fixed bottom-20 md:bottom-4 left-1/2 -translate-x-1/2 w-full max-w-lg z-40 flex flex-col gap-3 px-4 pointer-events-none">
         {invoices.map((inv) => (
-          <InvoiceBanner key={inv.id} invoice={inv} />
+          <div key={inv.id} className="pointer-events-auto">
+            <InvoiceBanner invoice={inv} />
+          </div>
         ))}
       </div>
 
       {/* Greeting */}
       {!loading && data?.studentName && (
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Halo, {data.studentName}! 👋</h1>
-          <p className="text-sm text-slate-500 mt-1">Semangat belajarnya hari ini.</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Halo, {data.studentName}! 👋</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Semangat belajarnya hari ini.</p>
         </div>
       )}
 
@@ -880,21 +883,54 @@ export default function StudentDashboard() {
         </div>
       )}
 
-      {/* Tabs */}
-      <div className="flex gap-2 p-1 bg-slate-200 rounded-xl">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-sm font-semibold transition-all ${activeTab === tab.id ? "bg-brand-primary text-white glow-primary" : "text-slate-400 hover:text-white hover:bg-white/10"}`}
-          >
-            <svg className="w-4 h-4 hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={tab.icon} />
-            </svg>
-            {tab.label}
-          </button>
-        ))}
+      {/* Desktop / Tablet Top Tabs */}
+      <div className="flex gap-2 p-1.5 glass-panel rounded-2xl border border-[var(--glass-border)]">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const active = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-xl text-sm font-bold transition-all cursor-pointer ${
+                active
+                  ? "bg-brand-primary text-white shadow-lg shadow-brand-primary/30 glow-primary"
+                  : "text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-white/10"
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+            </button>
+          );
+        })}
       </div>
+
+      {/* Mobile Floating Bottom Dock (Jadwal Belajar, Learning Path, Parent Hub) */}
+      <nav className="md:hidden fixed bottom-3 left-3 right-3 z-50 glass-panel rounded-2xl p-1.5 flex items-center justify-around shadow-2xl border border-[var(--glass-border)] bg-slate-900/85 backdrop-blur-xl">
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          const active = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`relative flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all cursor-pointer ${
+                active
+                  ? "text-brand-secondary font-bold scale-105"
+                  : "text-slate-400 hover:text-slate-200"
+              }`}
+            >
+              <Icon className={`w-5 h-5 ${active ? "text-brand-secondary animate-pulse" : "opacity-80"}`} />
+              <span className="text-[10px] mt-1 tracking-tight font-semibold">{tab.label}</span>
+
+              {/* Active Indicator Glow Pill */}
+              {active && (
+                <span className="absolute -top-1 w-6 h-1 rounded-full bg-brand-secondary shadow-[0_0_8px_var(--color-brand-secondary)]" />
+              )}
+            </button>
+          );
+        })}
+      </nav>
 
       {/* Content */}
       {loading ? (
