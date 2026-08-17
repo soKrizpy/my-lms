@@ -4,6 +4,7 @@ import React from "react";
 import { logout } from "./actions";
 import LogoutButton from "./components/LogoutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Logo } from "@/components/Logo";
 
 export default function AdminLayout({
   children,
@@ -14,7 +15,10 @@ export default function AdminLayout({
     <div className="min-h-screen flex bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300">
       {/* Sidebar */}
       <aside className="w-60 glass-panel border-r border-[var(--glass-border)] flex flex-col p-4 shadow-xl z-20">
-        <h2 className="text-xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-secondary">Admin LMS</h2>
+        <div className="mb-8 px-1 flex items-center justify-between">
+          <Logo size={32} showText={true} />
+          <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-primary/20 text-brand-primary border border-brand-primary/30">Admin</span>
+        </div>
 
         <nav className="flex flex-col gap-3 text-sm font-medium">
           <a

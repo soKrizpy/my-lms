@@ -237,7 +237,7 @@ function Navbar() {
       {/* Logo */}
       <div style={{ display: "flex", alignItems: "center", gap: "0.625rem", cursor: "pointer" }} onClick={() => scrollTo("hero")}>
         <Image
-          src={scrolled ? "/logo-b2b-light.svg" : "/logo-b2b-dark.svg"}
+          src={scrolled ? "/b2blight.webp" : "/b2bdark.webp"}
           alt="bits2bytes logo"
           width={40}
           height={40}
@@ -914,7 +914,7 @@ function Footer() {
           {/* Brand */}
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "0.625rem", marginBottom: "1rem" }}>
-              <Image src="/logo-b2b-dark.svg" alt="bits2bytes" width={36} height={36} />
+              <Image src="/b2bdark.webp" alt="bits2bytes" width={36} height={36} />
               <span style={{ fontWeight: 800, fontSize: "1.1rem", color: "#fff" }}>
                 bits<span style={{ color: "#7cc62f" }}>2</span>bytes
               </span>

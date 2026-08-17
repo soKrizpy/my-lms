@@ -17,6 +17,14 @@ export const metadata: Metadata = {
   title: "bits2bytes — Platform Belajar Coding Terstruktur",
   description: "Kuasai coding dari nol hingga siap kerja. Kurikulum terstruktur, mentor berpengalaman, quiz interaktif, dan sistem belajar yang terbukti menghasilkan developer profesional.",
   keywords: ["belajar coding", "kursus pemrograman", "web development", "bits2bytes", "belajar javascript", "bootcamp coding indonesia"],
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.webp", type: "image/webp" },
+      { url: "/favicon.png", type: "image/png" },
+    ],
+    apple: "/favicon.png",
+  },
   openGraph: {
     title: "bits2bytes — Platform Belajar Coding Terstruktur",
     description: "Dari Bits ke Bytes, dari Pemula ke Developer Profesional.",
