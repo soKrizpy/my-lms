@@ -13,8 +13,9 @@ function calcTimeLeft(targetDate: string) {
 }
 
 function useCountdown(targetDate: string) {
-  const [timeLeft, setTimeLeft] = useState(() => calcTimeLeft(targetDate));
+  const [timeLeft, setTimeLeft] = useState<ReturnType<typeof calcTimeLeft>>(null);
   useEffect(() => {
+    setTimeLeft(calcTimeLeft(targetDate));
     const t = setInterval(() => setTimeLeft(calcTimeLeft(targetDate)), 1000);
     return () => clearInterval(t);
   }, [targetDate]);
