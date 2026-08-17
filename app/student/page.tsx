@@ -56,14 +56,13 @@ function calcTimeLeft(targetDate: string) {
   };
 }
 function useCountdown(targetDate: string) {
-  const [timeLeft, setTimeLeft] = useState(() => calcTimeLeft(targetDate));
+  const [timeLeft, setTimeLeft] = useState<ReturnType<typeof calcTimeLeft>>(null);
   useEffect(() => {
-    // Don't bother ticking if the target is already in the past
+    setTimeLeft(calcTimeLeft(targetDate));
     if (!calcTimeLeft(targetDate)) return;
     const timer = setInterval(() => {
       const left = calcTimeLeft(targetDate);
       setTimeLeft(left);
-      // Stop the interval once it hits zero to avoid unnecessary ticks
       if (!left) clearInterval(timer);
     }, 1000);
     return () => clearInterval(timer);
@@ -132,8 +131,8 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
   const meetTime = new Date(meet.meeting_date).getTime();
   const meetEndTime = meetTime + 60 * 60 * 1000;
 
-  // Can join live for the first 30 minutes
-  const canJoinLive = !meet.is_completed && now >= meetTime && now < meetTime + 30 * 60 * 1000;
+  // Can join live for the first 60 minutes
+  const canJoinLive = !meet.is_completed && now >= meetTime && now < meetEndTime;
   // Is live for the whole hour just for the badge
   const isLive = !meet.is_completed && now >= meetTime && now < meetEndTime;
   const isCompleted = meet.is_completed;
@@ -230,7 +229,7 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
         )}
 
         {/* Action */}
-        {isCompleted || now >= meetTime + 30 * 60 * 1000 ? (
+        {isCompleted || now >= meetEndTime ? (
           meet.meeting_students?.[0]?.has_joined ? (
             hasAttempted ? (
               <div className="flex items-center justify-center w-full bg-green-100 text-green-700 rounded-lg py-2 text-sm font-medium border border-green-200 mt-3">
