@@ -74,7 +74,8 @@ export default function InvoicesPage() {
       });
       if (!res.ok) throw new Error("Gagal generate invoice");
       const result = await res.json();
-      alert(`Berhasil generate ${result.generated} invoice.`);
+      const updatedMsg = result.updated > 0 ? `, ${result.updated} diperbarui` : "";
+      alert(`Berhasil generate ${result.generated} invoice baru${updatedMsg}.`);
       fetchInvoices(selectedMonth);
     } catch (err: any) {
       alert(err.message);

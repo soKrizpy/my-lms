@@ -33,8 +33,8 @@ export async function POST(request: Request) {
 
     // Group by student
     const studentStats: Record<string, { total: number; attended: number }> = {};
-    meetings.forEach((meeting: any) => {
-      meeting.meeting_students.forEach((ms: any) => {
+    for (const meeting of meetings as any[]) {
+      for (const ms of meeting.meeting_students) {
         if (!studentStats[ms.student_id]) {
           studentStats[ms.student_id] = { total: 0, attended: 0 };
         }
@@ -42,18 +42,25 @@ export async function POST(request: Request) {
         if (ms.has_joined) {
           studentStats[ms.student_id].attended++;
         }
-      });
-    });
+      }
+    }
 
-    // Check existing invoices for this month
+    // Fetch full existing invoices for this month
     const { data: existingInvoices, error: existingError } = await supabaseAdmin
       .from("invoices")
-      .select("student_id")
+      .select("id, student_id, status, price_per_meeting")
       .eq("month_year", monthYear);
-    
+
     if (existingError) throw existingError;
 
-    const existingStudentIds = existingInvoices.map((inv: any) => inv.student_id);
+    const existingByStudent: Record<string, { id: string; status: string; price_per_meeting: number }> = {};
+    for (const inv of existingInvoices as any[]) {
+      existingByStudent[inv.student_id] = {
+        id: inv.id,
+        status: inv.status,
+        price_per_meeting: inv.price_per_meeting,
+      };
+    }
 
     // Get default price and bank account (from the most recent invoice)
     const { data: lastInvoice } = await supabaseAdmin
@@ -63,14 +70,18 @@ export async function POST(request: Request) {
       .limit(1)
       .maybeSingle();
 
-    const defaultPrice = lastInvoice?.price_per_meeting || 0;
-    const defaultBank = lastInvoice?.bank_account || "";
+    const defaultPrice = (lastInvoice as any)?.price_per_meeting || 0;
+    const defaultBank = (lastInvoice as any)?.bank_account || "";
 
-    // Prepare inserts
     const inserts: any[] = [];
+    const updatePromises: Promise<any>[] = [];
+
     for (const studentId of Object.keys(studentStats)) {
-      if (!existingStudentIds.includes(studentId)) {
-        const stats = studentStats[studentId];
+      const stats = studentStats[studentId];
+      const existing = existingByStudent[studentId];
+
+      if (!existing) {
+        // No invoice yet — insert fresh
         inserts.push({
           student_id: studentId,
           month_year: monthYear,
@@ -81,7 +92,23 @@ export async function POST(request: Request) {
           bank_account: defaultBank,
           status: "draft",
         });
+      } else if (existing.status === "draft") {
+        // Draft invoice — refresh meeting counts only, preserve price/bank/status
+        updatePromises.push(
+          supabaseAdmin
+            .from("invoices")
+            .update({
+              total_meetings: stats.total,
+              attended_meetings: stats.attended,
+              total_amount: stats.attended * existing.price_per_meeting,
+            })
+            .eq("id", existing.id)
+            .then(({ error }) => {
+              if (error) throw error;
+            })
+        );
       }
+      // sent/paid invoices: skip entirely
     }
 
     if (inserts.length > 0) {
@@ -89,9 +116,20 @@ export async function POST(request: Request) {
       if (insertError) throw insertError;
     }
 
-    return NextResponse.json({ success: true, generated: inserts.length });
+    if (updatePromises.length > 0) {
+      await Promise.all(updatePromises);
+    }
+
+    return NextResponse.json({
+      success: true,
+      generated: inserts.length,
+      updated: updatePromises.length,
+    });
   } catch (error: any) {
     console.error("Generate invoice error:", error);
-    return NextResponse.json({ error: error.message || "Terjadi kesalahan saat membuat invoice." }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || "Terjadi kesalahan saat membuat invoice." },
+      { status: 500 }
+    );
   }
 }
