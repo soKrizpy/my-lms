@@ -45,7 +45,7 @@ export default function InvoicesPage() {
   const fetchInvoices = async (month: string) => {
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/invoices?monthYear=${month}`);
+      const res = await fetch(`/api/admin/invoices?monthYear=${month}`, { cache: 'no-store' });
       if (!res.ok) throw new Error("Gagal mengambil data invoice");
       const data = await res.json();
       setInvoices(data);
