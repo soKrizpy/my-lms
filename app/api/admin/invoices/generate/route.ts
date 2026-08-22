@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     const defaultBank = (lastInvoice as any)?.bank_account || "";
 
     const inserts: any[] = [];
-    const updatePromises: Promise<any>[] = [];
+    const updatePromises: Promise<void>[] = [];
 
     for (const studentId of Object.keys(studentStats)) {
       const stats = studentStats[studentId];
@@ -94,18 +94,22 @@ export async function POST(request: Request) {
         });
       } else if (existing.status === "draft") {
         // Draft invoice — refresh meeting counts only, preserve price/bank/status
+        const invId = existing.id;
+        const price = existing.price_per_meeting;
+        const total = stats.total;
+        const attended = stats.attended;
         updatePromises.push(
-          supabaseAdmin
-            .from("invoices")
-            .update({
-              total_meetings: stats.total,
-              attended_meetings: stats.attended,
-              total_amount: stats.attended * existing.price_per_meeting,
-            })
-            .eq("id", existing.id)
-            .then(({ error }) => {
-              if (error) throw error;
-            })
+          (async (): Promise<void> => {
+            const { error } = await supabaseAdmin
+              .from("invoices")
+              .update({
+                total_meetings: total,
+                attended_meetings: attended,
+                total_amount: attended * price,
+              })
+              .eq("id", invId);
+            if (error) throw error;
+          })()
         );
       }
       // sent/paid invoices: skip entirely
