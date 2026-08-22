@@ -17,14 +17,16 @@ type Invoice = {
   };
 };
 
-export default function InvoiceModal({ invoice, onClose, onSaved }: { invoice: Invoice, onClose: () => void, onSaved: () => void }) {
+export default function InvoiceModal({ invoice, onClose, onSaved }: { invoice: Invoice; onClose: () => void; onSaved: () => void }) {
   const [price, setPrice] = useState(invoice.price_per_meeting.toString());
   const [bankAccount, setBankAccount] = useState(invoice.bank_account || "");
+  const [attended, setAttended] = useState(invoice.attended_meetings.toString());
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
     setSaving(true);
     const numPrice = parseInt(price) || 0;
+    const numAttended = Math.max(0, Math.min(parseInt(attended) || 0, invoice.total_meetings));
     try {
       const res = await fetch("/api/admin/invoices", {
         method: "PUT",
@@ -34,7 +36,8 @@ export default function InvoiceModal({ invoice, onClose, onSaved }: { invoice: I
           price_per_meeting: numPrice,
           bank_account: bankAccount,
           status: invoice.status,
-          total_amount: invoice.attended_meetings * numPrice
+          attended_meetings: numAttended,
+          total_amount: numAttended * numPrice,
         }),
       });
       if (!res.ok) throw new Error("Gagal menyimpan invoice");
@@ -46,13 +49,15 @@ export default function InvoiceModal({ invoice, onClose, onSaved }: { invoice: I
     }
   };
 
-  const totalAmount = invoice.attended_meetings * (parseInt(price) || 0);
+  const numPrice = parseInt(price) || 0;
+  const numAttended = Math.max(0, Math.min(parseInt(attended) || 0, invoice.total_meetings));
+  const totalAmount = numAttended * numPrice;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-[var(--background)] border border-[var(--glass-border)] rounded-2xl p-6 w-full max-w-md shadow-2xl">
         <h3 className="text-xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-secondary">
-          Edit Invoice - {invoice.students?.full_name}
+          Edit Invoice — {invoice.students?.full_name}
         </h3>
 
         <div className="space-y-4 text-sm">
@@ -61,8 +66,22 @@ export default function InvoiceModal({ invoice, onClose, onSaved }: { invoice: I
             <span className="font-medium">{invoice.month_year}</span>
           </div>
           <div className="flex justify-between border-b border-[var(--glass-border)] pb-2">
-            <span className="opacity-70">Kehadiran</span>
-            <span className="font-medium">{invoice.attended_meetings} dari {invoice.total_meetings}</span>
+            <span className="opacity-70">Total Pertemuan</span>
+            <span className="font-medium">{invoice.total_meetings}</span>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium opacity-70 mb-1">
+              Kehadiran (maks. {invoice.total_meetings})
+            </label>
+            <input
+              type="number"
+              min={0}
+              max={invoice.total_meetings}
+              value={attended}
+              onChange={(e) => setAttended(e.target.value)}
+              className="w-full px-4 py-2 rounded-xl bg-[var(--background)] border border-[var(--glass-border)] focus:outline-none focus:border-brand-primary transition-colors"
+            />
           </div>
 
           <div>
@@ -88,7 +107,7 @@ export default function InvoiceModal({ invoice, onClose, onSaved }: { invoice: I
 
           <div className="flex justify-between border-t border-[var(--glass-border)] pt-4 mt-2">
             <span className="font-bold text-lg">Total Tagihan</span>
-            <span className="font-bold text-lg text-brand-primary">Rp {totalAmount.toLocaleString('id-ID')}</span>
+            <span className="font-bold text-lg text-brand-primary">Rp {totalAmount.toLocaleString("id-ID")}</span>
           </div>
         </div>
 

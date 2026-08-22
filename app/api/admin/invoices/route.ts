@@ -4,7 +4,7 @@ import { getSupabaseAdmin } from "../../../../lib/supabaseAdmin";
 export async function GET(request: Request) {
   const supabaseAdmin = getSupabaseAdmin();
   const { searchParams } = new URL(request.url);
-  const monthYear = searchParams.get("monthYear"); // Format: YYYY-MM
+  const monthYear = searchParams.get("monthYear");
 
   if (!monthYear) {
     return NextResponse.json({ error: "monthYear is required" }, { status: 400 });
@@ -12,13 +12,7 @@ export async function GET(request: Request) {
 
   const { data, error } = await supabaseAdmin
     .from("invoices")
-    .select(`
-      *,
-      students (
-        full_name,
-        email_or_phone
-      )
-    `)
+    .select(`*, students ( full_name, email_or_phone )`)
     .eq("month_year", monthYear)
     .order("created_at", { ascending: false });
 
@@ -26,27 +20,33 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  return NextResponse.json(data, { headers: { 'Cache-Control': 'no-store' } });
+  return NextResponse.json(data, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function PUT(request: Request) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
     const body = await request.json();
-    const { id, price_per_meeting, bank_account, status, total_amount } = body;
+    const { id, price_per_meeting, bank_account, status, total_amount, attended_meetings } = body;
 
     if (!id) {
       return NextResponse.json({ error: "ID wajib diisi." }, { status: 400 });
     }
 
+    const updatePayload: Record<string, any> = {
+      price_per_meeting,
+      bank_account,
+      status,
+      total_amount,
+    };
+
+    if (attended_meetings !== undefined) {
+      updatePayload.attended_meetings = attended_meetings;
+    }
+
     const { error } = await supabaseAdmin
       .from("invoices")
-      .update({
-        price_per_meeting,
-        bank_account,
-        status,
-        total_amount,
-      })
+      .update(updatePayload)
       .eq("id", id);
 
     if (error) throw error;
