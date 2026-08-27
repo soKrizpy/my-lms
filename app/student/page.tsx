@@ -868,52 +868,60 @@ export default function StudentDashboard() {
 
       {/* Fantasy Magical Greeting Card */}
       {!loading && data?.studentName && (
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-indigo-500/30 p-5 sm:p-6 shadow-xl shadow-indigo-950/40 text-white">
-          {/* Ambient Magical Stardust */}
-          <MagicalParticles colorScheme="mana" density={20} className="absolute inset-0 pointer-events-none" />
+        <div className="relative overflow-hidden rounded-2xl p-6 sm:p-7 shadow-2xl transition-all text-white bg-[#0f172a] dark:bg-[#080516] border border-blue-500/30 dark:border-purple-500/50 shadow-blue-950/20 dark:shadow-[0_0_30px_rgba(168,85,247,0.35)]">
+          {/* Ambient Magical Stardust Canvas */}
+          <MagicalParticles colorScheme="rainbow" density={65} className="absolute inset-0 pointer-events-none z-0" />
 
-          {/* Radial Mana Glows */}
-          <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-blue-500/20 blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-12 -left-12 w-48 h-48 rounded-full bg-lime-500/15 blur-3xl pointer-events-none" />
+          {/* Deep Nebula & Mana Glow Overlays */}
+          <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-blue-500/25 dark:bg-purple-600/30 blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '6s' }} />
+          <div className="absolute -bottom-16 -left-16 w-56 h-56 rounded-full bg-lime-500/20 dark:bg-pink-500/20 blur-3xl pointer-events-none animate-pulse" style={{ animationDuration: '8s' }} />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-32 rounded-full bg-indigo-500/15 dark:bg-purple-500/20 blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="space-y-1">
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold backdrop-blur-md mb-1">
-                <Sparkles className="w-3.5 h-3.5 text-lime-400 animate-spin" style={{ animationDuration: '8s' }} />
-                <span>Student Quest Portal</span>
+          {/* Floating Decorative Constellation Sparkles */}
+          <div className="absolute top-3 right-1/3 text-amber-300/70 text-xs pointer-events-none animate-ping" style={{ animationDuration: '4s' }}>✦</div>
+          <div className="absolute bottom-3 right-1/4 text-purple-300/70 text-sm pointer-events-none animate-pulse">✧</div>
+          <div className="absolute top-4 left-1/2 text-cyan-300/80 text-xs pointer-events-none animate-bounce" style={{ animationDuration: '5s' }}>⋆</div>
+
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+            <div className="space-y-1.5">
+              <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-indigo-500/25 dark:bg-purple-600/30 border border-indigo-400/40 dark:border-purple-400/50 text-indigo-200 dark:text-purple-200 text-xs font-semibold backdrop-blur-md shadow-sm mb-0.5">
+                <Sparkles className="w-3.5 h-3.5 text-lime-400 dark:text-pink-400 animate-spin" style={{ animationDuration: '6s' }} />
+                <span className="tracking-wide">Student Quest Portal</span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
-                Halo, {data.studentName}! <span className="inline-block hover:scale-125 transition-transform cursor-default">✨</span>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)]">
+                Halo, {data.studentName}! <span className="inline-block hover:scale-125 transition-transform cursor-default animate-bounce" style={{ animationDuration: '3s' }}>✨</span>
               </h1>
-              <p className="text-sm text-indigo-200/80 max-w-lg">
+              <p className="text-sm text-slate-300 dark:text-purple-200/90 max-w-lg leading-relaxed">
                 Siap melanjutkan petualangan koding hari ini? Selesaikan modul dan taklukkan tantangannya!
               </p>
             </div>
 
             {/* Live Stats Magical Badges */}
-            <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+            <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
               {/* Completed Classes */}
-              <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 border border-white/15 backdrop-blur-md shadow-sm">
-                <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+              <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-black/40 dark:bg-black/60 border border-white/20 dark:border-purple-500/40 backdrop-blur-xl shadow-lg shadow-black/30 hover:border-emerald-400/50 transition-all">
+                <div className="p-2 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-emerald-400 shadow-[0_0_10px_rgba(16,185,129,0.3)]">
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-xs text-slate-300 font-medium">Selesai</div>
-                  <div className="text-sm font-bold text-white tabular-nums">
-                    <MagicalCounter value={data.pastMeetings?.filter((m: any) => m.is_completed)?.length || 0} /> Sesi
+                  <div className="text-[11px] uppercase tracking-wider text-slate-400 dark:text-purple-300/80 font-semibold">Selesai</div>
+                  <div className="text-base font-black text-white tabular-nums flex items-center gap-1">
+                    <MagicalCounter value={data.pastMeetings?.filter((m: any) => m.is_completed)?.length || 0} />
+                    <span className="text-xs font-medium text-slate-300">Sesi</span>
                   </div>
                 </div>
               </div>
 
               {/* Quizzes / Challenges */}
-              <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 border border-white/15 backdrop-blur-md shadow-sm">
-                <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400">
+              <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-black/40 dark:bg-black/60 border border-white/20 dark:border-purple-500/40 backdrop-blur-xl shadow-lg shadow-black/30 hover:border-amber-400/50 transition-all">
+                <div className="p-2 rounded-lg bg-amber-500/20 border border-amber-400/30 text-amber-400 shadow-[0_0_10px_rgba(245,158,11,0.3)]">
                   <Trophy className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-xs text-slate-300 font-medium">Quiz</div>
-                  <div className="text-sm font-bold text-white tabular-nums">
-                    <MagicalCounter value={data.quizAttempts?.length || 0} /> Selesai
+                  <div className="text-[11px] uppercase tracking-wider text-slate-400 dark:text-purple-300/80 font-semibold">Quiz</div>
+                  <div className="text-base font-black text-white tabular-nums flex items-center gap-1">
+                    <MagicalCounter value={data.quizAttempts?.length || 0} />
+                    <span className="text-xs font-medium text-slate-300">Selesai</span>
                   </div>
                 </div>
               </div>
