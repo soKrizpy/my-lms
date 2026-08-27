@@ -1,7 +1,9 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Calendar, BookOpen, Users } from "lucide-react";
+import { Calendar, BookOpen, Users, Sparkles, Trophy, CheckCircle2 } from "lucide-react";
+import { MagicalParticles } from "@/components/MagicalParticles";
+import { MagicalCounter } from "@/components/MagicalCounter";
 
 // --- Types ---
 interface Meeting {
@@ -864,11 +866,59 @@ export default function StudentDashboard() {
         ))}
       </div>
 
-      {/* Greeting */}
+      {/* Fantasy Magical Greeting Card */}
       {!loading && data?.studentName && (
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Halo, {data.studentName}! 👋</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Semangat belajarnya hari ini.</p>
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-indigo-500/30 p-5 sm:p-6 shadow-xl shadow-indigo-950/40 text-white">
+          {/* Ambient Magical Stardust */}
+          <MagicalParticles colorScheme="mana" density={20} className="absolute inset-0 pointer-events-none" />
+
+          {/* Radial Mana Glows */}
+          <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-blue-500/20 blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-12 -left-12 w-48 h-48 rounded-full bg-lime-500/15 blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-semibold backdrop-blur-md mb-1">
+                <Sparkles className="w-3.5 h-3.5 text-lime-400 animate-spin" style={{ animationDuration: '8s' }} />
+                <span>Student Quest Portal</span>
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
+                Halo, {data.studentName}! <span className="inline-block hover:scale-125 transition-transform cursor-default">✨</span>
+              </h1>
+              <p className="text-sm text-indigo-200/80 max-w-lg">
+                Siap melanjutkan petualangan koding hari ini? Selesaikan modul dan taklukkan tantangannya!
+              </p>
+            </div>
+
+            {/* Live Stats Magical Badges */}
+            <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+              {/* Completed Classes */}
+              <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 border border-white/15 backdrop-blur-md shadow-sm">
+                <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-300 font-medium">Selesai</div>
+                  <div className="text-sm font-bold text-white tabular-nums">
+                    <MagicalCounter value={data.pastMeetings?.filter((m: any) => m.is_completed)?.length || 0} /> Sesi
+                  </div>
+                </div>
+              </div>
+
+              {/* Quizzes / Challenges */}
+              <div className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white/10 border border-white/15 backdrop-blur-md shadow-sm">
+                <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400">
+                  <Trophy className="w-4 h-4" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-300 font-medium">Quiz</div>
+                  <div className="text-sm font-bold text-white tabular-nums">
+                    <MagicalCounter value={data.quizAttempts?.length || 0} /> Selesai
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

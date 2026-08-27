@@ -3,6 +3,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { MagicalParticles } from "@/components/MagicalParticles";
+import { MagicalCounter } from "@/components/MagicalCounter";
 import "./landing.css";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -347,13 +349,16 @@ function Navbar() {
 // ─── Hero ─────────────────────────────────────────────────────────────────────
 function HeroSection() {
   return (
-    <section id="hero" className="hero-bg" style={{ minHeight: "100vh", display: "flex", alignItems: "center", paddingTop: "68px" }}>
+    <section id="hero" className="hero-bg relative" style={{ minHeight: "100vh", display: "flex", alignItems: "center", paddingTop: "68px" }}>
+      {/* Ambient Stardust Canvas */}
+      <MagicalParticles colorScheme="emerald" density={28} className="absolute inset-0 pointer-events-none z-0" />
+
       {/* Particles */}
       {Array.from({ length: 12 }, (_, i) => (
         <div key={i} className={`particle p${i + 1}`} aria-hidden="true" />
       ))}
 
-      <div className="lp-container" style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4rem", alignItems: "center", padding: "4rem 1.5rem" }}>
+      <div className="lp-container relative z-10" style={{ width: "100%", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4rem", alignItems: "center", padding: "4rem 1.5rem" }}>
         {/* Left: text */}
         <div>
           {/* Badge */}
@@ -364,7 +369,7 @@ function HeroSection() {
           }}>
             <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#7cc62f", display: "inline-block", animation: "pulse-dot 2s ease-in-out infinite" }} />
             <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "#a8e063", letterSpacing: "0.05em" }}>
-              Platform Belajar Coding #1
+              ✨ Platform Belajar Coding #1
             </span>
           </div>
 
@@ -403,18 +408,24 @@ function HeroSection() {
             </button>
           </div>
 
-          {/* Mini stats */}
+          {/* Mini stats with magical counters */}
           <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
-            {[
-              { value: "500+", label: "Siswa Aktif" },
-              { value: "4.9★", label: "Rating" },
-              { value: "95%", label: "Lulus Quiz" },
-            ].map((s) => (
-              <div key={s.label}>
-                <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#7cc62f" }}>{s.value}</div>
-                <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.6)", marginTop: "2px" }}>{s.label}</div>
+            <div>
+              <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#7cc62f" }}>
+                <MagicalCounter value={500} suffix="+" />
               </div>
-            ))}
+              <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.6)", marginTop: "2px" }}>Siswa Aktif</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#7cc62f" }}>4.9★</div>
+              <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.6)", marginTop: "2px" }}>Rating</div>
+            </div>
+            <div>
+              <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#7cc62f" }}>
+                <MagicalCounter value={95} suffix="%" />
+              </div>
+              <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.6)", marginTop: "2px" }}>Lulus Quiz</div>
+            </div>
           </div>
         </div>
 
