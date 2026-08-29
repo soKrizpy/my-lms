@@ -11,6 +11,7 @@ type Topic = {
   description?: string | null;
   project_link?: string | null;
   topic_link?: string | null;
+  engine_topic_id?: string | null;
 };
 
 export function TopicList({
@@ -40,6 +41,7 @@ export function TopicList({
         const editDescriptionId = `topic-${topic.id}-description`;
         const editProjectLinkId = `topic-${topic.id}-project-link`;
         const editTopicLinkId = `topic-${topic.id}-topic-link`;
+        const editEngineTopicId = `topic-${topic.id}-engine-topic-id`;
 
         return (
           <li
@@ -210,6 +212,23 @@ export function TopicList({
                     defaultValue={topic.project_link ?? ""}
                     className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="https://github.com/..."
+                  />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor={editEngineTopicId}
+                    className="block text-sm font-medium text-slate-700"
+                  >
+                    Engine Topic ID
+                  </label>
+                  <input
+                    id={editEngineTopicId}
+                    name="engineTopicId"
+                    type="text"
+                    defaultValue={topic.engine_topic_id ?? ""}
+                    className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="contoh: beginner-html-01"
                   />
                 </div>
 

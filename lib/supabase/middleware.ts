@@ -43,6 +43,15 @@ export async function updateSession(request: NextRequest) {
     }
   }
 
+  // Protect the student routes
+  if (request.nextUrl.pathname.startsWith('/student')) {
+    if (!user) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      return NextResponse.redirect(url)
+    }
+  }
+
   // Optional: protect student routes or redirect away from /login if already logged in
   if (request.nextUrl.pathname === '/login' && user) {
     const url = request.nextUrl.clone()

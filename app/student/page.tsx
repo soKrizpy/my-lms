@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Calendar, BookOpen, Users, Sparkles, Trophy, CheckCircle2 } from "lucide-react";
 import { MagicalParticles } from "@/components/MagicalParticles";
 import { MagicalCounter } from "@/components/MagicalCounter";
+import { useLmsEngineListener } from "@/lib/useLmsEngineListener";
 
 // --- Types ---
 interface Meeting {
@@ -26,6 +27,7 @@ interface Topic {
   order_index: number;
   description: string | null;
   project_link: string | null;
+  engine_topic_id: string | null;
   isUnlocked: boolean;
   quiz: { id: number; title: string } | null;
 }
@@ -546,6 +548,17 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
                               Link Project
                             </a>
                           )}
+                          {topic.isUnlocked && topic.engine_topic_id && (
+                            <a
+                              href={`${process.env.NEXT_PUBLIC_LESSON_ENGINE_URL || 'http://localhost:3001'}/lesson/${topic.engine_topic_id}?lmsOrigin=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 text-xs text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg mt-2 font-semibold shadow-sm transition-colors w-max"
+                            >
+                              <Sparkles className="w-3.5 h-3.5" />
+                              Mulai Belajar
+                            </a>
+                          )}
                         </div>
                         {topic.isUnlocked && topic.quiz && (
                           <div className="flex items-center gap-2 self-start mt-0.5">
@@ -817,6 +830,7 @@ export default function StudentDashboard() {
   const [activeTab, setActiveTab] = useState<"jadwal" | "learning" | "parent">("jadwal");
   const [announcement, setAnnouncement] = useState<string | null>(null);
 
+
   const fetchInvoices = async () => {
     try {
       const res = await fetch("/api/student/invoices");
@@ -843,6 +857,9 @@ export default function StudentDashboard() {
       setLoading(false);
     }
   }, []);
+
+  // Sync lesson engine events (quiz score + XP) to Supabase via postMessage
+  useLmsEngineListener({ onSynced: () => { void fetchData(); } });
 
   useEffect(() => { 
     fetchData(); 

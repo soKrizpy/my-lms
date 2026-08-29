@@ -15,6 +15,7 @@ export type TopicRecord = {
   order_index: number;
   description?: string | null;
   project_link?: string | null;
+  engine_topic_id?: string | null;
   created_at?: string | null;
 };
 
@@ -55,7 +56,7 @@ export async function getModuleById(moduleId: string) {
 export async function getTopicById(topicId: string) {
   return supabase
     .from("topics")
-    .select("id, title, module_id, description, project_link")
+    .select("id, title, module_id, description, project_link, engine_topic_id")
     .eq("id", Number(topicId))
     .maybeSingle();
 }
@@ -63,7 +64,7 @@ export async function getTopicById(topicId: string) {
 export async function getTopicsByModuleId(moduleId: number) {
   return supabase
     .from("topics")
-    .select("id, title, module_id, order_index, description, project_link")
+    .select("id, title, module_id, order_index, description, project_link, engine_topic_id")
     .eq("module_id", moduleId)
     .order("order_index", { ascending: true });
 }
@@ -74,6 +75,7 @@ export async function createTopic(
   orderIndex: number,
   description?: string,
   projectLink?: string,
+  engineTopicId?: string,
 ) {
   return supabase.from("topics").insert({
     module_id: moduleId,
@@ -81,6 +83,7 @@ export async function createTopic(
     order_index: orderIndex,
     description,
     project_link: projectLink,
+    engine_topic_id: engineTopicId,
   });
 }
 
@@ -90,12 +93,14 @@ export async function updateTopic(
   orderIndex: number,
   description?: string,
   projectLink?: string,
+  engineTopicId?: string,
 ) {
   return supabase.from("topics").update({
     title,
     order_index: orderIndex,
     description,
     project_link: projectLink,
+    engine_topic_id: engineTopicId,
   }).eq("id", topicId);
 }
 

@@ -79,6 +79,22 @@ export function AddTopicForm({ moduleId }: { moduleId: string }) {
 
       <div>
         <label
+          htmlFor="new-topic-engine-topic-id"
+          className="mb-1 block text-sm font-medium text-slate-700"
+        >
+          Engine Topic ID
+        </label>
+        <input
+          id="new-topic-engine-topic-id"
+          name="engineTopicId"
+          type="text"
+          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+          placeholder="contoh: beginner-html-01"
+        />
+      </div>
+
+      <div>
+        <label
           htmlFor="new-topic-order-index"
           className="mb-1 block text-sm font-medium text-slate-700"
         >
