@@ -12,6 +12,8 @@ type Topic = {
   project_link?: string | null;
   topic_link?: string | null;
   engine_topic_id?: string | null;
+  status?: string | null;
+  lesson_content?: unknown | null;
 };
 
 export function TopicList({
@@ -54,6 +56,24 @@ export function TopicList({
                   {topic.order_index}. {topic.title}
                 </span>
 
+                {topic.engine_topic_id && (
+                  <div className="flex items-center gap-1 mt-1 flex-wrap">
+                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                      <span>🔗</span>
+                      <code className="font-mono">{topic.engine_topic_id}</code>
+                    </span>
+                    {topic.lesson_content ? (
+                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
+                        ✓ konten lesson
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                        belum ada konten
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 {topic.description && (
                   <>
                     <button
@@ -88,14 +108,9 @@ export function TopicList({
                       <svg
                         className="mr-1.5 h-4 w-4"
                         xmlns="http://www.w3.org/2000/svg"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                        width="24" height="24" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" strokeWidth="2"
+                        strokeLinecap="round" strokeLinejoin="round"
                       >
                         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
                         <polyline points="15 3 21 3 21 9" />
@@ -138,8 +153,8 @@ export function TopicList({
                     try {
                       await updateTopicAction(formData);
                       alert("Topik berhasil disimpan!");
-                    } catch (err: any) {
-                      alert("Gagal menyimpan topik: " + err.message);
+                    } catch (err: unknown) {
+                      alert("Gagal menyimpan topik: " + (err instanceof Error ? err.message : String(err)));
                     }
                   });
                 }}
@@ -149,66 +164,44 @@ export function TopicList({
                 <input type="hidden" name="topicId" value={topic.id} />
 
                 <div>
-                  <label
-                    htmlFor={editTitleId}
-                    className="block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor={editTitleId} className="block text-sm font-medium text-slate-700">
                     Judul Topik
                   </label>
                   <input
-                    id={editTitleId}
-                    name="title"
-                    type="text"
-                    required
+                    id={editTitleId} name="title" type="text" required
                     defaultValue={topic.title}
                     className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label
-                    htmlFor={editOrderId}
-                    className="block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor={editOrderId} className="block text-sm font-medium text-slate-700">
                     Urutan (Order)
                   </label>
                   <input
-                    id={editOrderId}
-                    name="orderIndex"
-                    type="number"
-                    required
+                    id={editOrderId} name="orderIndex" type="number" required
                     defaultValue={topic.order_index}
                     className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label
-                    htmlFor={editDescriptionId}
-                    className="block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor={editDescriptionId} className="block text-sm font-medium text-slate-700">
                     Deskripsi Topik
                   </label>
                   <textarea
-                    id={editDescriptionId}
-                    name="description"
-                    rows={3}
+                    id={editDescriptionId} name="description" rows={3}
                     defaultValue={topic.description ?? ""}
                     className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label
-                    htmlFor={editProjectLinkId}
-                    className="block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor={editProjectLinkId} className="block text-sm font-medium text-slate-700">
                     Link Project
                   </label>
                   <input
-                    id={editProjectLinkId}
-                    name="projectLink"
-                    type="text"
+                    id={editProjectLinkId} name="projectLink" type="text"
                     defaultValue={topic.project_link ?? ""}
                     className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="https://github.com/..."
@@ -216,16 +209,11 @@ export function TopicList({
                 </div>
 
                 <div>
-                  <label
-                    htmlFor={editEngineTopicId}
-                    className="block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor={editEngineTopicId} className="block text-sm font-medium text-slate-700">
                     Engine Topic ID
                   </label>
                   <input
-                    id={editEngineTopicId}
-                    name="engineTopicId"
-                    type="text"
+                    id={editEngineTopicId} name="engineTopicId" type="text"
                     defaultValue={topic.engine_topic_id ?? ""}
                     className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="contoh: beginner-html-01"
@@ -233,16 +221,11 @@ export function TopicList({
                 </div>
 
                 <div>
-                  <label
-                    htmlFor={editTopicLinkId}
-                    className="block text-sm font-medium text-slate-700"
-                  >
+                  <label htmlFor={editTopicLinkId} className="block text-sm font-medium text-slate-700">
                     Embed Canva / Topic Link
                   </label>
                   <textarea
-                    id={editTopicLinkId}
-                    name="topicLink"
-                    rows={3}
+                    id={editTopicLinkId} name="topicLink" rows={3}
                     defaultValue={topic.topic_link ?? ""}
                     className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Paste kode embed iframe Canva di sini"
@@ -250,8 +233,7 @@ export function TopicList({
                 </div>
 
                 <button
-                  type="submit"
-                  disabled={isPending}
+                  type="submit" disabled={isPending}
                   className="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
                 >
                   {isPending ? "Menyimpan..." : "Simpan"}

@@ -3,13 +3,11 @@
 import { getSupabaseAdmin } from "../../../../../lib/supabaseAdmin";
 import { AddTopicForm } from "./AddTopicForm";
 import { TopicList } from "./TopicList";
+import { CsvImportForm } from "./CsvImportForm";
 
 type PageProps = {
   params:
-    | {
-        id?: string;
-        [key: string]: unknown;
-      }
+    | { id?: string; [key: string]: unknown }
     | Promise<{ id?: string; [key: string]: unknown }>;
 };
 
@@ -40,9 +38,10 @@ export default async function ModuleTopicsPage({ params }: PageProps) {
     .select("id, title, description")
     .eq("id", Number(moduleIdParam))
     .maybeSingle();
+
   const { data: topics, error: topicsError } = await supabaseAdmin
     .from("topics")
-    .select("id, title, module_id, order_index, description, project_link, topic_link")
+    .select("id, title, module_id, order_index, description, project_link, topic_link, engine_topic_id, status, lesson_content")
     .eq("module_id", Number(moduleIdParam))
     .order("order_index", { ascending: true });
 
@@ -67,6 +66,8 @@ export default async function ModuleTopicsPage({ params }: PageProps) {
       </div>
 
       <AddTopicForm moduleId={moduleIdParam} />
+
+      <CsvImportForm moduleId={moduleIdParam} />
 
       {topicsError && (
         <p style={{ color: "red" }}>Error topik: {topicsError.message}</p>
