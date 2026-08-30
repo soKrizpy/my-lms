@@ -2,7 +2,6 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { createQuizQuestion } from "../../../../../../../lib/lmsData";
 
 export function AddQuizQuestionForm({ quizId }: { quizId: number }) {
   const router = useRouter();
@@ -35,18 +34,23 @@ export function AddQuizQuestionForm({ quizId }: { quizId: number }) {
 
     try {
       setLoading(true);
-      const { error } = await createQuizQuestion({
-        quizId,
-        question: question.trim(),
-        optionA: optionA.trim(),
-        optionB: optionB.trim(),
-        optionC: optionC.trim(),
-        optionD: optionD.trim(),
-        correct,
+      const res = await fetch('/api/quiz', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          quizId,
+          question: question.trim(),
+          optionA: optionA.trim(),
+          optionB: optionB.trim(),
+          optionC: optionC.trim(),
+          optionD: optionD.trim(),
+          correct,
+        }),
       });
 
-      if (error) {
-        setErrorMsg(error.message);
+      if (!res.ok) {
+        const data = await res.json().catch(() => null);
+        setErrorMsg(data?.error ?? 'Terjadi kesalahan.');
         return;
       }
 

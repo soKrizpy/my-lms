@@ -1,4 +1,4 @@
-import { supabase } from "./supabaseClient";
+import { getSupabaseAdmin } from "./supabaseAdmin";
 
 export type ModuleRecord = {
   id: number;
@@ -16,6 +16,9 @@ export type TopicRecord = {
   description?: string | null;
   project_link?: string | null;
   engine_topic_id?: string | null;
+  lesson_content?: unknown | null;
+  status?: string | null;
+  published_at?: string | null;
   created_at?: string | null;
 };
 
@@ -39,6 +42,7 @@ export type QuizQuestionRecord = {
 };
 
 export async function getModules() {
+  const supabase = getSupabaseAdmin();
   return supabase
     .from("modules")
     .select("id, title, description, created_at, is_active")
@@ -46,6 +50,7 @@ export async function getModules() {
 }
 
 export async function getModuleById(moduleId: string) {
+  const supabase = getSupabaseAdmin();
   return supabase
     .from("modules")
     .select("id, title, description")
@@ -54,6 +59,7 @@ export async function getModuleById(moduleId: string) {
 }
 
 export async function getTopicById(topicId: string) {
+  const supabase = getSupabaseAdmin();
   return supabase
     .from("topics")
     .select("id, title, module_id, description, project_link, engine_topic_id")
@@ -62,6 +68,7 @@ export async function getTopicById(topicId: string) {
 }
 
 export async function getTopicsByModuleId(moduleId: number) {
+  const supabase = getSupabaseAdmin();
   return supabase
     .from("topics")
     .select("id, title, module_id, order_index, description, project_link, engine_topic_id")
@@ -77,6 +84,7 @@ export async function createTopic(
   projectLink?: string,
   engineTopicId?: string,
 ) {
+  const supabase = getSupabaseAdmin();
   return supabase.from("topics").insert({
     module_id: moduleId,
     title,
@@ -95,6 +103,7 @@ export async function updateTopic(
   projectLink?: string,
   engineTopicId?: string,
 ) {
+  const supabase = getSupabaseAdmin();
   return supabase.from("topics").update({
     title,
     order_index: orderIndex,
@@ -105,10 +114,12 @@ export async function updateTopic(
 }
 
 export async function deleteTopic(topicId: number) {
+  const supabase = getSupabaseAdmin();
   return supabase.from("topics").delete().eq("id", topicId);
 }
 
 export async function getOrCreateQuiz(topicId: number, fallbackTitle: string) {
+  const supabase = getSupabaseAdmin();
   const { data: existingQuiz, error: quizError } = await supabase
     .from("quizzes")
     .select("id, topic_id, title")
@@ -134,6 +145,7 @@ export async function getOrCreateQuiz(topicId: number, fallbackTitle: string) {
 }
 
 export async function getQuizQuestions(quizId: number) {
+  const supabase = getSupabaseAdmin();
   return supabase
     .from("quiz_questions")
     .select(
@@ -152,6 +164,7 @@ export async function createQuizQuestion(input: {
   optionD: string;
   correct: string;
 }) {
+  const supabase = getSupabaseAdmin();
   return supabase.from("quiz_questions").insert({
     quiz_id: input.quizId,
     question_text: input.question,
@@ -174,6 +187,7 @@ export async function updateQuizQuestion(
     correct: string;
   }
 ) {
+  const supabase = getSupabaseAdmin();
   return supabase.from("quiz_questions").update({
     question_text: input.question,
     option_a: input.optionA,
@@ -185,5 +199,6 @@ export async function updateQuizQuestion(
 }
 
 export async function deleteQuizQuestion(id: number) {
+  const supabase = getSupabaseAdmin();
   return supabase.from("quiz_questions").delete().eq("id", id);
 }
