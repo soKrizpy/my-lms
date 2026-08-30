@@ -1,0 +1,25 @@
+# BITS2BYTES Lesson Template v1.0
+# Instructions: Fill LESSON row first, then NODE rows, then QUIZ rows.
+# Lines starting with # are ignored by the importer.
+# See CSV_GUIDE.md for full column documentation.
+# Delete these comment rows before importing.
+#
+# -- LESSON ROW ---------------------------------------------------------------
+# type,lessonId,title,description,level,category,topicNumber,estimatedTime,xp
+LESSON,beginner-html-01,Apa itu HTML?,HTML adalah bahasa markup untuk membangun halaman web.,beginner,HTML,1,25,100,,,,, 
+#
+# -- NODE ROWS ----------------------------------------------------------------
+# type,lessonId,nodeId,nodeType,title,xp,content,language,codeContent,unused,unused,options,correctOption,unused
+NODE,beginner-html-01,node-01,lesson,Apa itu HTML?,5,HTML adalah singkatan dari HyperText Markup Language.,,,,,,, 
+NODE,beginner-html-01,node-02,code,Contoh Kode HTML Pertama,5,Ini adalah struktur dasar HTML.,html,"<!DOCTYPE html><html><body><h1>Hello!</h1></body></html>",,,,, 
+NODE,beginner-html-01,node-03,practice,Latihan Pilihan Ganda,10,Apa kepanjangan HTML?,,,,,"HyperText Markup Language|HyperText Making Language|HighText Markup Language|HyperTransfer Markup Language",HyperText Markup Language, 
+NODE,beginner-html-01,node-04,challenge,Buat Halaman Pertama,15,Buat halaman HTML sederhana dengan judul dan satu paragraf.,,,,,, 
+NODE,beginner-html-01,node-05,quiz,Uji Pengetahuanmu,0,,,,,,, 
+#
+# -- QUIZ ROWS ----------------------------------------------------------------
+# type,lessonId,questionId,question,optionA,optionB,optionC,optionD,correctAnswer,explanation,points,...
+QUIZ,beginner-html-01,q01,Apa kepanjangan HTML?,HyperText Markup Language,HyperText Making Language,HighText Markup Language,HyperTransfer Markup Language,HyperText Markup Language,HTML = HyperText Markup Language.,20,,, 
+QUIZ,beginner-html-01,q02,Tag HTML untuk judul terbesar?,<h1>,<h6>,<title>,<header>,<h1>,h1 adalah heading level 1.,20,,, 
+QUIZ,beginner-html-01,q03,Atribut yang digunakan di tag a?,href,src,alt,class,href,href menentukan URL tujuan link.,20,,, 
+QUIZ,beginner-html-01,q04,Tag untuk gambar di HTML?,<img>,<image>,<pic>,<figure>,<img>,Tag img src alt untuk menampilkan gambar.,20,,, 
+QUIZ,beginner-html-01,q05,Kepanjangan CSS?,Cascading Style Sheets,Computer Style Sheets,Creative Style Sheets,Colorful Style Sheets,Cascading Style Sheets,CSS = Cascading Style Sheets.,20,,, 

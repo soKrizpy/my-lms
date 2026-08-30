@@ -2,8 +2,10 @@
 
 // app/admin/modules/[id]/topics/CsvImportForm.tsx
 // Teacher-facing CSV upload form.
-// Downloads the template from the Lesson Engine and uploads
-// the filled CSV to /api/admin/topics/import-csv.
+//
+// FIXES:
+//   1. Template/guide served from LMS /templates/ (not engine URL)
+//   2. File input replaced with hidden input + styled label — dark mode safe
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -25,14 +27,17 @@ interface ImportResponse {
 export function CsvImportForm({ moduleId }: { moduleId: string }) {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<ImportResponse | null>(null);
   const [fatalError, setFatalError] = useState<string | null>(null);
 
-  const engineUrl =
-    process.env.NEXT_PUBLIC_LESSON_ENGINE_URL ?? "http://localhost:3001";
-  const templateUrl = `${engineUrl}/templates/lesson-template.csv`;
-  const guideUrl = `${engineUrl}/templates/CSV_GUIDE.md`;
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    setFileName(f?.name ?? null);
+    setFatalError(null);
+    setResponse(null);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -44,7 +49,7 @@ export function CsvImportForm({ moduleId }: { moduleId: string }) {
       setFatalError("Pilih file CSV terlebih dahulu.");
       return;
     }
-    if (!file.name.endsWith(".csv")) {
+    if (!file.name.toLowerCase().endsWith(".csv")) {
       setFatalError("File harus berformat .csv");
       return;
     }
@@ -64,7 +69,7 @@ export function CsvImportForm({ moduleId }: { moduleId: string }) {
 
       if (!res.ok && !data.results) {
         setFatalError(
-          data.error ?? "Import gagal." + (data.hint ? ` ${data.hint}` : "")
+          (data.error ?? "Import gagal.") + (data.hint ? ` ${data.hint}` : "")
         );
         return;
       }
@@ -80,73 +85,97 @@ export function CsvImportForm({ moduleId }: { moduleId: string }) {
     } finally {
       setLoading(false);
       if (fileRef.current) fileRef.current.value = "";
+      setFileName(null);
     }
   }
 
   return (
-    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-      <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-        <h2 className="text-sm font-semibold text-blue-900">
+    <div className="rounded-lg border border-indigo-300 bg-indigo-950/40 p-4">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-3 flex-wrap gap-2">
+        <h2 className="text-sm font-semibold text-indigo-200">
           Import Konten Lesson via CSV
         </h2>
-        <div className="flex gap-2 text-xs">
+        <div className="flex gap-2">
           <a
-            href={templateUrl}
+            href="/templates/lesson-template.csv"
             download="lesson-template.csv"
-            className="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-100 text-blue-700 hover:bg-blue-200 font-medium transition-colors"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-indigo-700 text-white text-xs font-semibold hover:bg-indigo-600 transition-colors"
           >
             ⬇ Download Template
           </a>
           <a
-            href={guideUrl}
+            href="/templates/CSV_GUIDE.md"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 font-medium transition-colors"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-700 text-slate-200 text-xs font-semibold hover:bg-slate-600 transition-colors"
           >
             📖 Panduan CSV
           </a>
         </div>
       </div>
 
-      <p className="text-xs text-blue-700 mb-3">
-        Download template, isi konten lesson (LESSON + NODE + QUIZ rows),
-        lalu upload di sini. Topic harus sudah dibuat terlebih dahulu.
-        <code className="mx-1 bg-blue-100 px-1 rounded">lessonId</code>
+      {/* Instructions */}
+      <p className="text-xs text-indigo-300 mb-3 leading-relaxed">
+        Download template, isi konten lesson (baris LESSON + NODE + QUIZ), lalu upload.
+        Topic harus sudah dibuat. Kolom{" "}
+        <code className="bg-indigo-900 px-1 rounded text-indigo-100">lessonId</code>{" "}
         di CSV harus cocok dengan{" "}
-        <code className="bg-blue-100 px-1 rounded">engine_topic_id</code>{" "}
+        <code className="bg-indigo-900 px-1 rounded text-indigo-100">engine_topic_id</code>{" "}
         atau urutan topik.
       </p>
 
-      <form onSubmit={handleSubmit} className="flex items-center gap-2 flex-wrap">
-        <input
-          ref={fileRef}
-          type="file"
-          accept=".csv,text/csv"
-          className="text-xs text-slate-700 file:mr-2 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-slate-900 file:text-white hover:file:bg-slate-700 cursor-pointer"
-        />
-        <button
-          type="submit"
-          disabled={loading}
-          className="px-3 py-1.5 rounded bg-blue-600 text-white text-xs font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors"
-        >
-          {loading ? "Mengimpor…" : "Upload & Import"}
-        </button>
+      {/* Upload form */}
+      <form onSubmit={handleSubmit}>
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Hidden native file input — styled label acts as the visible button */}
+          <input
+            ref={fileRef}
+            id="csv-file-input"
+            type="file"
+            accept=".csv,text/csv"
+            onChange={handleFileChange}
+            className="sr-only"
+          />
+          <label
+            htmlFor="csv-file-input"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-700 text-slate-100 text-xs font-semibold hover:bg-slate-600 cursor-pointer transition-colors select-none border border-slate-500"
+          >
+            📂 Pilih File CSV
+          </label>
+
+          {/* Selected filename display */}
+          <span className="text-xs text-slate-400 truncate max-w-[180px]">
+            {fileName ?? "Belum ada file dipilih"}
+          </span>
+
+          <button
+            type="submit"
+            disabled={loading || !fileName}
+            className="px-3 py-1.5 rounded-md bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          >
+            {loading ? "Mengimpor…" : "Upload & Import"}
+          </button>
+        </div>
       </form>
 
+      {/* Fatal error */}
       {fatalError && (
-        <p className="mt-3 text-xs text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">
+        <p className="mt-3 text-xs text-red-300 bg-red-950/50 border border-red-800 rounded px-3 py-2">
           ❌ {fatalError}
         </p>
       )}
 
+      {/* Results */}
       {response && (
-        <div className="mt-3 space-y-1">
-          <p className="text-xs font-semibold text-slate-700">
+        <div className="mt-3 space-y-1.5">
+          <p className="text-xs font-semibold text-slate-300">
             Hasil: {response.summary.ok}/{response.summary.total} lesson berhasil diimpor
           </p>
+
           {response.parseErrors.length > 0 && (
-            <div className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded px-3 py-2">
-              <p className="font-semibold mb-1">⚠ Baris CSV tidak dikenali:</p>
+            <div className="text-xs text-amber-300 bg-amber-950/40 border border-amber-700 rounded px-3 py-2">
+              <p className="font-semibold mb-1">⚠ Baris tidak dikenali:</p>
               <ul className="list-disc list-inside space-y-0.5">
                 {response.parseErrors.slice(0, 5).map((e, i) => (
                   <li key={i}>{e}</li>
@@ -157,19 +186,21 @@ export function CsvImportForm({ moduleId }: { moduleId: string }) {
               </ul>
             </div>
           )}
+
           <ul className="space-y-1">
             {response.results.map((r) => (
               <li
                 key={r.lessonId}
-                className={`text-xs px-3 py-2 rounded border ${
+                className={`text-xs px-3 py-2 rounded border font-mono ${
                   r.ok
-                    ? "bg-green-50 border-green-200 text-green-800"
-                    : "bg-red-50 border-red-200 text-red-800"
+                    ? "bg-green-950/40 border-green-700 text-green-300"
+                    : "bg-red-950/40 border-red-800 text-red-300"
                 }`}
               >
-                {r.ok ? "✓" : "✗"}{" "}
-                <code className="font-mono">{r.lessonId}</code>
-                {r.ok ? ` — ${r.action}` : ` — ${r.error}`}
+                {r.ok ? "✓" : "✗"} {r.lessonId}
+                <span className="font-sans ml-1 opacity-80">
+                  {r.ok ? `— ${r.action}` : `— ${r.error}`}
+                </span>
               </li>
             ))}
           </ul>
