@@ -50,6 +50,15 @@ interface QuizAttempt {
   quizzes: { title: string; topics: { title: string } };
 }
 
+interface TopicProgress {
+  engine_topic_id: string;
+  topic_id: number;
+  xp_earned: number;
+  best_quiz_score: number;
+  completed_at: string;
+  topics?: { title: string } | null;
+}
+
 // --- Countdown Hook ---
 function calcTimeLeft(targetDate: string) {
   const diff = new Date(targetDate).getTime() - Date.now();
@@ -627,8 +636,91 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
   );
 }
 
+// --- Engine Lesson Progress ---
+function EngineProgressSection({ topicProgress }: { topicProgress: TopicProgress[] }) {
+  if (!topicProgress || topicProgress.length === 0) {
+    return (
+      <div className="text-center py-8 glass-panel rounded-xl">
+        <p className="text-slate-400 text-sm">Belum ada lesson engine yang diselesaikan.</p>
+        <p className="text-slate-500 text-xs mt-1">Selesaikan lesson interaktif untuk melihat progress di sini.</p>
+      </div>
+    );
+  }
+
+  const totalXp = topicProgress.reduce((s, t) => s + (t.xp_earned || 0), 0);
+  const avgScore = topicProgress.length > 0
+    ? Math.round(topicProgress.reduce((s, t) => s + (t.best_quiz_score || 0), 0) / topicProgress.length)
+    : 0;
+
+  return (
+    <div className="space-y-4">
+      {/* Summary strip */}
+      <div className="grid grid-cols-3 gap-3">
+        <div className="glass-panel rounded-xl p-3 text-center">
+          <p className="text-2xl font-black text-yellow-400">⭐ {totalXp}</p>
+          <p className="text-xs text-slate-400 mt-0.5">Total XP</p>
+        </div>
+        <div className="glass-panel rounded-xl p-3 text-center">
+          <p className="text-2xl font-black text-green-400">{topicProgress.length}</p>
+          <p className="text-xs text-slate-400 mt-0.5">Lesson Selesai</p>
+        </div>
+        <div className="glass-panel rounded-xl p-3 text-center">
+          <p className="text-2xl font-black text-blue-400">{avgScore}%</p>
+          <p className="text-xs text-slate-400 mt-0.5">Rata-rata Quiz</p>
+        </div>
+      </div>
+
+      {/* Per-lesson cards */}
+      <div className="space-y-2">
+        {topicProgress.map((tp) => {
+          const scorePercent = tp.best_quiz_score;
+          const scoreColor = scorePercent >= 80
+            ? 'text-green-400' : scorePercent >= 60
+            ? 'text-yellow-400' : 'text-red-400';
+          const lessonTitle = tp.topics?.title ?? tp.engine_topic_id;
+          const completedDate = new Date(tp.completed_at).toLocaleDateString('id-ID', {
+            day: 'numeric', month: 'short', year: 'numeric'
+          });
+
+          return (
+            <div
+              key={tp.engine_topic_id}
+              className="glass-panel rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--glass-border)] bg-black/5">
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm text-slate-800 dark:text-slate-200 truncate">{lessonTitle}</p>
+                  <p className="text-xs text-slate-400 mt-0.5 font-mono">{tp.engine_topic_id}</p>
+                </div>
+                <span className="text-xs text-slate-400 ml-3 whitespace-nowrap">{completedDate}</span>
+              </div>
+              <div className="flex divide-x divide-[var(--glass-border)]">
+                {/* XP */}
+                <div className="flex-1 px-4 py-3 flex flex-col items-center">
+                  <span className="text-lg font-black text-yellow-400">⭐ {tp.xp_earned}</span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wide">XP</span>
+                </div>
+                {/* Quiz score */}
+                <div className="flex-1 px-4 py-3 flex flex-col items-center">
+                  <span className={`text-lg font-black ${scoreColor}`}>{scorePercent}%</span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wide">Nilai Quiz</span>
+                </div>
+                {/* Achievement badge */}
+                <div className="flex-1 px-4 py-3 flex flex-col items-center justify-center">
+                  <span className="text-xl" title="Lesson selesai">🏆</span>
+                  <span className="text-[10px] text-slate-400 uppercase tracking-wide">Achievement</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // --- Parent Hub ---
-function ParentHub({ pastMeetings, quizAttempts, modules }: { pastMeetings: Meeting[]; quizAttempts: QuizAttempt[]; modules: Module[] }) {
+function ParentHub({ pastMeetings, quizAttempts, modules, topicProgress }: { pastMeetings: Meeting[]; quizAttempts: QuizAttempt[]; modules: Module[]; topicProgress: TopicProgress[] }) {
   const [openModules, setOpenModules] = useState<Record<number, boolean>>({});
   
   const toggleModule = (id: number) => {
@@ -726,6 +818,16 @@ function ParentHub({ pastMeetings, quizAttempts, modules }: { pastMeetings: Meet
           </div>
         );
       })}
+
+      {/* Engine Lesson Progress */}
+      {topicProgress.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+            <span>⭐</span> Progress Lesson Engine
+          </h3>
+          <EngineProgressSection topicProgress={topicProgress} />
+        </div>
+      )}
     </div>
   );
 }
@@ -1071,7 +1173,7 @@ export default function StudentDashboard() {
           {activeTab === "parent" && (
             <div className="space-y-4">
               <h2 className="font-bold text-slate-900">Parent Hub</h2>
-              <ParentHub pastMeetings={data.pastMeetings} quizAttempts={data.quizAttempts} modules={data.modules || []} />
+              <ParentHub pastMeetings={data.pastMeetings} quizAttempts={data.quizAttempts} modules={data.modules || []} topicProgress={data.topicProgress || []} />
             </div>
           )}
         </>

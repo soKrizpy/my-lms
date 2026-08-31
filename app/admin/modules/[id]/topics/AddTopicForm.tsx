@@ -1,3 +1,4 @@
+import { BUILT_IN_LESSONS } from "../../../../../lib/builtInLessons";
 import { createTopicAction } from "./actions";
 
 export function AddTopicForm({ moduleId }: { moduleId: string }) {
@@ -82,15 +83,31 @@ export function AddTopicForm({ moduleId }: { moduleId: string }) {
           htmlFor="new-topic-engine-topic-id"
           className="mb-1 block text-sm font-medium text-slate-700"
         >
-          Engine Topic ID
+          Hubungkan ke Lesson Engine (Opsional)
         </label>
-        <input
+        <select
           id="new-topic-engine-topic-id"
           name="engineTopicId"
-          type="text"
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
-          placeholder="contoh: beginner-html-01"
-        />
+          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+        >
+          <option value="">— Tidak dihubungkan —</option>
+          <optgroup label="HTML">
+            {BUILT_IN_LESSONS.filter(l => l.category === 'HTML').map(l => (
+              <option key={l.id} value={l.id}>{l.id} — {l.title}</option>
+            ))}
+          </optgroup>
+          <optgroup label="CSS">
+            {BUILT_IN_LESSONS.filter(l => l.category === 'CSS').map(l => (
+              <option key={l.id} value={l.id}>{l.id} — {l.title}</option>
+            ))}
+          </optgroup>
+          <optgroup label="JavaScript">
+            {BUILT_IN_LESSONS.filter(l => l.category === 'JavaScript').map(l => (
+              <option key={l.id} value={l.id}>{l.id} — {l.title}</option>
+            ))}
+          </optgroup>
+        </select>
+        <p className="mt-1 text-xs text-slate-500">Pilih lesson bawaan engine yang akan dibuka siswa saat klik "Mulai Belajar".</p>
       </div>
 
       <div>

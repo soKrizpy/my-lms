@@ -138,11 +138,13 @@ export async function GET() {
     .order("created_at", { ascending: false })
     .limit(1);
 
-  // 5. Total XP earned from engine-completed lessons
+  // 5. Total XP earned from engine-completed lessons, with topic title via join
   const { data: topicProgress } = await supabaseAdmin
     .from("topic_progress")
-    .select("xp_earned, best_quiz_score, engine_topic_id, completed_at")
-    .eq("student_id", studentId);
+    .select("xp_earned, best_quiz_score, engine_topic_id, completed_at, topic_id, topics(title)")
+    .eq("student_id", studentId)
+    .order("completed_at", { ascending: false });
+
   const engineXpTotal = (topicProgress || []).reduce(
     (sum: number, tp: any) => sum + (typeof tp.xp_earned === "number" ? tp.xp_earned : 0),
     0

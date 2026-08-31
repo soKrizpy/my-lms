@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 import { deleteTopicAction, updateTopicAction, publishTopicAction, unpublishTopicAction } from "./actions";
+import { BUILT_IN_LESSONS } from "../../../../../lib/builtInLessons";
 
 type Topic = {
   id: number;
@@ -233,14 +234,31 @@ export function TopicList({
 
                 <div>
                   <label htmlFor={editEngineTopicId} className="block text-sm font-medium text-slate-700">
-                    Engine Topic ID
+                    Hubungkan ke Lesson Engine (Opsional)
                   </label>
-                  <input
-                    id={editEngineTopicId} name="engineTopicId" type="text"
+                  <select
+                    id={editEngineTopicId} name="engineTopicId"
                     defaultValue={topic.engine_topic_id ?? ""}
-                    className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="contoh: beginner-html-01"
-                  />
+                    className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">— Tidak dihubungkan —</option>
+                    <optgroup label="HTML">
+                      {BUILT_IN_LESSONS.filter(l => l.category === 'HTML').map(l => (
+                        <option key={l.id} value={l.id}>{l.id} — {l.title}</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="CSS">
+                      {BUILT_IN_LESSONS.filter(l => l.category === 'CSS').map(l => (
+                        <option key={l.id} value={l.id}>{l.id} — {l.title}</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="JavaScript">
+                      {BUILT_IN_LESSONS.filter(l => l.category === 'JavaScript').map(l => (
+                        <option key={l.id} value={l.id}>{l.id} — {l.title}</option>
+                      ))}
+                    </optgroup>
+                  </select>
+                  <p className="mt-1 text-xs text-slate-500">Lesson bawaan yang dibuka siswa saat "Mulai Belajar".</p>
                 </div>
 
                 <div>
