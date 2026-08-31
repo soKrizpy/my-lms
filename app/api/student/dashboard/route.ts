@@ -77,7 +77,7 @@ export async function GET() {
   if (moduleIds.length > 0) {
     const { data: topics } = await supabaseAdmin
       .from("topics")
-      .select("id, module_id, title, order_index, description, project_link, engine_topic_id")
+      .select("id, module_id, title, order_index, description, project_link, engine_topic_id, status")
       .in("module_id", moduleIds)
       .order("order_index", { ascending: true });
 
@@ -138,6 +138,17 @@ export async function GET() {
     .order("created_at", { ascending: false })
     .limit(1);
 
+  // 5. Total XP earned from engine-completed lessons
+  const { data: topicProgress } = await supabaseAdmin
+    .from("topic_progress")
+    .select("xp_earned, best_quiz_score, engine_topic_id, completed_at")
+    .eq("student_id", studentId);
+  const engineXpTotal = (topicProgress || []).reduce(
+    (sum: number, tp: any) => sum + (typeof tp.xp_earned === "number" ? tp.xp_earned : 0),
+    0
+  );
+  const completedEngineTopics = (topicProgress || []).length;
+
   const studentName = user.user_metadata?.full_name || "Siswa";
   // take only first name for casual greeting
   const firstName = studentName.split(" ")[0];
@@ -149,5 +160,8 @@ export async function GET() {
     quizAttempts: quizAttempts || [],
     announcement: announcements?.[0]?.content || null,
     studentName: firstName,
+    engineXpTotal,
+    completedEngineTopics,
+    topicProgress: topicProgress || [],
   });
 }

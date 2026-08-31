@@ -14,6 +14,7 @@ type Topic = {
   engine_topic_id?: string | null;
   status?: string | null;
   lesson_content?: unknown | null;
+  published_at?: string | null;
 };
 
 export function TopicList({
@@ -68,7 +69,9 @@ export function TopicList({
                           ? 'bg-green-50 text-green-700 border-green-300'
                           : 'bg-amber-50 text-amber-700 border-amber-200'
                       }`}>
-                        {topic.status === 'published' ? '✅ Published' : '📝 Draft'}
+                        {topic.status === 'published'
+                          ? `✅ Published${topic.published_at ? ` · ${new Date(topic.published_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}` : ''}`
+                          : '📝 Draft'}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">

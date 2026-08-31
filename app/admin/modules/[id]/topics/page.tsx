@@ -41,7 +41,7 @@ export default async function ModuleTopicsPage({ params }: PageProps) {
 
   const { data: topics, error: topicsError } = await supabaseAdmin
     .from("topics")
-    .select("id, title, module_id, order_index, description, project_link, topic_link, engine_topic_id, status, lesson_content")
+    .select("id, title, module_id, order_index, description, project_link, topic_link, engine_topic_id, status, lesson_content, published_at")
     .eq("module_id", Number(moduleIdParam))
     .order("order_index", { ascending: true });
 

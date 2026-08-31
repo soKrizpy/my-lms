@@ -28,6 +28,7 @@ interface Topic {
   description: string | null;
   project_link: string | null;
   engine_topic_id: string | null;
+  status?: string | null;
   isUnlocked: boolean;
   quiz: { id: number; title: string } | null;
 }
@@ -549,15 +550,21 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
                             </a>
                           )}
                           {topic.isUnlocked && topic.engine_topic_id && (
-                            <a
-                              href={`${process.env.NEXT_PUBLIC_LESSON_ENGINE_URL || 'http://localhost:3001'}/lesson/${topic.engine_topic_id}?lmsOrigin=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : '')}&lang=${typeof document !== 'undefined' ? (document.cookie.split('; ').find(r => r.startsWith('locale='))?.split('=')[1] ?? 'id') : 'id'}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5 text-xs text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg mt-2 font-semibold shadow-sm transition-colors w-max"
-                            >
-                              <Sparkles className="w-3.5 h-3.5" />
-                              Mulai Belajar
-                            </a>
+                            topic.status === 'published' ? (
+                              <a
+                                href={`${process.env.NEXT_PUBLIC_LESSON_ENGINE_URL || 'http://localhost:3001'}/lesson/${topic.engine_topic_id}?lmsOrigin=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : '')}&lang=${typeof document !== 'undefined' ? (document.cookie.split('; ').find(r => r.startsWith('locale='))?.split('=')[1] ?? 'id') : 'id'}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5 text-xs text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg mt-2 font-semibold shadow-sm transition-colors w-max"
+                              >
+                                <Sparkles className="w-3.5 h-3.5" />
+                                Mulai Belajar
+                              </a>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-xs text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg mt-2 font-medium w-max">
+                                ⏳ Lesson segera tersedia
+                              </span>
+                            )
                           )}
                         </div>
                         {topic.isUnlocked && topic.quiz && (
@@ -942,6 +949,22 @@ export default function StudentDashboard() {
                   </div>
                 </div>
               </div>
+
+              {/* Engine XP Total — only shown when student has completed engine lessons */}
+              {(data.engineXpTotal ?? 0) > 0 && (
+                <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/15 dark:bg-black/60 border border-white/25 dark:border-purple-500/40 backdrop-blur-xl shadow-lg shadow-blue-950/20 dark:shadow-black/30 hover:border-yellow-300/60 dark:hover:border-yellow-400/50 transition-all">
+                  <div className="p-2 rounded-lg bg-yellow-400/25 border border-yellow-300/40 text-yellow-200 dark:text-yellow-400 shadow-[0_0_10px_rgba(251,191,36,0.3)]">
+                    <span className="text-sm" aria-hidden="true">⭐</span>
+                  </div>
+                  <div>
+                    <div className="text-[11px] uppercase tracking-wider text-blue-100 dark:text-purple-300/80 font-bold">XP</div>
+                    <div className="text-base font-black text-white tabular-nums flex items-center gap-1">
+                      <MagicalCounter value={data.engineXpTotal || 0} />
+                      <span className="text-xs font-medium text-blue-100/90 dark:text-slate-300">pts</span>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

@@ -12,9 +12,21 @@
 // - Uses service_role client server-side — RLS is bypassed intentionally here
 //   because RLS only restricts anonymous browser-direct Supabase access.
 //   The endpoint itself enforces the status = 'published' filter.
+// - CORS: allows requests from any origin so the Lesson Engine can fetch
+//   regardless of whether it runs on a different domain.
 
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '../../../../lib/supabaseAdmin';
+
+const CORS_HEADERS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS_HEADERS });
+}
 
 export async function GET(
   _req: Request,
@@ -23,7 +35,7 @@ export async function GET(
   const { topicId } = await params;
 
   if (!topicId || typeof topicId !== 'string') {
-    return NextResponse.json({ error: 'Invalid topicId' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid topicId' }, { status: 400, headers: CORS_HEADERS });
   }
 
   const admin = getSupabaseAdmin();
@@ -36,16 +48,16 @@ export async function GET(
     .maybeSingle();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500, headers: CORS_HEADERS });
   }
 
   if (!data || !data.lesson_content) {
     return NextResponse.json(
       { error: `No published lesson content found for topic "${topicId}"` },
-      { status: 404 }
+      { status: 404, headers: CORS_HEADERS }
     );
   }
 
   // Return the raw lesson JSON — the engine validates it against its own schema
-  return NextResponse.json(data.lesson_content);
+  return NextResponse.json(data.lesson_content, { headers: CORS_HEADERS });
 }
