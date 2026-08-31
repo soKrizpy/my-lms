@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState, useTransition } from "react";
-import { deleteTopicAction, updateTopicAction } from "./actions";
+import { deleteTopicAction, updateTopicAction, publishTopicAction, unpublishTopicAction } from "./actions";
 
 type Topic = {
   id: number;
@@ -63,8 +63,12 @@ export function TopicList({
                       <code className="font-mono">{topic.engine_topic_id}</code>
                     </span>
                     {topic.lesson_content ? (
-                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-200">
-                        ✓ konten lesson
+                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${
+                        topic.status === 'published'
+                          ? 'bg-green-50 text-green-700 border-green-300'
+                          : 'bg-amber-50 text-amber-700 border-amber-200'
+                      }`}>
+                        {topic.status === 'published' ? '✅ Published' : '📝 Draft'}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
@@ -129,6 +133,22 @@ export function TopicList({
                 >
                   Kelola quiz
                 </Link>
+                {Boolean(topic.lesson_content) && (
+                  <form action={topic.status === 'published' ? unpublishTopicAction : publishTopicAction}>
+                    <input type="hidden" name="moduleId" value={moduleId} />
+                    <input type="hidden" name="topicId" value={topic.id} />
+                    <button
+                      type="submit"
+                      className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
+                        topic.status === 'published'
+                          ? 'border border-amber-300 text-amber-700 hover:bg-amber-50'
+                          : 'border border-green-300 text-green-700 hover:bg-green-50'
+                      }`}
+                    >
+                      {topic.status === 'published' ? '📤 Unpublish' : '🚀 Publish'}
+                    </button>
+                  </form>
+                )}
                 <form action={deleteTopicAction}>
                   <input type="hidden" name="moduleId" value={moduleId} />
                   <input type="hidden" name="topicId" value={topic.id} />

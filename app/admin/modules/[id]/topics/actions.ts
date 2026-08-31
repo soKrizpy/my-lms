@@ -92,3 +92,49 @@ export async function deleteTopicAction(formData: FormData) {
   revalidatePath(topicPath(moduleId));
   revalidatePath("/admin/modules");
 }
+
+export async function publishTopicAction(formData: FormData) {
+  const moduleId = readString(formData, "moduleId");
+  const topicId = Number(readString(formData, "topicId"));
+
+  if (!moduleId || !topicId) {
+    throw new Error("ID topik wajib diisi.");
+  }
+
+  const supabaseAdmin = getSupabaseAdmin();
+  const { error } = await supabaseAdmin
+    .from("topics")
+    .update({
+      status: "published",
+      published_at: new Date().toISOString(),
+    })
+    .eq("id", topicId)
+    .eq("module_id", Number(moduleId));
+
+  if (error) throw error;
+
+  revalidatePath(topicPath(moduleId));
+}
+
+export async function unpublishTopicAction(formData: FormData) {
+  const moduleId = readString(formData, "moduleId");
+  const topicId = Number(readString(formData, "topicId"));
+
+  if (!moduleId || !topicId) {
+    throw new Error("ID topik wajib diisi.");
+  }
+
+  const supabaseAdmin = getSupabaseAdmin();
+  const { error } = await supabaseAdmin
+    .from("topics")
+    .update({
+      status: "draft",
+      published_at: null,
+    })
+    .eq("id", topicId)
+    .eq("module_id", Number(moduleId));
+
+  if (error) throw error;
+
+  revalidatePath(topicPath(moduleId));
+}
