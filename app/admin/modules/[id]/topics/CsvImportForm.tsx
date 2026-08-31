@@ -90,17 +90,17 @@ export function CsvImportForm({ moduleId }: { moduleId: string }) {
   }
 
   return (
-    <div className="rounded-lg border border-indigo-300 bg-indigo-950/40 p-4">
+    <div className="glass-panel rounded-lg p-4">
       {/* Header */}
       <div className="flex items-start justify-between mb-3 flex-wrap gap-2">
-        <h2 className="text-sm font-semibold text-indigo-200">
+        <h2 className="text-sm font-semibold text-[var(--text-primary)]">
           Import Konten Lesson via CSV
         </h2>
         <div className="flex gap-2">
           <a
             href="/templates/lesson-template.csv"
             download="lesson-template.csv"
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-indigo-700 text-white text-xs font-semibold hover:bg-indigo-600 transition-colors"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-90 transition-opacity"
           >
             ⬇ Download Template
           </a>
@@ -108,7 +108,7 @@ export function CsvImportForm({ moduleId }: { moduleId: string }) {
             href="/templates/CSV_GUIDE.md"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-700 text-slate-200 text-xs font-semibold hover:bg-slate-600 transition-colors"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md border border-[var(--glass-border)] text-[var(--text-secondary)] text-xs font-semibold hover:border-[var(--accent)] hover:text-[var(--text-primary)] transition-colors"
           >
             📖 Panduan CSV
           </a>
@@ -116,12 +116,12 @@ export function CsvImportForm({ moduleId }: { moduleId: string }) {
       </div>
 
       {/* Instructions */}
-      <p className="text-xs text-indigo-300 mb-3 leading-relaxed">
+      <p className="text-xs text-[var(--text-muted)] mb-3 leading-relaxed">
         Download template, isi konten lesson (baris LESSON + NODE + QUIZ), lalu upload.
         Topic harus sudah dibuat. Kolom{" "}
-        <code className="bg-indigo-900 px-1 rounded text-indigo-100">lessonId</code>{" "}
+        <code className="bg-[var(--input-bg)] border border-[var(--glass-border)] px-1 rounded text-[var(--text-primary)] font-mono">lessonId</code>{" "}
         di CSV harus cocok dengan{" "}
-        <code className="bg-indigo-900 px-1 rounded text-indigo-100">engine_topic_id</code>{" "}
+        <code className="bg-[var(--input-bg)] border border-[var(--glass-border)] px-1 rounded text-[var(--text-primary)] font-mono">engine_topic_id</code>{" "}
         atau urutan topik.
       </p>
 
@@ -139,20 +139,20 @@ export function CsvImportForm({ moduleId }: { moduleId: string }) {
           />
           <label
             htmlFor="csv-file-input"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-slate-700 text-slate-100 text-xs font-semibold hover:bg-slate-600 cursor-pointer transition-colors select-none border border-slate-500"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[var(--glass-border)] bg-[var(--input-bg)] text-[var(--text-primary)] text-xs font-semibold hover:border-[var(--accent)] cursor-pointer transition-colors select-none"
           >
             📂 Pilih File CSV
           </label>
 
           {/* Selected filename display */}
-          <span className="text-xs text-slate-400 truncate max-w-[180px]">
+          <span className="text-xs text-[var(--text-muted)] truncate max-w-[180px]">
             {fileName ?? "Belum ada file dipilih"}
           </span>
 
           <button
             type="submit"
             disabled={loading || !fileName}
-            className="px-3 py-1.5 rounded-md bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-1.5 rounded-md bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
           >
             {loading ? "Mengimpor…" : "Upload & Import"}
           </button>
@@ -161,7 +161,7 @@ export function CsvImportForm({ moduleId }: { moduleId: string }) {
 
       {/* Fatal error */}
       {fatalError && (
-        <p className="mt-3 text-xs text-red-300 bg-red-950/50 border border-red-800 rounded px-3 py-2">
+        <p className="mt-3 text-xs text-[var(--error)] bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/60 rounded px-3 py-2">
           ❌ {fatalError}
         </p>
       )}
@@ -169,12 +169,12 @@ export function CsvImportForm({ moduleId }: { moduleId: string }) {
       {/* Results */}
       {response && (
         <div className="mt-3 space-y-1.5">
-          <p className="text-xs font-semibold text-slate-300">
+          <p className="text-xs font-semibold text-[var(--text-secondary)]">
             Hasil: {response.summary.ok}/{response.summary.total} lesson berhasil diimpor
           </p>
 
           {response.parseErrors.length > 0 && (
-            <div className="text-xs text-amber-300 bg-amber-950/40 border border-amber-700 rounded px-3 py-2">
+            <div className="text-xs text-[var(--warning)] bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800/50 rounded px-3 py-2">
               <p className="font-semibold mb-1">⚠ Baris tidak dikenali:</p>
               <ul className="list-disc list-inside space-y-0.5">
                 {response.parseErrors.slice(0, 5).map((e, i) => (
@@ -193,8 +193,8 @@ export function CsvImportForm({ moduleId }: { moduleId: string }) {
                 key={r.lessonId}
                 className={`text-xs px-3 py-2 rounded border font-mono ${
                   r.ok
-                    ? "bg-green-950/40 border-green-700 text-green-300"
-                    : "bg-red-950/40 border-red-800 text-red-300"
+                    ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800/50 text-green-700 dark:text-green-400"
+                    : "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400"
                 }`}
               >
                 {r.ok ? "✓" : "✗"} {r.lessonId}

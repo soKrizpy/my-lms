@@ -283,15 +283,15 @@ export default function StudentDetailPanel({ studentId, onClose, onEdit, onDelet
         </div>
 
         {/* ── Tabs ── */}
-        <div className="flex border-b border-slate-200 bg-slate-50 flex-shrink-0">
+        <div className="flex border-b border-[var(--glass-border)] bg-[var(--glass-bg)] flex-shrink-0">
           {tabs.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`flex-1 flex flex-col items-center gap-0.5 px-2 py-3 text-[11px] font-semibold transition-colors border-b-2 ${
                 activeTab === tab.key
-                  ? "border-brand-primary text-brand-primary border-b-2 shadow-[0_4px_15px_-3px_var(--color-primary-glow)]"
-                  : "border-transparent text-slate-500 hover:text-slate-300 hover:border-slate-300"
+                  ? "border-[var(--accent)] text-[var(--accent)] shadow-[0_4px_15px_-3px_var(--accent-glow)]"
+                  : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--glass-border)]"
               }`}
             >
               {tab.icon}
@@ -330,15 +330,15 @@ export default function StudentDetailPanel({ studentId, onClose, onEdit, onDelet
                     data.modules.map((mod) => (
                       <div
                         key={mod.id}
-                        className="border border-slate-200 rounded-xl overflow-hidden shadow-sm"
+                        className="glass-panel rounded-xl overflow-hidden shadow-sm"
                       >
                         {/* Module header */}
-                        <div className="px-4 py-3 bg-slate-50 border-b border-slate-200">
+                        <div className="px-4 py-3 bg-[var(--glass-bg)] border-b border-[var(--glass-border)]">
                           <div className="flex items-center justify-between mb-1.5">
-                            <h3 className="text-sm font-semibold text-slate-900 truncate mr-2">
+                            <h3 className="text-sm font-semibold text-[var(--text-primary)] truncate mr-2">
                               {mod.title}
                             </h3>
-                            <span className="text-xs font-medium text-slate-500 flex-shrink-0">
+                            <span className="text-xs font-medium text-[var(--text-muted)] flex-shrink-0">
                               {mod.completedCount}/{mod.totalCount} topik
                             </span>
                           </div>
@@ -346,9 +346,9 @@ export default function StudentDetailPanel({ studentId, onClose, onEdit, onDelet
                         </div>
 
                         {/* Topics list */}
-                        <div className="divide-y divide-slate-100">
+                        <div className="divide-y divide-[var(--glass-border)]">
                           {mod.topics.length === 0 ? (
-                            <p className="px-4 py-3 text-xs text-slate-400 italic">
+                            <p className="px-4 py-3 text-xs text-[var(--text-muted)] italic">
                               Belum ada topik di modul ini.
                             </p>
                           ) : (
@@ -357,34 +357,34 @@ export default function StudentDetailPanel({ studentId, onClose, onEdit, onDelet
                                 {/* Status icon */}
                                 <div className="flex-shrink-0 mt-0.5">
                                   {topic.isUnlocked ? (
-                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 text-[11px] font-bold">✓</span>
+                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">✓</span>
                                   ) : (
-                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-slate-100 text-slate-400 text-[10px]">🔒</span>
+                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-muted)] text-[10px]">🔒</span>
                                   )}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                  <p className={`text-sm font-medium ${topic.isUnlocked ? "text-slate-900" : "text-slate-400"}`}>
+                                  <p className={`text-sm font-medium ${topic.isUnlocked ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]"}`}>
                                     {topic.order_index}. {topic.title}
                                   </p>
                                   {topic.quiz && (
                                     <div className="flex items-center gap-2 mt-1">
                                       {topic.quiz.bestScore !== null && topic.quiz.totalQuestions ? (
                                         <>
-                                          <span className="text-xs text-slate-500">
-                                            Quiz: <strong>{topic.quiz.bestScore}/{topic.quiz.totalQuestions}</strong>
+                                          <span className="text-xs text-[var(--text-muted)]">
+                                            Quiz: <strong className="text-[var(--text-secondary)]">{topic.quiz.bestScore}/{topic.quiz.totalQuestions}</strong>
                                           </span>
                                           <ScoreBadge
                                             score={topic.quiz.bestScore}
                                             total={topic.quiz.totalQuestions}
                                           />
                                           {topic.quiz.attemptsCount > 1 && (
-                                            <span className="text-[10px] text-slate-400">
+                                            <span className="text-[10px] text-[var(--text-muted)]">
                                               ({topic.quiz.attemptsCount}× percobaan)
                                             </span>
                                           )}
                                         </>
                                       ) : (
-                                        <span className="text-xs text-slate-400 italic">
+                                        <span className="text-xs text-[var(--text-muted)] italic">
                                           Quiz belum dikerjakan
                                         </span>
                                       )}
@@ -431,29 +431,29 @@ export default function StudentDetailPanel({ studentId, onClose, onEdit, onDelet
                       return (
                         <div
                           key={meet.id}
-                          className={`rounded-xl border p-4 ${
+                          className={`glass-panel rounded-xl border p-4 ${
                             upcoming
-                              ? "border-blue-200 bg-blue-50"
+                              ? "border-blue-300/40 dark:border-blue-700/40"
                               : attended
-                              ? "border-emerald-200 bg-emerald-50"
-                              : "border-red-200 bg-red-50"
+                              ? "border-emerald-300/40 dark:border-emerald-700/40"
+                              : "border-red-300/40 dark:border-red-700/40"
                           }`}
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-slate-900 truncate">
+                              <p className="text-sm font-semibold text-[var(--text-primary)] truncate">
                                 {meet.title}
                               </p>
-                              <p className="text-xs text-slate-500 mt-0.5">
+                              <p className="text-xs text-[var(--text-muted)] mt-0.5">
                                 {dateStr} · {timeStr} WIB
                               </p>
                             </div>
                             <StatusPill upcoming={upcoming} attended={attended} missed={missed} status={status} />
                           </div>
                           {meet.progress_report && (
-                            <div className="mt-2 p-2 bg-white/60 rounded-lg border border-white/80">
-                              <p className="text-xs font-semibold text-slate-600 mb-0.5">Laporan:</p>
-                              <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
+                            <div className="mt-2 p-2 bg-[var(--input-bg)] rounded-lg border border-[var(--glass-border)]">
+                              <p className="text-xs font-semibold text-[var(--text-muted)] mb-0.5">Laporan:</p>
+                              <p className="text-xs text-[var(--text-secondary)] leading-relaxed whitespace-pre-wrap">
                                 {meet.progress_report}
                               </p>
                             </div>
