@@ -1,0 +1,121 @@
+{
+  "nav": {
+    "student": "Student",
+    "admin": "Admin"
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "close": "Close",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back"
+  },
+  "lang": {
+    "toggle": "ID",
+    "current": "EN"
+  },
+  "student": {
+    "tabs": {
+      "schedule": "Schedule",
+      "learning": "Learning Path",
+      "parent": "Parent Hub"
+    },
+    "greeting": "Hello, {name}!",
+    "greetingBadge": "Student Quest Portal",
+    "greetingSubline": "Ready to continue your coding adventure today? Complete modules and conquer the challenges!",
+    "stats": {
+      "completed": "Completed",
+      "sessions": "Sessions",
+      "quiz": "Quiz"
+    },
+    "schedule": {
+      "heading": "Next 3 Classes",
+      "empty": "No upcoming schedule",
+      "loading": "Loading data...",
+      "failed": "Failed to load data."
+    },
+    "meeting": {
+      "live": "● LIVE",
+      "done": "✓ Done",
+      "joinNow": "Join Now!",
+      "notYet": "Not Yet",
+      "classDone": "Class Done",
+      "finishQuiz": "Complete Quiz",
+      "absent": "Absent (Missing Class)",
+      "lockedHint": "Join the class to unlock",
+      "synopsis": "Synopsis",
+      "projectLink": "Project Link",
+      "openProject": "Open Project Link",
+      "noSynopsis": "No synopsis available for this topic.",
+      "countdown": {
+        "days": "Days",
+        "hours": "Hrs",
+        "minutes": "Min",
+        "seconds": "Sec"
+      },
+      "session": "Session {current}/{total}"
+    },
+    "learning": {
+      "heading": "My Learning Path",
+      "empty": "No modules assigned to you yet.",
+      "locked": "Locked",
+      "done": "Done",
+      "active": "Active",
+      "lockedHint": "Complete the previous module to unlock this one",
+      "topicCount": "{unlocked}/{total} topics",
+      "startLesson": "Start Lesson",
+      "takeCourse": "Join class",
+      "synopsis": {
+        "open": "View synopsis",
+        "close": "Close synopsis"
+      },
+      "quiz": {
+        "label": "Quiz",
+        "score": "Score: {score}",
+        "history": "Quiz History",
+        "attemptsUsed": "Attempts Used",
+        "bestScore": "Best Score"
+      }
+    },
+    "parent": {
+      "heading": "Parent Hub",
+      "empty": "No completed classes yet.",
+      "teacherReport": "Teacher Report",
+      "noReport": "Report not available yet.",
+      "quizScore": "Quiz Score",
+      "noAttempt": "Quiz not attempted yet."
+    },
+    "quiz": {
+      "loading": "Loading questions...",
+      "empty": "No questions for this quiz yet.",
+      "allAnswered": "Please answer all questions first.",
+      "sending": "Submitting...",
+      "submit": "Submit Answers",
+      "good": "Great job! 🎉",
+      "retry": "Try again!",
+      "correct": "{correct} out of {total} correct",
+      "maxAttempts": "Attempt limit reached. Your best score: {score}",
+      "answerKey": "Answer Key",
+      "yourAnswer": "Your answer: {answer}",
+      "correctAnswer": "Correct: {answer}"
+    },
+    "invoice": {
+      "paid": "Thank You!",
+      "paidBody": "Invoice for {month} has been paid in full.",
+      "heading": "Invoice for {month}",
+      "collapsedLabel": "Invoice {month}: Rp {amount}",
+      "breakdown": "{count} Attendance x Rp {price}",
+      "bankLabel": "Transfer to account:",
+      "openDetail": "Open Detail",
+      "collapse": "Collapse"
+    }
+  },
+  "logout": {
+    "confirm": "Are you sure you want to log out?",
+    "loading": "Ending your session",
+    "button": "Logging out..."
+  }
+}

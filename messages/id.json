@@ -1,0 +1,121 @@
+{
+  "nav": {
+    "student": "Siswa",
+    "admin": "Admin"
+  },
+  "common": {
+    "loading": "Memuat...",
+    "error": "Terjadi kesalahan",
+    "save": "Simpan",
+    "cancel": "Batal",
+    "close": "Tutup",
+    "delete": "Hapus",
+    "edit": "Edit",
+    "back": "Kembali"
+  },
+  "lang": {
+    "toggle": "EN",
+    "current": "ID"
+  },
+  "student": {
+    "tabs": {
+      "schedule": "Jadwal Belajar",
+      "learning": "Learning Path",
+      "parent": "Parent Hub"
+    },
+    "greeting": "Halo, {name}!",
+    "greetingBadge": "Student Quest Portal",
+    "greetingSubline": "Siap melanjutkan petualangan koding hari ini? Selesaikan modul dan taklukkan tantangannya!",
+    "stats": {
+      "completed": "Selesai",
+      "sessions": "Sesi",
+      "quiz": "Quiz"
+    },
+    "schedule": {
+      "heading": "3 Jadwal Mendatang",
+      "empty": "Tidak ada jadwal mendatang",
+      "loading": "Memuat data...",
+      "failed": "Gagal memuat data."
+    },
+    "meeting": {
+      "live": "● LIVE",
+      "done": "✓ Selesai",
+      "joinNow": "Bergabung Sekarang!",
+      "notYet": "Belum Waktunya",
+      "classDone": "Kelas Selesai",
+      "finishQuiz": "Selesaikan Quiz",
+      "absent": "Tidak Hadir (Missing Class)",
+      "lockedHint": "Bergabung ke kelas untuk membuka",
+      "synopsis": "Sinopsis",
+      "projectLink": "Link Project",
+      "openProject": "Buka Link Project",
+      "noSynopsis": "Tidak ada sinopsis untuk topik ini.",
+      "countdown": {
+        "days": "Hari",
+        "hours": "Jam",
+        "minutes": "Mnt",
+        "seconds": "Dtk"
+      },
+      "session": "Sesi {current}/{total}"
+    },
+    "learning": {
+      "heading": "Learning Path Saya",
+      "empty": "Belum ada modul yang di-assign untukmu.",
+      "locked": "Terkunci",
+      "done": "Selesai",
+      "active": "Aktif",
+      "lockedHint": "Selesaikan modul sebelumnya untuk membuka modul ini",
+      "topicCount": "{unlocked}/{total} topik",
+      "startLesson": "Mulai Belajar",
+      "takeCourse": "Ikuti kelas",
+      "synopsis": {
+        "open": "Lihat sinopsis",
+        "close": "Tutup sinopsis"
+      },
+      "quiz": {
+        "label": "Quiz",
+        "score": "Nilai: {score}",
+        "history": "Riwayat Kuis",
+        "attemptsUsed": "Percobaan Terpakai",
+        "bestScore": "Nilai Terbaik"
+      }
+    },
+    "parent": {
+      "heading": "Parent Hub",
+      "empty": "Belum ada kelas yang selesai.",
+      "teacherReport": "Laporan Guru",
+      "noReport": "Laporan belum tersedia.",
+      "quizScore": "Nilai Quiz",
+      "noAttempt": "Quiz belum dikerjakan."
+    },
+    "quiz": {
+      "loading": "Memuat soal...",
+      "empty": "Belum ada soal untuk quiz ini.",
+      "allAnswered": "Jawab semua pertanyaan terlebih dahulu.",
+      "sending": "Mengirim...",
+      "submit": "Kumpulkan Jawaban",
+      "good": "Bagus! 🎉",
+      "retry": "Coba lagi ya!",
+      "correct": "{correct} dari {total} jawaban benar",
+      "maxAttempts": "Batas percobaan habis. Nilai terbaikmu: {score}",
+      "answerKey": "Kunci Jawaban",
+      "yourAnswer": "Jawabanmu: {answer}",
+      "correctAnswer": "Benar: {answer}"
+    },
+    "invoice": {
+      "paid": "Terima Kasih!",
+      "paidBody": "Tagihan bulan {month} sudah dibayar lunas.",
+      "heading": "Tagihan Bulan {month}",
+      "collapsedLabel": "Tagihan {month}: Rp {amount}",
+      "breakdown": "{count} Kehadiran x Rp {price}",
+      "bankLabel": "Transfer ke rekening:",
+      "openDetail": "Buka Detail",
+      "collapse": "Ciutkan"
+    }
+  },
+  "logout": {
+    "confirm": "Yakin ingin keluar?",
+    "loading": "Mengakhiri sesi kamu",
+    "button": "Keluar..."
+  }
+}

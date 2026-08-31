@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import LogoutButton from "./components/LogoutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/Logo";
+import { LanguageToggle } from '@/components/LanguageToggle';
 import {
   LayoutDashboard,
   BookOpen,
@@ -20,6 +21,11 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+
+  // Read locale from cookie for language toggle
+  const locale = typeof document !== 'undefined'
+    ? document.cookie.split('; ').find(r => r.startsWith('locale='))?.split('=')[1] ?? 'id'
+    : 'id';
 
   const navItems = [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
@@ -45,6 +51,7 @@ export default function AdminLayout({
           </span>
         </div>
         <div className="flex items-center gap-3">
+          <LanguageToggle currentLocale={locale} />
           <ThemeToggle />
           <LogoutButton />
         </div>
@@ -82,6 +89,7 @@ export default function AdminLayout({
 
         <div className="mt-auto pt-4 border-t border-[var(--glass-border)] flex items-center justify-between">
           <LogoutButton />
+          <LanguageToggle currentLocale={locale} />
           <ThemeToggle />
         </div>
       </aside>

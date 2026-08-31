@@ -550,7 +550,7 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
                           )}
                           {topic.isUnlocked && topic.engine_topic_id && (
                             <a
-                              href={`${process.env.NEXT_PUBLIC_LESSON_ENGINE_URL || 'http://localhost:3001'}/lesson/${topic.engine_topic_id}?lmsOrigin=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : '')}`}
+                              href={`${process.env.NEXT_PUBLIC_LESSON_ENGINE_URL || 'http://localhost:3001'}/lesson/${topic.engine_topic_id}?lmsOrigin=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : '')}&lang=${typeof document !== 'undefined' ? (document.cookie.split('; ').find(r => r.startsWith('locale='))?.split('=')[1] ?? 'id') : 'id'}`}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1.5 text-xs text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg mt-2 font-semibold shadow-sm transition-colors w-max"

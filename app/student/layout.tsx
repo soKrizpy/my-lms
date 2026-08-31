@@ -4,8 +4,13 @@ import { logout } from "./actions";
 import LogoutButton from "./LogoutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/Logo";
+import { cookies } from 'next/headers';
+import { LanguageToggle } from '@/components/LanguageToggle';
 
-export default function StudentLayout({ children }: { children: React.ReactNode }) {
+export default async function StudentLayout({ children }: { children: React.ReactNode }) {
+  const cookieStore = await cookies();
+  const raw = cookieStore.get('locale')?.value;
+  const locale = raw === 'en' ? 'en' : 'id';
   return (
     <div className="min-h-screen bg-[var(--background)] text-[var(--foreground)] transition-colors duration-300">
       {/* Top navbar */}
@@ -16,6 +21,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
             <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-brand-secondary/20 text-brand-secondary border border-brand-secondary/30">Student</span>
           </div>
           <div className="flex items-center gap-4">
+            <LanguageToggle currentLocale={locale} />
             <ThemeToggle />
             <LogoutButton />
           </div>
