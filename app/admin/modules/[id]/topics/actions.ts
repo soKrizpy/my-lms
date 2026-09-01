@@ -22,7 +22,7 @@ export async function createTopicAction(formData: FormData) {
   const engineTopicId = readString(formData, "engineTopicId");
 
   if (!moduleId || !title || !Number.isFinite(orderIndex)) {
-    throw new Error("ID modul, judul, dan urutan topik wajib diisi.");
+    return { error: "ID modul, judul, dan urutan topik wajib diisi." };
   }
 
   const supabaseAdmin = getSupabaseAdmin();
@@ -36,10 +36,17 @@ export async function createTopicAction(formData: FormData) {
     engine_topic_id: engineTopicId || null,
   });
 
-  if (error) throw error;
+  if (error) {
+    // Unique constraint on engine_topic_id
+    if (error.code === "23505") {
+      return { error: `Lesson Engine ID "${engineTopicId}" sudah digunakan oleh topik lain. Pilih ID yang berbeda atau kosongkan.` };
+    }
+    return { error: error.message };
+  }
 
   revalidatePath(topicPath(moduleId));
   revalidatePath("/admin/modules");
+  return { success: true };
 }
 
 export async function updateTopicAction(formData: FormData) {
@@ -53,7 +60,7 @@ export async function updateTopicAction(formData: FormData) {
   const engineTopicId = readString(formData, "engineTopicId");
 
   if (!moduleId || !topicId || !title || !Number.isFinite(orderIndex)) {
-    throw new Error("ID, judul, dan urutan topik wajib diisi.");
+    return { error: "ID, judul, dan urutan topik wajib diisi." };
   }
 
   const supabaseAdmin = getSupabaseAdmin();
@@ -70,10 +77,16 @@ export async function updateTopicAction(formData: FormData) {
     .eq("id", topicId)
     .eq("module_id", Number(moduleId));
 
-  if (error) throw error;
+  if (error) {
+    if (error.code === "23505") {
+      return { error: `Lesson Engine ID "${engineTopicId}" sudah digunakan oleh topik lain. Pilih ID yang berbeda atau kosongkan.` };
+    }
+    return { error: error.message };
+  }
 
   revalidatePath(topicPath(moduleId));
   revalidatePath("/admin/modules");
+  return { success: true };
 }
 
 export async function deleteTopicAction(formData: FormData) {
@@ -81,16 +94,17 @@ export async function deleteTopicAction(formData: FormData) {
   const topicId = Number(readString(formData, "topicId"));
 
   if (!moduleId || !topicId) {
-    throw new Error("ID topik wajib diisi.");
+    return { error: "ID topik wajib diisi." };
   }
 
   const supabaseAdmin = getSupabaseAdmin();
   const { error } = await supabaseAdmin.from("topics").delete().eq("id", topicId);
 
-  if (error) throw error;
+  if (error) return { error: error.message };
 
   revalidatePath(topicPath(moduleId));
   revalidatePath("/admin/modules");
+  return { success: true };
 }
 
 export async function publishTopicAction(formData: FormData) {
@@ -98,7 +112,7 @@ export async function publishTopicAction(formData: FormData) {
   const topicId = Number(readString(formData, "topicId"));
 
   if (!moduleId || !topicId) {
-    throw new Error("ID topik wajib diisi.");
+    return { error: "ID topik wajib diisi." };
   }
 
   const supabaseAdmin = getSupabaseAdmin();
@@ -111,9 +125,10 @@ export async function publishTopicAction(formData: FormData) {
     .eq("id", topicId)
     .eq("module_id", Number(moduleId));
 
-  if (error) throw error;
+  if (error) return { error: error.message };
 
   revalidatePath(topicPath(moduleId));
+  return { success: true };
 }
 
 export async function unpublishTopicAction(formData: FormData) {
@@ -121,7 +136,7 @@ export async function unpublishTopicAction(formData: FormData) {
   const topicId = Number(readString(formData, "topicId"));
 
   if (!moduleId || !topicId) {
-    throw new Error("ID topik wajib diisi.");
+    return { error: "ID topik wajib diisi." };
   }
 
   const supabaseAdmin = getSupabaseAdmin();
@@ -134,7 +149,8 @@ export async function unpublishTopicAction(formData: FormData) {
     .eq("id", topicId)
     .eq("module_id", Number(moduleId));
 
-  if (error) throw error;
+  if (error) return { error: error.message };
 
   revalidatePath(topicPath(moduleId));
+  return { success: true };
 }

@@ -138,12 +138,23 @@ export function TopicList({
                   Kelola quiz
                 </Link>
                 {Boolean(topic.lesson_content) && (
-                  <form action={topic.status === 'published' ? unpublishTopicAction : publishTopicAction}>
+                  <form
+                    action={(formData) => {
+                      startTransition(async () => {
+                        const action = topic.status === 'published' ? unpublishTopicAction : publishTopicAction;
+                        const result = await action(formData);
+                        if (result && 'error' in result && result.error) {
+                          alert("Gagal: " + result.error);
+                        }
+                      });
+                    }}
+                  >
                     <input type="hidden" name="moduleId" value={moduleId} />
                     <input type="hidden" name="topicId" value={topic.id} />
                     <button
                       type="submit"
-                      className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors ${
+                      disabled={isPending}
+                      className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-50 ${
                         topic.status === 'published'
                           ? 'border border-amber-300 text-amber-700 hover:bg-amber-50'
                           : 'border border-green-300 text-green-700 hover:bg-green-50'
@@ -153,12 +164,23 @@ export function TopicList({
                     </button>
                   </form>
                 )}
-                <form action={deleteTopicAction}>
+                <form
+                  action={(formData) => {
+                    if (!confirm("Hapus topik ini?")) return;
+                    startTransition(async () => {
+                      const result = await deleteTopicAction(formData);
+                      if (result && 'error' in result && result.error) {
+                        alert("Gagal hapus: " + result.error);
+                      }
+                    });
+                  }}
+                >
                   <input type="hidden" name="moduleId" value={moduleId} />
                   <input type="hidden" name="topicId" value={topic.id} />
                   <button
                     type="submit"
-                    className="rounded-md border border-red-200 px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-50"
+                    disabled={isPending}
+                    className="rounded-md border border-red-200 px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
                   >
                     Hapus
                   </button>
@@ -174,11 +196,11 @@ export function TopicList({
               <form
                 action={(formData) => {
                   startTransition(async () => {
-                    try {
-                      await updateTopicAction(formData);
+                    const result = await updateTopicAction(formData);
+                    if (result && 'error' in result && result.error) {
+                      alert("Gagal menyimpan topik: " + result.error);
+                    } else {
                       alert("Topik berhasil disimpan!");
-                    } catch (err: unknown) {
-                      alert("Gagal menyimpan topik: " + (err instanceof Error ? err.message : String(err)));
                     }
                   });
                 }}

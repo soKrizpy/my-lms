@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../lib/supabase/server";
 import { getSupabaseAdmin } from "../../../../lib/supabaseAdmin";
+import { resolveTopicUnlockMap } from "../../../../lib/topicUnlock";
 
 // GET /api/student/dashboard - fetch all data for student dashboard
 export async function GET() {
@@ -14,7 +15,7 @@ export async function GET() {
   const supabaseAdmin = getSupabaseAdmin();
   const studentId = user.id;
 
-  // 1. Upcoming meetings (next 3)
+  // 1. All meetings for this student (sorted asc for globalIndex mapping)
   const { data: meetings } = await supabaseAdmin
     .from("meetings")
     .select(`
@@ -27,17 +28,17 @@ export async function GET() {
     .order("meeting_date", { ascending: true });
 
   const now = new Date();
-  const sortedMeetings = meetings || [];
-  sortedMeetings.forEach((m: any, idx: number) => m.globalIndex = idx);
-  
+  const sortedMeetings = (meetings || []) as any[];
+  sortedMeetings.forEach((m: any, idx: number) => { m.globalIndex = idx; });
+
   // Filter upcoming meetings based on visibility rules
-  const visibleUpcomingMeetings = sortedMeetings.filter(m => {
+  const visibleUpcomingMeetings = sortedMeetings.filter((m: any) => {
     const hasJoined = m.meeting_students[0]?.has_joined;
-    
-    // 1. Remove if teacher has submitted report / marked completed
+
+    // Remove if teacher has submitted report / marked completed
     if (m.is_completed) return false;
 
-    // 2. Remove if student missed class and 65 minutes have passed since meeting started (1 hr duration + 5 mins)
+    // Remove if student missed class and 65 minutes have passed since meeting started
     const meetingTime = new Date(m.meeting_date).getTime();
     const isMissingAndExpired = !hasJoined && now.getTime() > meetingTime + (65 * 60 * 1000);
     if (isMissingAndExpired) return false;
@@ -46,35 +47,34 @@ export async function GET() {
   });
 
   const upcomingMeetings = visibleUpcomingMeetings.slice(0, 3);
-
-  const pastMeetings = (meetings || []).filter(
-    m => m.is_completed || new Date(m.meeting_date).getTime() + 60 * 60 * 1000 <= now.getTime()
+  const pastMeetings = sortedMeetings.filter(
+    (m: any) => m.is_completed || new Date(m.meeting_date).getTime() + 60 * 60 * 1000 <= now.getTime()
   );
 
-  // 2. Assigned modules with topics and quizzes
+  // 2. Assigned modules
   const { data: studentModules } = await supabaseAdmin
     .from("student_modules")
-    .select(`
-      module_id,
-      modules(id, title, description, level)
-    `)
+    .select(`module_id, modules(id, title, description, level)`)
     .eq("student_id", studentId)
     .order("module_id", { ascending: true });
 
-  const moduleIds = (studentModules || []).map((sm: any) => sm.module_id);
+  const moduleIds: number[] = ((studentModules || []) as any[]).map((sm: any) => sm.module_id);
 
-  // 3. Quiz scores — fetch early so unlock logic can use it
+  // 3. Quiz scores — fetched early so unlock logic can reference them
   const { data: quizAttempts } = await supabaseAdmin
     .from("quiz_attempts")
     .select(`id, quiz_id, score, total_questions, attempts_count, created_at, quizzes(title, topic_id, topics(title))`)
     .eq("student_id", studentId)
     .order("created_at", { ascending: false });
 
-  // Build a set of quiz_ids the student has attempted
-  const attemptedQuizIds = new Set((quizAttempts || []).map((qa: any) => qa.quiz_id));
+  const attemptedQuizIds = new Set(((quizAttempts || []) as any[]).map((qa: any) => qa.quiz_id));
 
   let modulesWithTopics: any[] = [];
+
   if (moduleIds.length > 0) {
+    // Resolve unlock status via centralised function
+    const unlockMap = await resolveTopicUnlockMap(studentId, moduleIds);
+
     const { data: topics } = await supabaseAdmin
       .from("topics")
       .select("id, module_id, title, order_index, description, project_link, engine_topic_id, status, lesson_content")
@@ -84,42 +84,20 @@ export async function GET() {
     const { data: quizzes } = await supabaseAdmin
       .from("quizzes")
       .select("id, topic_id, title")
-      .in("topic_id", (topics || []).map((t: any) => t.id));
+      .in("topic_id", ((topics || []) as any[]).map((t: any) => t.id));
 
-    // Total topics across all modules (for meeting→topic modulo mapping)
-    const allTopicsFlat = (topics || [])
-      .filter((t: any) => moduleIds.includes(t.module_id))
-      .sort((a: any, b: any) => {
-        if (a.module_id !== b.module_id) return a.module_id - b.module_id;
-        return a.order_index - b.order_index;
-      });
-    const totalTopicsCount = allTopicsFlat.length;
-
-    let globalTopicIndex = 0;
-
-    modulesWithTopics = (studentModules || []).map((sm: any) => {
+    modulesWithTopics = ((studentModules || []) as any[]).map((sm: any) => {
       const mod = sm.modules;
-      const modTopics = (topics || [])
+      const modTopics = ((topics || []) as any[])
         .filter((t: any) => t.module_id === sm.module_id)
         .sort((a: any, b: any) => a.order_index - b.order_index)
         .map((t: any) => {
-          const quiz = (quizzes || []).find((q: any) => q.topic_id === t.id);
-
-          // Unlock if: student attempted this topic's quiz
-          const unlockedByQuiz = quiz ? attemptedQuizIds.has(quiz.id) : false;
-
-          // Fallback: unlock if student joined the corresponding meeting (cycled if more meetings than topics)
-          const meetingIdx = totalTopicsCount > 0 ? globalTopicIndex % totalTopicsCount : globalTopicIndex;
-          const correspondingMeeting = sortedMeetings.find((m: any) => m.globalIndex === meetingIdx);
-          const unlockedByJoin = correspondingMeeting?.meeting_students?.[0]?.has_joined || false;
-
-          const isUnlocked = unlockedByQuiz || unlockedByJoin;
-
-          globalTopicIndex++;
+          const quiz = ((quizzes || []) as any[]).find((q: any) => q.topic_id === t.id);
+          // Use centralised unlock map (covers join + engine completion)
+          const isUnlocked = unlockMap.get(t.id)?.isUnlocked ?? false;
           return { ...t, quiz, isUnlocked };
         });
 
-      // A module is "active" if it has at least one unlocked topic but isn't fully unlocked
       const unlockedCount = modTopics.filter((t: any) => t.isUnlocked).length;
       const isModuleLocked = unlockedCount === 0;
       const isModuleActive = unlockedCount > 0 && unlockedCount < modTopics.length;
@@ -138,21 +116,20 @@ export async function GET() {
     .order("created_at", { ascending: false })
     .limit(1);
 
-  // 5. Total XP earned from engine-completed lessons, with topic title via join
+  // 5. Engine lesson progress (XP + quiz scores from engine)
   const { data: topicProgress } = await supabaseAdmin
     .from("topic_progress")
     .select("xp_earned, best_quiz_score, engine_topic_id, completed_at, topic_id, topics(title)")
     .eq("student_id", studentId)
     .order("completed_at", { ascending: false });
 
-  const engineXpTotal = (topicProgress || []).reduce(
+  const engineXpTotal = ((topicProgress || []) as any[]).reduce(
     (sum: number, tp: any) => sum + (typeof tp.xp_earned === "number" ? tp.xp_earned : 0),
     0
   );
-  const completedEngineTopics = (topicProgress || []).length;
+  const completedEngineTopics = ((topicProgress || []) as any[]).length;
 
   const studentName = user.user_metadata?.full_name || "Siswa";
-  // take only first name for casual greeting
   const firstName = studentName.split(" ")[0];
 
   return NextResponse.json({

@@ -5,6 +5,9 @@ import { Calendar, BookOpen, Users, Sparkles, Trophy, CheckCircle2 } from "lucid
 import { MagicalParticles } from "@/components/MagicalParticles";
 import { MagicalCounter } from "@/components/MagicalCounter";
 import { useLmsEngineListener } from "@/lib/useLmsEngineListener";
+import { EngineModal } from "@/components/EngineModal";
+import { supabase } from "@/lib/supabaseClient";
+import { useTranslations } from "next-intl";
 
 // --- Types ---
 interface Meeting {
@@ -60,6 +63,14 @@ interface TopicProgress {
   topics?: { title: string } | null;
 }
 
+// Unlocked topic returned by the join API
+interface UnlockedTopic {
+  id: number;
+  title: string;
+  engine_topic_id: string | null;
+  canStartEngine: boolean;
+}
+
 // --- Countdown Hook ---
 function calcTimeLeft(targetDate: string) {
   const diff = new Date(targetDate).getTime() - Date.now();
@@ -88,6 +99,7 @@ function useCountdown(targetDate: string) {
 
 // --- Synopsis Floating Panel ---
 function SynopsisPanel({ topic, onClose }: { topic: Topic; onClose: () => void }) {
+  const t = useTranslations('student');
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/30" onClick={onClose}>
       <div
@@ -97,7 +109,7 @@ function SynopsisPanel({ topic, onClose }: { topic: Topic; onClose: () => void }
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-blue-600">
           <div>
-            <p className="text-xs font-medium text-blue-100 uppercase tracking-wide">Sinopsis Materi</p>
+            <p className="text-xs font-medium text-blue-100 uppercase tracking-wide">{t('meeting.synopsis')}</p>
             <h3 className="font-bold text-white text-base mt-0.5 leading-snug">{topic.title}</h3>
           </div>
           <button onClick={onClose} className="text-white/70 hover:text-white p-1 rounded">
@@ -110,17 +122,17 @@ function SynopsisPanel({ topic, onClose }: { topic: Topic; onClose: () => void }
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-5">
           {topic.description ? (
-            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: 'var(--text-secondary)' }}>
               {topic.description.replace(/<[^>]*>?/gm, "")}
             </p>
           ) : (
-            <p className="text-sm text-slate-400 italic">Tidak ada sinopsis untuk topik ini.</p>
+            <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>{t('meeting.noSynopsis')}</p>
           )}
         </div>
 
         {/* Footer - project link */}
         {topic.project_link && (
-          <div className="p-4 border-t border-slate-100">
+          <div className="p-4 border-t border-[var(--glass-border)]">
             <a
               href={topic.project_link}
               target="_blank"
@@ -130,7 +142,7 @@ function SynopsisPanel({ topic, onClose }: { topic: Topic; onClose: () => void }
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6m0 0v6m0-6L10 14" />
               </svg>
-              Buka Link Project
+              {t('meeting.openProject')}
             </a>
           </div>
         )}
@@ -140,7 +152,8 @@ function SynopsisPanel({ topic, onClose }: { topic: Topic; onClose: () => void }
 }
 
 // --- Meeting Card (Student View) ---
-function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: Meeting, modules: Module[], quizAttempts: any[], onRefresh: () => void }) {
+function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh, onJoined }: { meet: Meeting, modules: Module[], quizAttempts: any[], onRefresh: () => void, onJoined?: (unlockedTopic: UnlockedTopic | null) => void }) {
+  const t = useTranslations('student');
   const [synopsisOpen, setSynopsisOpen] = useState(false);
   const timeLeft = useCountdown(meet.meeting_date);
   const now = Date.now();
@@ -182,11 +195,11 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
           <div className="flex gap-1 flex-wrap justify-end">
             {meet.session_count > 1 && (
               <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-100">
-                Sesi {meet.session_number}/{meet.session_count}
+                {t('meeting.session', { current: meet.session_number, total: meet.session_count })}
               </span>
             )}
-            {isLive && <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 animate-pulse">● LIVE</span>}
-            {isCompleted && <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">✓ Selesai</span>}
+            {isLive && <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 animate-pulse">{t('meeting.live')}</span>}
+            {isCompleted && <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">{t('meeting.done')}</span>}
           </div>
         </div>
 
@@ -202,17 +215,17 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  Sinopsis
+                  {t('meeting.synopsis')}
                 </button>
               ) : (
                 <div
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-400 text-xs font-semibold cursor-not-allowed select-none"
-                  title="Bergabung ke kelas untuk membuka"
+                  title={t('meeting.lockedHint')}
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                  Sinopsis
+                  {t('meeting.synopsis')}
                 </div>
               )
             )}
@@ -227,17 +240,17 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6m0 0v6m0-6L10 14" />
                   </svg>
-                  Link Project
+                  {t('meeting.projectLink')}
                 </a>
               ) : (
                 <div
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-400 text-xs font-semibold cursor-not-allowed select-none"
-                  title="Bergabung ke kelas untuk membuka"
+                  title={t('meeting.lockedHint')}
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                  Link Project
+                  {t('meeting.projectLink')}
                 </div>
               )
             )}
@@ -249,16 +262,16 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
           meet.meeting_students?.[0]?.has_joined ? (
             hasAttempted ? (
               <div className="flex items-center justify-center w-full bg-green-100 text-green-700 rounded-lg py-2 text-sm font-medium border border-green-200 mt-3">
-                Kelas Selesai
+                {t('meeting.classDone')}
               </div>
             ) : (
               <div className="flex items-center justify-center w-full bg-orange-100 text-orange-700 rounded-lg py-2 text-sm font-medium border border-orange-200 mt-3">
-                Selesaikan Quiz
+                {t('meeting.finishQuiz')}
               </div>
             )
           ) : (
             <div className="flex items-center justify-center w-full bg-red-100 text-red-700 rounded-lg py-2 text-sm font-medium border border-red-200 mt-3">
-              Tidak Hadir (Missing Class)
+              {t('meeting.absent')}
             </div>
           )
         ) : canJoinLive && meet.link_url ? (
@@ -269,12 +282,20 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ meetingId: meet.id }),
-                }).then(() => onRefresh());
+                }).then(async (res) => {
+                  if (res.ok) {
+                    const data = await res.json() as { success: boolean; unlockedTopic: UnlockedTopic | null };
+                    onRefresh();
+                    if (onJoined) onJoined(data.unlockedTopic);
+                  } else {
+                    onRefresh();
+                  }
+                }).catch(() => onRefresh());
               }}
               className="flex items-center justify-center w-full bg-red-600 text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-red-700 transition-colors gap-2"
               style={{ animation: "none" }}>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-              Bergabung Sekarang!
+              {t('meeting.joinNow')}
             </a>
           </div>
         ) : (
@@ -284,10 +305,10 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
                 {timeLeft.days > 0 && (
                   <div className="text-center">
                     <div className="bg-slate-900 text-white rounded px-2 py-1 text-sm font-mono font-bold min-w-[28px]">{timeLeft.days}</div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">Hari</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">{t('meeting.countdown.days')}</div>
                   </div>
                 )}
-                {[{ v: timeLeft.hours, l: "Jam" }, { v: timeLeft.minutes, l: "Mnt" }, { v: timeLeft.seconds, l: "Dtk" }].map(({ v, l }) => (
+                {[{ v: timeLeft.hours, l: t('meeting.countdown.hours') }, { v: timeLeft.minutes, l: t('meeting.countdown.minutes') }, { v: timeLeft.seconds, l: t('meeting.countdown.seconds') }].map(({ v, l }) => (
                   <div key={l} className="text-center">
                     <div className="bg-slate-800 text-white rounded px-2 py-1 text-sm font-mono font-bold min-w-[28px]">{String(v).padStart(2, "0")}</div>
                     <div className="text-[10px] text-slate-500 mt-0.5">{l}</div>
@@ -297,7 +318,7 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
             )}
             <div className="flex items-center justify-center w-full bg-slate-100 text-slate-400 rounded-lg py-2 text-sm border border-slate-200 gap-2">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-              Belum Waktunya
+              {t('meeting.notYet')}
             </div>
           </div>
         )}
@@ -308,6 +329,7 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh }: { meet: 
 
 // --- Quiz Modal ---
 function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose: () => void; onComplete: () => void }) {
+  const t = useTranslations('student');
   const [questions, setQuestions] = useState<any[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [result, setResult] = useState<{ score: number; total: number; correct: number; attemptsCount?: number; bestScore?: number; correctAnswers?: Record<string, string> } | null>(null);
@@ -322,7 +344,7 @@ function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose
 
   const handleSubmit = async () => {
     if (Object.keys(answers).length < questions.length) {
-      alert("Jawab semua pertanyaan terlebih dahulu.");
+      alert(t('quiz.allAnswered'));
       return;
     }
     setSubmitting(true);
@@ -333,7 +355,7 @@ function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose
     });
     const data = await res.json();
     if (!res.ok) {
-      alert(data.error || "Gagal mengirim kuis.");
+      alert(data.error || t('common.error'));
     } else {
       setResult(data);
     }
@@ -343,7 +365,7 @@ function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="glass-panel rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh]">
-        <div className="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-blue-600 rounded-t-2xl">
+        <div className="px-6 py-4 border-b border-[var(--glass-border)] flex justify-between items-center bg-blue-600 rounded-t-2xl">
           <h2 className="text-lg font-bold text-white">{quiz?.title || "Quiz"}</h2>
           <button onClick={onClose} className="text-white/80 hover:text-white">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
@@ -351,31 +373,31 @@ function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose
         </div>
         <div className="overflow-y-auto flex-1 p-6">
           {loading ? (
-            <p className="text-slate-500 text-center">Memuat soal...</p>
+            <p className="text-center" style={{ color: 'var(--text-muted)' }}>{t('quiz.loading')}</p>
           ) : result ? (
             <div className="text-center space-y-4">
               <div className={`w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold mx-auto ${result.score >= 70 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
                 {result.score}
               </div>
-              <p className="text-xl font-semibold text-slate-900">{result.score >= 70 ? "Bagus! 🎉" : "Coba lagi ya!"}</p>
-              <p className="text-slate-500">{result.correct} dari {result.total} jawaban benar</p>
+              <p className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>{result.score >= 70 ? t('quiz.good') : t('quiz.retry')}</p>
+              <p style={{ color: 'var(--text-muted)' }}>{t('quiz.correct', { correct: result.correct, total: result.total })}</p>
               {(result.attemptsCount ?? 0) >= 2 && (
-                <p className="text-xs text-orange-600 bg-orange-50 inline-block px-3 py-1 rounded-full border border-orange-100">Batas percobaan habis. Nilai terbaikmu: {result.bestScore}</p>
+                <p className="text-xs text-orange-600 bg-orange-50 inline-block px-3 py-1 rounded-full border border-orange-100">{t('quiz.maxAttempts', { score: result.bestScore })}</p>
               )}
 
-              {/* Pembahasan Singkat / Kunci Jawaban */}
+              {/* Kunci Jawaban */}
               {result.correctAnswers && (
-                <div className="mt-6 text-left border border-slate-200 rounded-xl overflow-hidden text-sm">
-                  <div className="bg-slate-50 px-4 py-2 border-b border-slate-200 font-semibold text-slate-700">Kunci Jawaban</div>
+                <div className="mt-6 text-left border border-[var(--glass-border)] rounded-xl overflow-hidden text-sm">
+                  <div className="px-4 py-2 border-b border-[var(--glass-border)] font-semibold" style={{ background: 'var(--glass-bg)', color: 'var(--text-secondary)' }}>{t('quiz.answerKey')}</div>
                   <div className="p-4 space-y-3 max-h-[30vh] overflow-y-auto">
                     {questions.map((q, idx) => (
-                      <div key={q.id} className="pb-3 border-b border-slate-100 last:border-0 last:pb-0">
-                        <p className="text-slate-800 mb-1">{idx + 1}. {q.question_text}</p>
-                        <p className={`font-medium ${answers[q.id] === result.correctAnswers![q.id] ? "text-green-600" : "text-red-600"}`}>
-                          Jawabanmu: {answers[q.id]}
+                      <div key={q.id} className="pb-3 border-b border-[var(--glass-border)] last:border-0 last:pb-0">
+                        <p className="mb-1" style={{ color: 'var(--text-primary)' }}>{idx + 1}. {q.question_text}</p>
+                        <p className={`font-medium ${answers[q.id] === result.correctAnswers![q.id] ? "text-green-600" : "text-red-500"}`}>
+                          {t('quiz.yourAnswer', { answer: answers[q.id] })}
                         </p>
                         {answers[q.id] !== result.correctAnswers![q.id] && (
-                          <p className="text-green-600 font-medium">Benar: {result.correctAnswers![q.id]}</p>
+                          <p className="text-green-600 font-medium">{t('quiz.correctAnswer', { answer: result.correctAnswers![q.id] })}</p>
                         )}
                       </div>
                     ))}
@@ -383,21 +405,22 @@ function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose
                 </div>
               )}
 
-              <button onClick={() => { onComplete(); onClose(); }} className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Tutup</button>
+              <button onClick={() => { onComplete(); onClose(); }} className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">{t('common.close')}</button>
             </div>
           ) : questions.length === 0 ? (
-            <p className="text-slate-500 text-center">Belum ada soal untuk quiz ini.</p>
+            <p className="text-center" style={{ color: 'var(--text-muted)' }}>{t('quiz.empty')}</p>
           ) : (
             <div className="space-y-6">
               {questions.map((q, idx) => (
                 <div key={q.id} className="space-y-3">
-                  <p className="font-medium text-slate-900">{idx + 1}. {q.question_text}</p>
+                  <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{idx + 1}. {q.question_text}</p>
                   <div className="grid grid-cols-1 gap-2">
                     {(["A", "B", "C", "D"] as const).map(opt => (
                       <button
                         key={opt}
                         onClick={() => setAnswers(prev => ({ ...prev, [q.id]: opt }))}
-                        className={`text-left px-4 py-2.5 rounded-lg border text-sm transition-colors ${answers[q.id] === opt ? "border-blue-500 bg-blue-50 text-blue-700 font-medium" : "border-slate-200 hover:border-slate-300 hover:bg-slate-50"}`}
+                        className={`text-left px-4 py-2.5 rounded-lg border text-sm transition-colors ${answers[q.id] === opt ? "border-blue-500 bg-blue-50 text-blue-700 font-medium" : "border-[var(--glass-border)] hover:bg-[var(--glass-bg)]"}`}
+                        style={answers[q.id] !== opt ? { color: 'var(--text-primary)' } : undefined}
                       >
                         <span className="font-bold mr-2">{opt}.</span>
                         {q[`option_${opt.toLowerCase()}`]}
@@ -411,7 +434,7 @@ function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose
                 disabled={submitting || Object.keys(answers).length < questions.length}
                 className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors mt-4"
               >
-                {submitting ? "Mengirim..." : "Kumpulkan Jawaban"}
+                {submitting ? t('quiz.sending') : t('quiz.submit')}
               </button>
             </div>
           )}
@@ -422,7 +445,8 @@ function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose
 }
 
 // --- Learning Path ---
-function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[], quizAttempts: any[], onRefresh: () => void }) {
+function LearningPath({ modules, quizAttempts, onRefresh, onStartLesson }: { modules: Module[], quizAttempts: any[], onRefresh: () => void, onStartLesson?: (engineTopicId: string) => void }) {
+  const t = useTranslations('student');
   // Default-open the first active (partially unlocked) module, or first module if all locked
   const defaultOpen = modules.find((m: any) => m.isModuleActive)?.id
     ?? modules.find((m: any) => !m.isModuleLocked)?.id
@@ -436,7 +460,7 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
     setOpenSynopsis((prev) => ({ ...prev, [topicId]: !prev[topicId] }));
 
   if (modules.length === 0) {
-    return <p className="text-slate-500 italic text-sm">Belum ada modul yang di-assign untukmu.</p>;
+    return <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>{t('learning.empty')}</p>;
   }
 
   return (
@@ -471,13 +495,13 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
                 <div className="flex items-center gap-2">
                   <p className={`font-semibold text-sm ${isLocked ? "text-slate-400" : "text-slate-900"}`}>{mod.title}</p>
                   {isLocked && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-200 px-2 py-0.5 rounded-full">Terkunci</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-200 px-2 py-0.5 rounded-full">{t('learning.locked')}</span>
                   )}
                   {isComplete && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Selesai</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-green-700 bg-green-100 px-2 py-0.5 rounded-full">{t('learning.done')}</span>
                   )}
                   {!isLocked && !isComplete && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">Aktif</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{t('learning.active')}</span>
                   )}
                 </div>
                 {!isLocked && (
@@ -485,11 +509,11 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
                     <div className="flex-1 bg-slate-100 rounded-full h-1.5">
                       <div className={`h-1.5 rounded-full transition-all ${isComplete ? "bg-green-500" : "bg-blue-600"}`} style={{ width: `${progress}%` }} />
                     </div>
-                    <span className="text-xs text-slate-500 whitespace-nowrap">{unlockedCount}/{mod.topics.length} topik</span>
+                    <span className="text-xs text-slate-500 whitespace-nowrap">{t('learning.topicCount', { unlocked: unlockedCount, total: mod.topics.length })}</span>
                   </div>
                 )}
                 {isLocked && (
-                  <p className="text-xs text-slate-400 mt-0.5">Selesaikan modul sebelumnya untuk membuka modul ini</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{t('learning.lockedHint')}</p>
                 )}
               </div>
 
@@ -529,7 +553,7 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
                                 onClick={() => toggleSynopsis(topic.id)}
                                 className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 mt-1 font-medium"
                               >
-                                <span>{openSynopsis[topic.id] ? "Tutup sinopsis" : "Lihat sinopsis"}</span>
+                                <span>{openSynopsis[topic.id] ? t('learning.synopsis.close') : t('learning.synopsis.open')}</span>
                                 <svg
                                   className={`w-3.5 h-3.5 transition-transform ${openSynopsis[topic.id] ? "rotate-180" : ""}`}
                                   fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -565,15 +589,13 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
                             // 2. lesson_content is null/undefined (built-in filesystem lesson — always accessible)
                             // Show "segera tersedia" only when lesson_content exists but not yet published (draft)
                             (topic.status === 'published' || !topic.lesson_content) ? (
-                              <a
-                                href={`${process.env.NEXT_PUBLIC_LESSON_ENGINE_URL || 'http://localhost:3001'}/lesson/${topic.engine_topic_id}?lmsOrigin=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : '')}&lang=${typeof document !== 'undefined' ? (document.cookie.split('; ').find(r => r.startsWith('locale='))?.split('=')[1] ?? 'id') : 'id'}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1.5 text-xs text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg mt-2 font-semibold shadow-sm transition-colors w-max"
+                              <button
+                                onClick={() => onStartLesson?.(topic.engine_topic_id!)}
+                                className="inline-flex items-center gap-1.5 text-xs text-white bg-brand-primary hover:bg-brand-primary/80 px-3 py-1.5 rounded-lg mt-2 font-semibold shadow-sm transition-colors w-max focus:outline-none focus-visible:ring-2"
                               >
                                 <Sparkles className="w-3.5 h-3.5" />
-                                Mulai Belajar
-                              </a>
+                                {t('learning.startLesson')}
+                              </button>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-xs text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg mt-2 font-medium w-max">
                                 ⏳ Lesson segera tersedia
@@ -585,7 +607,7 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
                           <div className="flex items-center gap-2 self-start mt-0.5">
                             {attempt && attempt.attempts_count >= 2 ? (
                               <span className="text-xs font-bold text-green-700 bg-green-50 px-3 py-1 rounded-lg border border-green-200">
-                                Nilai: {attempt.score}
+                                {t('learning.quiz.score', { score: attempt.score })}
                               </span>
                             ) : (
                               <button
@@ -608,20 +630,20 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
                           </div>
                         )}
                         {!topic.isUnlocked && (
-                          <span className="text-xs text-slate-400 self-start mt-0.5">Ikuti kelas</span>
+                          <span className="text-xs self-start mt-0.5" style={{ color: 'var(--text-muted)' }}>{t('learning.takeCourse')}</span>
                         )}
                       </div>
                       
                       {isTopicExpanded && attempt && (
-                        <div className="px-14 pb-4 pt-1 bg-slate-50/50">
-                          <div className="text-xs border border-slate-200 rounded-md p-3 bg-white shadow-sm space-y-2">
-                            <h4 className="font-semibold text-slate-700 mb-1">Riwayat Kuis</h4>
-                            <div className="flex justify-between items-center text-slate-600 border-b border-slate-100 pb-1">
-                              <span>Percobaan Terpakai</span>
-                              <span className="font-medium text-slate-800">{attempt.attempts_count} / 2</span>
+                        <div className="px-14 pb-4 pt-1" style={{ background: 'var(--glass-bg)' }}>
+                          <div className="text-xs border border-[var(--glass-border)] rounded-md p-3 shadow-sm space-y-2" style={{ background: 'var(--background)' }}>
+                            <h4 className="font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>{t('learning.quiz.history')}</h4>
+                            <div className="flex justify-between items-center border-b border-[var(--glass-border)] pb-1" style={{ color: 'var(--text-muted)' }}>
+                              <span>{t('learning.quiz.attemptsUsed')}</span>
+                              <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{attempt.attempts_count} / 2</span>
                             </div>
-                            <div className="flex justify-between items-center text-slate-600">
-                              <span>Nilai Terbaik</span>
+                            <div className="flex justify-between items-center" style={{ color: 'var(--text-muted)' }}>
+                              <span>{t('learning.quiz.bestScore')}</span>
                               <span className={`font-bold ${attempt.score >= 70 ? 'text-green-600' : 'text-orange-600'}`}>{attempt.score} / 100</span>
                             </div>
                           </div>
@@ -646,8 +668,8 @@ function EngineProgressSection({ topicProgress }: { topicProgress: TopicProgress
   if (!topicProgress || topicProgress.length === 0) {
     return (
       <div className="text-center py-8 glass-panel rounded-xl">
-        <p className="text-slate-400 text-sm">Belum ada lesson engine yang diselesaikan.</p>
-        <p className="text-slate-500 text-xs mt-1">Selesaikan lesson interaktif untuk melihat progress di sini.</p>
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Belum ada lesson engine yang diselesaikan.</p>
+        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Selesaikan lesson interaktif untuk melihat progress di sini.</p>
       </div>
     );
   }
@@ -662,16 +684,16 @@ function EngineProgressSection({ topicProgress }: { topicProgress: TopicProgress
       {/* Summary strip */}
       <div className="grid grid-cols-3 gap-3">
         <div className="glass-panel rounded-xl p-3 text-center">
-          <p className="text-2xl font-black text-yellow-400">⭐ {totalXp}</p>
-          <p className="text-xs text-slate-400 mt-0.5">Total XP</p>
+          <p className="text-2xl font-black text-yellow-500">⭐ {totalXp}</p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Total XP</p>
         </div>
         <div className="glass-panel rounded-xl p-3 text-center">
-          <p className="text-2xl font-black text-green-400">{topicProgress.length}</p>
-          <p className="text-xs text-slate-400 mt-0.5">Lesson Selesai</p>
+          <p className="text-2xl font-black text-green-500">{topicProgress.length}</p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Lesson Selesai</p>
         </div>
         <div className="glass-panel rounded-xl p-3 text-center">
-          <p className="text-2xl font-black text-blue-400">{avgScore}%</p>
-          <p className="text-xs text-slate-400 mt-0.5">Rata-rata Quiz</p>
+          <p className="text-2xl font-black" style={{ color: 'var(--accent)' }}>{avgScore}%</p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>Rata-rata Quiz</p>
         </div>
       </div>
 
@@ -680,40 +702,34 @@ function EngineProgressSection({ topicProgress }: { topicProgress: TopicProgress
         {topicProgress.map((tp) => {
           const scorePercent = tp.best_quiz_score;
           const scoreColor = scorePercent >= 80
-            ? 'text-green-400' : scorePercent >= 60
-            ? 'text-yellow-400' : 'text-red-400';
+            ? 'text-green-500' : scorePercent >= 60
+            ? 'text-yellow-500' : 'text-red-500';
           const lessonTitle = tp.topics?.title ?? tp.engine_topic_id;
           const completedDate = new Date(tp.completed_at).toLocaleDateString('id-ID', {
             day: 'numeric', month: 'short', year: 'numeric'
           });
 
           return (
-            <div
-              key={tp.engine_topic_id}
-              className="glass-panel rounded-xl overflow-hidden hover:shadow-lg transition-shadow"
-            >
+            <div key={tp.engine_topic_id} className="glass-panel rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
               <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--glass-border)] bg-black/5">
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-sm text-slate-800 dark:text-slate-200 truncate">{lessonTitle}</p>
-                  <p className="text-xs text-slate-400 mt-0.5 font-mono">{tp.engine_topic_id}</p>
+                  <p className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>{lessonTitle}</p>
+                  <p className="text-xs mt-0.5 font-mono" style={{ color: 'var(--text-muted)' }}>{tp.engine_topic_id}</p>
                 </div>
-                <span className="text-xs text-slate-400 ml-3 whitespace-nowrap">{completedDate}</span>
+                <span className="text-xs ml-3 whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>{completedDate}</span>
               </div>
               <div className="flex divide-x divide-[var(--glass-border)]">
-                {/* XP */}
                 <div className="flex-1 px-4 py-3 flex flex-col items-center">
-                  <span className="text-lg font-black text-yellow-400">⭐ {tp.xp_earned}</span>
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wide">XP</span>
+                  <span className="text-lg font-black text-yellow-500">⭐ {tp.xp_earned}</span>
+                  <span className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>XP</span>
                 </div>
-                {/* Quiz score */}
                 <div className="flex-1 px-4 py-3 flex flex-col items-center">
                   <span className={`text-lg font-black ${scoreColor}`}>{scorePercent}%</span>
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wide">Nilai Quiz</span>
+                  <span className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Nilai Quiz</span>
                 </div>
-                {/* Achievement badge */}
                 <div className="flex-1 px-4 py-3 flex flex-col items-center justify-center">
                   <span className="text-xl" title="Lesson selesai">🏆</span>
-                  <span className="text-[10px] text-slate-400 uppercase tracking-wide">Achievement</span>
+                  <span className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Achievement</span>
                 </div>
               </div>
             </div>
@@ -726,18 +742,18 @@ function EngineProgressSection({ topicProgress }: { topicProgress: TopicProgress
 
 // --- Parent Hub ---
 function ParentHub({ pastMeetings, quizAttempts, modules, topicProgress }: { pastMeetings: Meeting[]; quizAttempts: QuizAttempt[]; modules: Module[]; topicProgress: TopicProgress[] }) {
+  const t = useTranslations('student');
   const [openModules, setOpenModules] = useState<Record<number, boolean>>({});
-  
+
   const toggleModule = (id: number) => {
     setOpenModules(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  // Only show completed meetings
   const completedMeetings = pastMeetings.filter(m => m.is_completed);
 
   if (completedMeetings.length === 0) {
     return (
-      <p className="text-sm text-slate-400 italic text-center py-10">Belum ada kelas yang selesai.</p>
+      <p className="text-sm italic text-center py-10" style={{ color: 'var(--text-muted)' }}>{t('parent.empty')}</p>
     );
   }
 
@@ -749,29 +765,29 @@ function ParentHub({ pastMeetings, quizAttempts, modules, topicProgress }: { pas
         const startIndex = globalIndexCounter;
         const endIndex = startIndex + mod.topics.length;
         globalIndexCounter = endIndex;
-        
+
         const moduleMeetings = completedMeetings.filter(m => m.globalIndex >= startIndex && m.globalIndex < endIndex);
-        
         if (moduleMeetings.length === 0) return null;
 
-        const isOpen = openModules[mod.id] ?? true; // Default open
+        const isOpen = openModules[mod.id] ?? true;
 
         return (
           <div key={mod.id} className="glass-panel rounded-xl shadow-sm overflow-hidden">
             {/* Module Header */}
-            <div 
-              className="flex items-center justify-between px-5 py-4 bg-slate-50 cursor-pointer hover:bg-slate-100 transition-colors border-b border-slate-100"
+            <div
+              className="flex items-center justify-between px-5 py-4 cursor-pointer transition-colors border-b border-[var(--glass-border)]"
+              style={{ background: 'var(--glass-bg)' }}
               onClick={() => toggleModule(mod.id)}
             >
-              <h3 className="font-bold text-slate-900">{mod.title}</h3>
-              <svg className={`w-5 h-5 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <h3 className="font-bold" style={{ color: 'var(--text-primary)' }}>{mod.title}</h3>
+              <svg className={`w-5 h-5 transition-transform ${isOpen ? 'rotate-180' : ''}`} style={{ color: 'var(--text-muted)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
             </div>
-            
+
             {/* Module Content */}
             {isOpen && (
-              <div className="p-4 space-y-4 bg-slate-50/50">
+              <div className="p-4 space-y-4">
                 {moduleMeetings.map(meet => {
                   const topic = mod.topics[meet.globalIndex - startIndex];
                   const cardTitle = topic?.title || meet.title;
@@ -782,36 +798,33 @@ function ParentHub({ pastMeetings, quizAttempts, modules, topicProgress }: { pas
                     <div key={meet.id} className="glass-panel rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow">
                       {/* Card Header */}
                       <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--glass-border)] bg-black/5">
-                        <p className="font-semibold text-slate-800 text-sm">{cardTitle}</p>
-                        <span className="text-xs text-slate-400 whitespace-nowrap">
+                        <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>{cardTitle}</p>
+                        <span className="text-xs whitespace-nowrap" style={{ color: 'var(--text-muted)' }}>
                           {new Date(meet.meeting_date).toLocaleDateString("id-ID", { day: "numeric", month: "short", year: "numeric" })}
                         </span>
                       </div>
 
                       {/* Card Body */}
-                      <div className="flex divide-x divide-slate-100">
+                      <div className="flex divide-x divide-[var(--glass-border)]">
                         {/* Teacher Report */}
                         <div className="flex-1 p-4 min-w-0">
-                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Laporan Guru</p>
+                          <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>{t('parent.teacherReport')}</p>
                           {meet.progress_report ? (
-                            <p className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">{meet.progress_report}</p>
+                            <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{meet.progress_report}</p>
                           ) : (
-                            <p className="text-sm text-slate-400 italic">Laporan belum tersedia.</p>
+                            <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>{t('parent.noReport')}</p>
                           )}
                         </div>
 
-                        {/* Quiz Score */}
-                        <div className="w-36 shrink-0 p-4 flex flex-col items-center justify-center gap-1 text-center bg-slate-50/30">
-                          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-1">Nilai Quiz</p>
+                        {/* Quiz Score — best score only, no attempt count */}
+                        <div className="w-36 shrink-0 p-4 flex flex-col items-center justify-center gap-1 text-center bg-black/5">
+                          <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>{t('parent.quizScore')}</p>
                           {quizAttempt ? (
-                            <>
-                              <span className={`text-2xl font-bold ${quizAttempt.score >= 70 ? "text-green-600" : quizAttempt.score >= 50 ? "text-yellow-500" : "text-red-500"}`}>
-                                {quizAttempt.score}
-                              </span>
-                              <span className="text-xs text-slate-400">{quizAttempt.total_questions} soal</span>
-                            </>
+                            <span className={`text-2xl font-bold ${quizAttempt.score >= 80 ? "text-green-500" : quizAttempt.score >= 70 ? "text-emerald-500" : quizAttempt.score >= 50 ? "text-yellow-500" : "text-red-500"}`}>
+                              {quizAttempt.score}
+                            </span>
                           ) : (
-                            <p className="text-xs text-slate-400 italic leading-snug">Quiz belum dikerjakan.</p>
+                            <p className="text-xs italic leading-snug" style={{ color: 'var(--text-muted)' }}>{t('parent.noAttempt')}</p>
                           )}
                         </div>
                       </div>
@@ -827,7 +840,7 @@ function ParentHub({ pastMeetings, quizAttempts, modules, topicProgress }: { pas
       {/* Engine Lesson Progress */}
       {topicProgress.length > 0 && (
         <div className="space-y-3">
-          <h3 className="font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+          <h3 className="font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
             <span>⭐</span> Progress Lesson Engine
           </h3>
           <EngineProgressSection topicProgress={topicProgress} />
@@ -839,9 +852,10 @@ function ParentHub({ pastMeetings, quizAttempts, modules, topicProgress }: { pas
 
 // --- Invoice Banner Component ---
 function InvoiceBanner({ invoice }: { invoice: any }) {
+  const t = useTranslations('student');
   const [visible, setVisible] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [paidState, setPaidState] = useState(invoice.status === 'paid');
+  const [paidState] = useState(invoice.status === 'paid');
 
   useEffect(() => {
     // If it's paid, we show the success banner for 5 seconds, then hide permanently
@@ -868,8 +882,8 @@ function InvoiceBanner({ invoice }: { invoice: any }) {
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
         </div>
         <div className="flex-1">
-          <p className="font-bold">Terima Kasih!</p>
-          <p className="text-sm text-green-100">Tagihan bulan {invoice.month_year} sudah dibayar lunas.</p>
+          <p className="font-bold">{t('invoice.paid')}</p>
+          <p className="text-sm text-green-100">{t('invoice.paidBody', { month: invoice.month_year })}</p>
         </div>
       </div>
     );
@@ -885,7 +899,7 @@ function InvoiceBanner({ invoice }: { invoice: any }) {
             </svg>
           </div>
           <span className="font-bold text-sm truncate">
-            Tagihan {invoice.month_year}: Rp {invoice.total_amount.toLocaleString('id-ID')}
+            {t('invoice.collapsedLabel', { month: invoice.month_year, amount: invoice.total_amount.toLocaleString('id-ID') })}
           </span>
         </div>
         <button
@@ -910,7 +924,7 @@ function InvoiceBanner({ invoice }: { invoice: any }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start">
-          <p className="font-bold">Tagihan Bulan {invoice.month_year}</p>
+          <p className="font-bold">{t('invoice.heading', { month: invoice.month_year })}</p>
           <button
             onClick={() => setIsCollapsed(true)}
             className="p-1 -mr-1 -mt-1 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0 text-blue-100 hover:text-white"
@@ -922,11 +936,11 @@ function InvoiceBanner({ invoice }: { invoice: any }) {
           </button>
         </div>
         <p className="text-sm text-blue-100 mt-1">
-          {invoice.attended_meetings} Kehadiran x Rp {invoice.price_per_meeting.toLocaleString('id-ID')}
+          {t('invoice.breakdown', { count: invoice.attended_meetings, price: invoice.price_per_meeting.toLocaleString('id-ID') })}
         </p>
         <p className="text-lg font-bold mt-2">Rp {invoice.total_amount.toLocaleString('id-ID')}</p>
         <div className="mt-3 pt-3 border-t border-blue-400/50">
-          <p className="text-xs text-blue-100 mb-1">Transfer ke rekening:</p>
+          <p className="text-xs text-blue-100 mb-1">{t('invoice.bankLabel')}</p>
           <p className="text-sm font-semibold tracking-wide bg-black/20 p-2 rounded-lg text-center break-all">
             {invoice.bank_account}
           </p>
@@ -938,11 +952,15 @@ function InvoiceBanner({ invoice }: { invoice: any }) {
 
 // --- Main Student Dashboard Page ---
 export default function StudentDashboard() {
+  const t = useTranslations('student');
   const [data, setData] = useState<any>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"jadwal" | "learning" | "parent">("jadwal");
   const [announcement, setAnnouncement] = useState<string | null>(null);
+  const [studentId, setStudentId] = useState<string>('');
+  const [locale, setLocale] = useState<string>('id');
+  const [engineModal, setEngineModal] = useState<{ topicId: string } | null>(null);
 
 
   const fetchInvoices = async () => {
@@ -975,19 +993,57 @@ export default function StudentDashboard() {
   // Sync lesson engine events (quiz score + XP) to Supabase via postMessage
   useLmsEngineListener({ onSynced: () => { void fetchData(); } });
 
+  // Resolve studentId from Supabase auth (client-side)
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: authData }) => {
+      setStudentId(authData.user?.id ?? '');
+    });
+    // Read locale from cookie
+    const cookieLocale = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('locale='))
+      ?.split('=')[1];
+    setLocale(cookieLocale === 'en' ? 'en' : 'id');
+  }, []);
+
   useEffect(() => { 
     fetchData(); 
     fetchInvoices();
   }, [fetchData]);
 
   const tabs = [
-    { id: "jadwal" as const, label: "Jadwal Belajar", icon: Calendar },
+    { id: "jadwal" as const, label: t('tabs.schedule'), icon: Calendar },
     { id: "learning" as const, label: "Learning Path", icon: BookOpen },
     { id: "parent" as const, label: "Parent Hub", icon: Users },
   ];
 
+  // Handler: student clicked "Bergabung Sekarang" — topic unlocked, maybe open engine
+  const handleJoined = useCallback((unlockedTopic: UnlockedTopic | null) => {
+    void fetchData(); // refresh unlock status
+    if (unlockedTopic?.canStartEngine && unlockedTopic.engine_topic_id) {
+      setEngineModal({ topicId: unlockedTopic.engine_topic_id });
+    }
+  }, [fetchData]);
+
+  // Handler: student completed a lesson in the engine
+  const handleEngineComplete = useCallback((topicId: string) => {
+    // engine-sync API call is handled by useLmsEngineListener → fetchData already fires
+    // Proactively close modal after a brief delay for achievement screen
+    void fetchData();
+  }, [fetchData]);
+
   return (
     <div className="space-y-5 relative">
+      {/* Engine Lesson Modal — full-screen iframe overlay */}
+      {engineModal && studentId && (
+        <EngineModal
+          topicId={engineModal.topicId}
+          studentId={studentId}
+          lang={locale}
+          onClose={() => setEngineModal(null)}
+          onComplete={handleEngineComplete}
+        />
+      )}
       {/* Invoice Banners */}
       <div className="fixed bottom-20 md:bottom-4 left-1/2 -translate-x-1/2 w-full max-w-lg z-40 flex flex-col gap-3 px-4 pointer-events-none">
         {invoices.map((inv) => (
@@ -1020,10 +1076,10 @@ export default function StudentDashboard() {
                 <span className="tracking-wide">Student Quest Portal</span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)]">
-                Halo, {data.studentName}! <span className="inline-block hover:scale-125 transition-transform cursor-default animate-bounce" style={{ animationDuration: '3s' }}>✨</span>
+                {t('greeting', { name: data.studentName })} <span className="inline-block hover:scale-125 transition-transform cursor-default animate-bounce" style={{ animationDuration: '3s' }}>✨</span>
               </h1>
               <p className="text-sm text-blue-100/95 dark:text-purple-200/90 max-w-lg leading-relaxed font-medium">
-                Siap melanjutkan petualangan koding hari ini? Selesaikan modul dan taklukkan tantangannya!
+                {t('greetingSubline')}
               </p>
             </div>
 
@@ -1035,10 +1091,10 @@ export default function StudentDashboard() {
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-[11px] uppercase tracking-wider text-blue-100 dark:text-purple-300/80 font-bold">Selesai</div>
+                  <div className="text-[11px] uppercase tracking-wider text-blue-100 dark:text-purple-300/80 font-bold">{t('stats.completed')}</div>
                   <div className="text-base font-black text-white tabular-nums flex items-center gap-1">
                     <MagicalCounter value={data.pastMeetings?.filter((m: any) => m.is_completed)?.length || 0} />
-                    <span className="text-xs font-medium text-blue-100/90 dark:text-slate-300">Sesi</span>
+                    <span className="text-xs font-medium text-blue-100/90 dark:text-slate-300">{t('stats.sessions')}</span>
                   </div>
                 </div>
               </div>
@@ -1049,10 +1105,10 @@ export default function StudentDashboard() {
                   <Trophy className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-[11px] uppercase tracking-wider text-blue-100 dark:text-purple-300/80 font-bold">Quiz</div>
+                  <div className="text-[11px] uppercase tracking-wider text-blue-100 dark:text-purple-300/80 font-bold">{t('stats.quiz')}</div>
                   <div className="text-base font-black text-white tabular-nums flex items-center gap-1">
                     <MagicalCounter value={data.quizAttempts?.length || 0} />
-                    <span className="text-xs font-medium text-blue-100/90 dark:text-slate-300">Selesai</span>
+                    <span className="text-xs font-medium text-blue-100/90 dark:text-slate-300">{t('stats.completed')}</span>
                   </div>
                 </div>
               </div>
@@ -1139,29 +1195,29 @@ export default function StudentDashboard() {
 
       {/* Content */}
       {loading ? (
-        <div className="text-center py-16 text-slate-400">
-          <div className="animate-spin w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full mx-auto mb-3" />
-          Memuat data...
+        <div className="text-center py-16" style={{ color: 'var(--text-muted)' }}>
+          <div className="animate-spin w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full mx-auto mb-3" />
+          {t('schedule.loading')}
         </div>
       ) : !data ? (
-        <p className="text-slate-500 text-center py-10">Gagal memuat data.</p>
+        <p className="text-center py-10" style={{ color: 'var(--text-muted)' }}>{t('schedule.failed')}</p>
       ) : (
         <>
           {activeTab === "jadwal" && (
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="font-bold text-slate-900">3 Jadwal Mendatang</h2>
-                <span className="text-xs text-slate-500">{data.upcomingMeetings.length} jadwal</span>
+                <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>{t('schedule.heading')}</h2>
+                <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{data.upcomingMeetings.length} jadwal</span>
               </div>
               {data.upcomingMeetings.length === 0 ? (
                 <div className="text-center py-12 glass-panel rounded-xl">
-                  <svg className="w-12 h-12 text-slate-200 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                  <p className="text-slate-400 text-sm">Tidak ada jadwal mendatang</p>
+                  <svg className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--glass-border)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('schedule.empty')}</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {data.upcomingMeetings.map((meet: Meeting) => (
-                    <StudentMeetingCard key={meet.id} meet={meet} modules={data.modules || []} quizAttempts={data.quizAttempts || []} onRefresh={fetchData} />
+                    <StudentMeetingCard key={meet.id} meet={meet} modules={data.modules || []} quizAttempts={data.quizAttempts || []} onRefresh={fetchData} onJoined={handleJoined} />
                   ))}
                 </div>
               )}
@@ -1170,14 +1226,14 @@ export default function StudentDashboard() {
 
           {activeTab === "learning" && (
             <div className="space-y-4">
-              <h2 className="font-bold text-slate-900">Learning Path Saya</h2>
-              <LearningPath modules={data.modules} quizAttempts={data.quizAttempts || []} onRefresh={fetchData} />
+              <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>{t('learning.heading')}</h2>
+              <LearningPath modules={data.modules} quizAttempts={data.quizAttempts || []} onRefresh={fetchData} onStartLesson={(eid) => setEngineModal({ topicId: eid })} />
             </div>
           )}
 
           {activeTab === "parent" && (
             <div className="space-y-4">
-              <h2 className="font-bold text-slate-900">Parent Hub</h2>
+              <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>Parent Hub</h2>
               <ParentHub pastMeetings={data.pastMeetings} quizAttempts={data.quizAttempts} modules={data.modules || []} topicProgress={data.topicProgress || []} />
             </div>
           )}

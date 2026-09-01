@@ -54,6 +54,10 @@ export default async function ModuleTopicsPage({ params }: PageProps) {
     );
   }
 
+  const usedEngineTopicIds = (topics ?? [])
+    .map((t) => t.engine_topic_id)
+    .filter((id): id is string => typeof id === "string" && id.length > 0);
+
   return (
     <section className="space-y-6">
       <div>
@@ -65,7 +69,7 @@ export default async function ModuleTopicsPage({ params }: PageProps) {
         </p>
       </div>
 
-      <AddTopicForm moduleId={moduleIdParam} />
+      <AddTopicForm moduleId={moduleIdParam} usedEngineTopicIds={usedEngineTopicIds} />
 
       <CsvImportForm moduleId={moduleIdParam} />
 

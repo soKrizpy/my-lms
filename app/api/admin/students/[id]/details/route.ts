@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabaseAdmin } from "../../../../../../lib/supabaseAdmin";
+import { resolveTopicUnlockMap } from "../../../../../../lib/topicUnlock";
 
 export async function GET(
   _req: Request,
@@ -20,95 +21,59 @@ export async function GET(
       return NextResponse.json({ error: "Siswa tidak ditemukan." }, { status: 404 });
     }
 
-    // 2. Assigned modules + topics
+    // 2. Assigned modules
     const { data: studentModules } = await supabaseAdmin
       .from("student_modules")
       .select("module_id, modules(id, title, description)")
       .eq("student_id", studentId)
       .order("module_id", { ascending: true });
 
-    const moduleIds = (studentModules || []).map((sm: any) => sm.module_id);
+    const moduleIds: number[] = ((studentModules || []) as any[]).map((sm: any) => sm.module_id);
 
     let modulesWithTopics: any[] = [];
 
     if (moduleIds.length > 0) {
-      // Topics for all assigned modules
+      // Centralised unlock logic
+      const unlockMap = await resolveTopicUnlockMap(studentId, moduleIds);
+
       const { data: topics } = await supabaseAdmin
         .from("topics")
-        .select("id, module_id, title, order_index, description, project_link")
+        .select("id, module_id, title, order_index, description, project_link, engine_topic_id")
         .in("module_id", moduleIds)
         .order("order_index", { ascending: true });
 
-      // Quizzes for those topics
-      const topicIds = (topics || []).map((t: any) => t.id);
+      const topicIds = ((topics || []) as any[]).map((t: any) => t.id);
       const { data: quizzes } = await supabaseAdmin
         .from("quizzes")
         .select("id, topic_id, title")
         .in("topic_id", topicIds);
 
-      // Student's quiz attempts
       const { data: attempts } = await supabaseAdmin
         .from("quiz_attempts")
         .select("id, quiz_id, score, total_questions, created_at, attempts_count")
         .eq("student_id", studentId)
         .order("created_at", { ascending: false });
 
-      // Build set of attempted quiz ids
-      const attemptedQuizIds = new Set((attempts || []).map((a: any) => a.quiz_id));
-
-      // Student's meetings (for unlock logic)
-      const { data: meetings } = await supabaseAdmin
-        .from("meetings")
-        .select("id, meeting_date, meeting_students!inner(student_id, has_joined)")
-        .eq("meeting_students.student_id", studentId)
-        .order("meeting_date", { ascending: true });
-
-      const sortedMeetings = (meetings || []).map((m: any, idx: number) => ({
-        ...m,
-        globalIndex: idx,
-      }));
-
-      const allTopicsFlat = (topics || [])
-        .filter((t: any) => moduleIds.includes(t.module_id))
-        .sort((a: any, b: any) =>
-          a.module_id !== b.module_id
-            ? a.module_id - b.module_id
-            : a.order_index - b.order_index
-        );
-      const totalTopicsCount = allTopicsFlat.length;
-      let globalTopicIndex = 0;
-
-      modulesWithTopics = (studentModules || []).map((sm: any) => {
+      modulesWithTopics = ((studentModules || []) as any[]).map((sm: any) => {
         const mod = sm.modules;
-        const modTopics = (topics || [])
+        const modTopics = ((topics || []) as any[])
           .filter((t: any) => t.module_id === sm.module_id)
           .sort((a: any, b: any) => a.order_index - b.order_index)
           .map((t: any) => {
-            const quiz = (quizzes || []).find((q: any) => q.topic_id === t.id);
-            const unlockedByQuiz = quiz ? attemptedQuizIds.has(quiz.id) : false;
+            const quiz = ((quizzes || []) as any[]).find((q: any) => q.topic_id === t.id);
+            const isUnlocked = unlockMap.get(t.id)?.isUnlocked ?? false;
 
-            const meetingIdx =
-              totalTopicsCount > 0 ? globalTopicIndex % totalTopicsCount : globalTopicIndex;
-            const correspondingMeeting = sortedMeetings.find(
-              (m: any) => m.globalIndex === meetingIdx
-            );
-            const unlockedByJoin =
-              correspondingMeeting?.meeting_students?.[0]?.has_joined || false;
-            const isUnlocked = unlockedByQuiz || unlockedByJoin;
-
-            // Best quiz attempt for this topic
             const bestAttempt = quiz
-              ? (attempts || [])
+              ? ((attempts || []) as any[])
                   .filter((a: any) => a.quiz_id === quiz.id)
                   .sort((a: any, b: any) => b.score - a.score)[0] || null
               : null;
-
-            globalTopicIndex++;
 
             return {
               id: t.id,
               title: t.title,
               order_index: t.order_index,
+              engine_topic_id: t.engine_topic_id ?? null,
               isUnlocked,
               quiz: quiz
                 ? {
@@ -143,7 +108,7 @@ export async function GET(
       .eq("meeting_students.student_id", studentId)
       .order("meeting_date", { ascending: false });
 
-    const meetings = (meetingRows || []).map((m: any) => ({
+    const meetings = ((meetingRows || []) as any[]).map((m: any) => ({
       id: m.id,
       title: m.title,
       meeting_date: m.meeting_date,
@@ -162,7 +127,7 @@ export async function GET(
       .eq("student_id", studentId)
       .order("created_at", { ascending: false });
 
-    const formattedAttempts = (quizAttempts || []).map((a: any) => ({
+    const formattedAttempts = ((quizAttempts || []) as any[]).map((a: any) => ({
       id: a.id,
       quiz_id: a.quiz_id,
       score: a.score,
@@ -178,7 +143,7 @@ export async function GET(
       modules: modulesWithTopics,
       meetings,
       quizAttempts: formattedAttempts,
-      certificates: [], // placeholder – fitur coming soon
+      certificates: [],
     });
   } catch (err: any) {
     return NextResponse.json(

@@ -3,6 +3,50 @@
 import React, { useState, useEffect } from "react";
 import InvoiceModal from "./InvoiceModal";
 
+// ─── Parent Link popup ────────────────────────────────────────────────────────
+function ParentLinkPopup({ url, onClose }: { url: string; onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div className="bg-[var(--background)] border border-[var(--glass-border)] rounded-2xl p-6 w-full max-w-md shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-2 mb-4">
+          <span className="text-xl">🔗</span>
+          <h3 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Link Laporan Orang Tua</h3>
+        </div>
+        <p className="text-sm mb-3" style={{ color: 'var(--text-muted)' }}>
+          Bagikan link berikut kepada orang tua siswa. Link berlaku 30 hari dan tidak memerlukan login.
+        </p>
+        <div className="flex gap-2">
+          <input
+            readOnly
+            value={url}
+            className="flex-1 px-3 py-2 text-xs rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] font-mono truncate"
+            style={{ color: 'var(--text-secondary)' }}
+            onClick={e => (e.target as HTMLInputElement).select()}
+          />
+          <button
+            onClick={handleCopy}
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors text-white ${copied ? 'bg-green-600' : 'bg-brand-primary hover:bg-brand-primary/80'}`}
+          >
+            {copied ? '✓ Disalin!' : 'Salin'}
+          </button>
+        </div>
+        <div className="flex justify-end mt-4">
+          <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm border border-[var(--glass-border)] hover:bg-[var(--glass-border)] transition-colors" style={{ color: 'var(--text-muted)' }}>
+            Tutup
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 type Invoice = {
   id: string;
   student_id: string;
@@ -102,6 +146,31 @@ export default function InvoicesPage() {
   const [generating, setGenerating] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [attendanceInvoice, setAttendanceInvoice] = useState<Invoice | null>(null);
+  // parentLinks: invoiceId → generated URL (session-level, no DB re-fetch needed)
+  const [parentLinks, setParentLinks] = useState<Record<string, string>>({});
+  const [generatingLink, setGeneratingLink] = useState<string | null>(null); // invoiceId being generated
+  const [popupLink, setPopupLink] = useState<string | null>(null); // URL to show in popup
+
+  const handleGenerateParentLink = async (inv: Invoice) => {
+    // If already generated this session, just show it
+    if (parentLinks[inv.id]) { setPopupLink(parentLinks[inv.id]); return; }
+    setGeneratingLink(inv.id);
+    try {
+      const res = await fetch('/api/admin/parent-links', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentId: inv.student_id, invoiceId: inv.id }),
+      });
+      if (!res.ok) throw new Error('Gagal generate link');
+      const { url } = await res.json() as { url: string };
+      setParentLinks(prev => ({ ...prev, [inv.id]: url }));
+      setPopupLink(url);
+    } catch (err: any) {
+      alert(err.message);
+    } finally {
+      setGeneratingLink(null);
+    }
+  };
 
   const [selectedMonth, setSelectedMonth] = useState(() => {
     const d = new Date();
@@ -168,6 +237,8 @@ export default function InvoicesPage() {
 
   return (
     <div className="space-y-6">
+      {/* Parent link popup */}
+      {popupLink && <ParentLinkPopup url={popupLink} onClose={() => setPopupLink(null)} />}
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-primary to-brand-secondary">Manajemen Invoice</h1>
         <div className="flex items-center gap-4">
@@ -228,7 +299,7 @@ export default function InvoicesPage() {
                     }`}>{inv.status.toUpperCase()}</span>
                   </td>
                   <td className="p-4">
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                       <button onClick={() => setSelectedInvoice(inv)}
                         className="px-3 py-1.5 rounded-lg bg-[var(--background)] border border-[var(--glass-border)] hover:border-brand-primary hover:text-brand-primary transition-colors text-sm">
                         Edit
@@ -245,6 +316,19 @@ export default function InvoicesPage() {
                           Tandai Lunas
                         </button>
                       )}
+                      <button
+                        onClick={() => handleGenerateParentLink(inv)}
+                        disabled={generatingLink === inv.id}
+                        title="Generate atau tampilkan link laporan untuk orang tua"
+                        className="px-3 py-1.5 rounded-lg border transition-colors text-sm font-medium disabled:opacity-50"
+                        style={{
+                          background: parentLinks[inv.id] ? 'rgba(124,58,237,0.1)' : 'var(--background)',
+                          borderColor: parentLinks[inv.id] ? 'rgba(124,58,237,0.4)' : 'var(--glass-border)',
+                          color: parentLinks[inv.id] ? '#7c3aed' : 'var(--text-muted)',
+                        }}
+                      >
+                        {generatingLink === inv.id ? '⏳' : parentLinks[inv.id] ? '🔗 Salin Link' : '🔗 Link Ortu'}
+                      </button>
                     </div>
                   </td>
                 </tr>
