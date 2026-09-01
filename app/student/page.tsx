@@ -29,6 +29,7 @@ interface Topic {
   project_link: string | null;
   engine_topic_id: string | null;
   status?: string | null;
+  lesson_content?: unknown | null;
   isUnlocked: boolean;
   quiz: { id: number; title: string } | null;
 }
@@ -559,7 +560,11 @@ function LearningPath({ modules, quizAttempts, onRefresh }: { modules: Module[],
                             </a>
                           )}
                           {topic.isUnlocked && topic.engine_topic_id && (
-                            topic.status === 'published' ? (
+                            // Show "Mulai Belajar" when:
+                            // 1. status = 'published' (LMS-authored lesson, published)
+                            // 2. lesson_content is null/undefined (built-in filesystem lesson — always accessible)
+                            // Show "segera tersedia" only when lesson_content exists but not yet published (draft)
+                            (topic.status === 'published' || !topic.lesson_content) ? (
                               <a
                                 href={`${process.env.NEXT_PUBLIC_LESSON_ENGINE_URL || 'http://localhost:3001'}/lesson/${topic.engine_topic_id}?lmsOrigin=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : '')}&lang=${typeof document !== 'undefined' ? (document.cookie.split('; ').find(r => r.startsWith('locale='))?.split('=')[1] ?? 'id') : 'id'}`}
                                 target="_blank"

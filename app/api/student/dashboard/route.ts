@@ -77,7 +77,7 @@ export async function GET() {
   if (moduleIds.length > 0) {
     const { data: topics } = await supabaseAdmin
       .from("topics")
-      .select("id, module_id, title, order_index, description, project_link, engine_topic_id, status")
+      .select("id, module_id, title, order_index, description, project_link, engine_topic_id, status, lesson_content")
       .in("module_id", moduleIds)
       .order("order_index", { ascending: true });
 
