@@ -1,16 +1,24 @@
 // app/student/layout.tsx
+// "i18n without routing" pattern (next-intl 3.26.3).
+// - Locale is read from cookie manually (same source as i18n/request.ts)
+// - Messages are loaded via getMessages() which reads from i18n/request.ts
+// - NextIntlClientProvider passes both to all client components in this subtree
 import React from "react";
 import LogoutButton from "./LogoutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/Logo";
+import { cookies } from 'next/headers';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { NextIntlClientProvider } from 'next-intl';
-import { getLocale, getMessages } from 'next-intl/server';
+import { getMessages } from 'next-intl/server';
 
 export default async function StudentLayout({ children }: { children: React.ReactNode }) {
-  // getLocale() reads from i18n/request.ts (same source as getMessages)
-  // — keeps locale and messages in sync, no manual cookie read needed
-  const locale = await getLocale();
+  // Read locale from cookie — same logic as i18n/request.ts so they always agree
+  const cookieStore = await cookies();
+  const raw = cookieStore.get('locale')?.value;
+  const locale = raw === 'en' ? 'en' : 'id';
+
+  // getMessages() reads i18n/request.ts which also reads the same cookie
   const messages = await getMessages();
 
   return (
