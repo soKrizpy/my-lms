@@ -247,15 +247,17 @@ export default function ModulesPage() {
                         </svg>
                         Lihat Topik
                       </p>
-                      <Link
-                        href={`/admin/modules/${mod.id}/topics`}
-                        className="text-xs font-semibold text-slate-900 underline"
-                      >
-                        Kelola semua
-                      </Link>
                     </summary>
 
                     <div className="mt-3">
+                      <div className="mb-3 flex justify-end">
+                        <Link
+                          href={`/admin/modules/${mod.id}/topics`}
+                          className="text-xs font-semibold text-slate-900 underline hover:text-blue-600"
+                        >
+                          Kelola semua
+                        </Link>
+                      </div>
                       {(topicMap[mod.id] ?? []).length === 0 ? (
                         <p className="text-sm text-slate-500">
                           Belum ada topik.

@@ -978,13 +978,43 @@ export default function StudentDashboard() {
   const fetchData = useCallback(async () => {
     try {
       const dashRes = await fetch("/api/student/dashboard");
-      if (dashRes.ok) {
-        const json = await dashRes.json();
-        setData(json);
-        if (json.announcement) setAnnouncement(json.announcement);
+      
+      if (!dashRes.ok) {
+        console.error("Dashboard API error:", { status: dashRes.status });
+        setData(null);
+        return;
       }
+      
+      const json = await dashRes.json();
+      
+      // Validate response structure
+      if (!json || typeof json !== 'object') {
+        console.error("Dashboard API returned invalid JSON structure");
+        setData(null);
+        return;
+      }
+      
+      // Ensure all expected fields exist (with fallback defaults)
+      const validatedData = {
+        upcomingMeetings: Array.isArray(json.upcomingMeetings) ? json.upcomingMeetings : [],
+        pastMeetings: Array.isArray(json.pastMeetings) ? json.pastMeetings : [],
+        modules: Array.isArray(json.modules) ? json.modules : [],
+        quizAttempts: Array.isArray(json.quizAttempts) ? json.quizAttempts : [],
+        announcement: json.announcement ?? null,
+        studentName: json.studentName || "Siswa",
+        engineXpTotal: typeof json.engineXpTotal === "number" ? json.engineXpTotal : 0,
+        completedEngineTopics: typeof json.completedEngineTopics === "number" ? json.completedEngineTopics : 0,
+        topicProgress: Array.isArray(json.topicProgress) ? json.topicProgress : [],
+      };
+      
+      setData(validatedData);
+      if (validatedData.announcement) setAnnouncement(validatedData.announcement);
     } catch (err) {
-      console.error(err);
+      console.error("Failed to fetch dashboard data:", {
+        error: err instanceof Error ? err.message : String(err),
+        timestamp: new Date().toISOString(),
+      });
+      setData(null);
     } finally {
       setLoading(false);
     }

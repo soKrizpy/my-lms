@@ -10,12 +10,15 @@ export async function GET() {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
 
     if (authError || !user) {
+      console.error("Dashboard: Auth failed", { authError });
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const supabaseAdmin = getSupabaseAdmin();
     const studentId = user.id;
     const now = new Date();
+    
+    console.log(`Dashboard: Fetching data for student ${studentId}`);
 
     // 1. All meetings for this student (sorted asc for globalIndex mapping)
     let meetings: any[] = [];
@@ -258,21 +261,30 @@ export async function GET() {
     const studentName = user.user_metadata?.full_name || "Siswa";
     const firstName = studentName.split(" ")[0];
 
-    return NextResponse.json({
-      upcomingMeetings: upcomingMeetings || [],
-      pastMeetings: pastMeetings || [],
-      modules: modulesWithTopics || [],
-      quizAttempts: quizAttempts || [],
-      announcement,
-      studentName: firstName,
-      engineXpTotal,
-      completedEngineTopics,
-      topicProgress: topicProgress || [],
-    });
+    // Validate and sanitize response structure before returning
+    const responsePayload = {
+      upcomingMeetings: Array.isArray(upcomingMeetings) ? upcomingMeetings : [],
+      pastMeetings: Array.isArray(pastMeetings) ? pastMeetings : [],
+      modules: Array.isArray(modulesWithTopics) ? modulesWithTopics : [],
+      quizAttempts: Array.isArray(quizAttempts) ? quizAttempts : [],
+      announcement: announcement ?? null,
+      studentName: firstName || "Siswa",
+      engineXpTotal: typeof engineXpTotal === "number" ? engineXpTotal : 0,
+      completedEngineTopics: typeof completedEngineTopics === "number" ? completedEngineTopics : 0,
+      topicProgress: Array.isArray(topicProgress) ? topicProgress : [],
+    };
+
+    console.log(`Dashboard: Success - student ${studentId}, modules: ${responsePayload.modules.length}, xp: ${responsePayload.engineXpTotal}`);
+    return NextResponse.json(responsePayload);
   } catch (err) {
-    console.error("Unexpected error in dashboard endpoint:", err);
-    // Return partial data with defaults rather than crashing
-    return NextResponse.json({
+    console.error("Dashboard API fatal error:", {
+      error: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+      timestamp: new Date().toISOString(),
+    });
+    
+    // Return partial/default data rather than crashing to prevent Server Component render errors
+    const fallbackResponse = {
       upcomingMeetings: [],
       pastMeetings: [],
       modules: [],
@@ -282,6 +294,8 @@ export async function GET() {
       engineXpTotal: 0,
       completedEngineTopics: 0,
       topicProgress: [],
-    });
+    };
+    
+    return NextResponse.json(fallbackResponse, { status: 200 });
   }
 }
