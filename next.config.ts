@@ -1,9 +1,10 @@
 import type { NextConfig } from 'next';
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 
 const nextConfig: NextConfig = {
   async rewrites() {
-    // LESSON_ENGINE_URL = server-only env var (set in Vercel dashboard)
-    // Falls back to NEXT_PUBLIC_LESSON_ENGINE_URL so both names work in .env.local
     const engineUrl =
       process.env.LESSON_ENGINE_URL ??
       process.env.NEXT_PUBLIC_LESSON_ENGINE_URL ??
@@ -17,4 +18,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);
