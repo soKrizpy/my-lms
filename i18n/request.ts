@@ -1,19 +1,25 @@
 // i18n/request.ts
-// next-intl server-side config — reads locale from cookie.
-// Using "i18n without routing" pattern so existing middleware.ts is untouched.
 import { getRequestConfig } from 'next-intl/server';
 import { cookies } from 'next/headers';
+import idMessages from '../messages/id.json';
+import enMessages from '../messages/en.json';
 
 export const locales = ['id', 'en'] as const;
 export type Locale = (typeof locales)[number];
 export const defaultLocale: Locale = 'id';
 
 export default getRequestConfig(async () => {
-  const cookieStore = await cookies();
-  const raw = cookieStore.get('locale')?.value;
-  const locale: Locale = raw === 'en' ? 'en' : 'id';
+  let locale: Locale = 'id';
+  try {
+    const cookieStore = await cookies();
+    const raw = cookieStore.get('locale')?.value;
+    if (raw === 'en') locale = 'en';
+  } catch {
+    // default to 'id'
+  }
+
   return {
     locale,
-    messages: (await import(`../messages/${locale}.json`)).default,
+    messages: locale === 'en' ? enMessages : idMessages,
   };
 });
