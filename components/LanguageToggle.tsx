@@ -6,6 +6,7 @@
 
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { Globe } from 'lucide-react';
 import { setLocale } from '@/app/actions/locale';
 
 interface LanguageToggleProps {
@@ -31,11 +32,14 @@ export function LanguageToggle({ currentLocale }: LanguageToggleProps) {
       onClick={handleToggle}
       disabled={isPending}
       title={currentLocale === 'id' ? 'Switch to English' : 'Ganti ke Bahasa Indonesia'}
-      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-bold border transition-colors disabled:opacity-50
-        bg-slate-800/60 border-slate-600 text-slate-300 hover:bg-slate-700 hover:text-white"
       aria-label={currentLocale === 'id' ? 'Switch to English' : 'Switch to Indonesian'}
+      className="relative flex items-center justify-center w-9 h-9 rounded-full glass-panel hover:bg-black/10 transition-colors border border-[var(--glass-border)] cursor-pointer disabled:opacity-50"
     >
-      🌐 {label}
+      <Globe className="w-4 h-4" />
+      {/* locale badge */}
+      <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center w-[14px] h-[14px] rounded-full bg-[var(--brand-primary,#6366f1)] text-white text-[8px] font-bold leading-none">
+        {label}
+      </span>
     </button>
   );
 }
