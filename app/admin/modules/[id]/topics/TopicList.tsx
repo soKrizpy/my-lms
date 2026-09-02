@@ -279,6 +279,11 @@ export function TopicList({
                         <option key={l.id} value={l.id}>{l.id} — {l.title}</option>
                       ))}
                     </optgroup>
+                    <optgroup label="Scratch">
+                      {BUILT_IN_LESSONS.filter(l => l.category === 'Scratch').map(l => (
+                        <option key={l.id} value={l.id}>{l.id} — {l.title}</option>
+                      ))}
+                    </optgroup>
                   </select>
                   <p className="mt-1 text-xs text-slate-500">Lesson bawaan yang dibuka siswa saat "Mulai Belajar".</p>
                 </div>

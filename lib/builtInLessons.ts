@@ -6,7 +6,7 @@
 export interface BuiltInLesson {
   id: string;
   title: string;
-  category: 'HTML' | 'CSS' | 'JavaScript';
+  category: 'HTML' | 'CSS' | 'JavaScript' | 'Scratch';
   topicNumber: number;
 }
 
@@ -38,6 +38,30 @@ export const BUILT_IN_LESSONS: BuiltInLesson[] = [
   { id: 'beginner-html-22', title: 'Kondisi — Website yang Bisa Mengambil Keputusan', category: 'JavaScript', topicNumber: 5 },
   { id: 'beginner-html-23', title: 'Functions — Kode yang Bisa Dipanggil Berkali-kali', category: 'JavaScript', topicNumber: 6 },
   { id: 'beginner-html-24', title: 'Final Project — Mini Website Interaktif', category: 'JavaScript', topicNumber: 7 },
+  // Scratch Level 1 — Project Pertamaku
+  { id: 'beginner-scratch-01', title: 'Kucing yang Bisa Jalan-Jalan', category: 'Scratch', topicNumber: 1 },
+  { id: 'beginner-scratch-02', title: 'Kartu Ucapan Digital', category: 'Scratch', topicNumber: 2 },
+  { id: 'beginner-scratch-03', title: 'Buku Cerita 3 Halaman', category: 'Scratch', topicNumber: 3 },
+  { id: 'beginner-scratch-04', title: 'Orkestra Mini', category: 'Scratch', topicNumber: 4 },
+  { id: 'beginner-scratch-05', title: 'Kupu-Kupu Terbang', category: 'Scratch', topicNumber: 5 },
+  { id: 'beginner-scratch-06', title: 'Hujan Bintang', category: 'Scratch', topicNumber: 6 },
+  { id: 'beginner-scratch-07', title: 'Animasi Intro Namaku', category: 'Scratch', topicNumber: 7 },
+  // Scratch Level 2 — Game & Interaksi
+  { id: 'beginner-scratch-08', title: 'Labirin Sederhana', category: 'Scratch', topicNumber: 8 },
+  { id: 'beginner-scratch-09', title: 'Kuis Tebak Gambar', category: 'Scratch', topicNumber: 9 },
+  { id: 'beginner-scratch-10', title: 'Tangkap Apel Jatuh', category: 'Scratch', topicNumber: 10 },
+  { id: 'beginner-scratch-11', title: 'Game Skor Koin', category: 'Scratch', topicNumber: 11 },
+  { id: 'beginner-scratch-12', title: 'Kalkulator Ajaib', category: 'Scratch', topicNumber: 12 },
+  { id: 'beginner-scratch-13', title: 'Robot Pengantar Pesan', category: 'Scratch', topicNumber: 13 },
+  { id: 'beginner-scratch-14', title: 'Dodge the Meteor', category: 'Scratch', topicNumber: 14 },
+  // Scratch Level 3 — Buat Duniamu Sendiri
+  { id: 'beginner-scratch-15', title: 'Petualangan 3 Babak', category: 'Scratch', topicNumber: 15 },
+  { id: 'beginner-scratch-16', title: 'Sprite Dance Battle', category: 'Scratch', topicNumber: 16 },
+  { id: 'beginner-scratch-17', title: 'Platformer Mini', category: 'Scratch', topicNumber: 17 },
+  { id: 'beginner-scratch-18', title: 'Magic Paintbrush', category: 'Scratch', topicNumber: 18 },
+  { id: 'beginner-scratch-19', title: 'Boss Battle Game', category: 'Scratch', topicNumber: 19 },
+  { id: 'beginner-scratch-20', title: 'Pilih Petualanganmu', category: 'Scratch', topicNumber: 20 },
+  { id: 'beginner-scratch-21', title: 'Showcase Project — Game atau Cerita Sendiri', category: 'Scratch', topicNumber: 21 },
 ];
 
 export const BUILT_IN_LESSON_MAP = new Map(BUILT_IN_LESSONS.map(l => [l.id, l]));

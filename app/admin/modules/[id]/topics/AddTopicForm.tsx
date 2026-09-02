@@ -110,7 +110,7 @@ export function AddTopicForm({ moduleId, usedEngineTopicIds = [] }: Props) {
           className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
         >
           <option value="">— Tidak dihubungkan —</option>
-          {["HTML", "CSS", "JavaScript"].map((cat) => {
+          {["HTML", "CSS", "JavaScript", "Scratch"].map((cat) => {
             const lessons = BUILT_IN_LESSONS.filter((l) => l.category === cat);
             if (lessons.length === 0) return null;
             return (

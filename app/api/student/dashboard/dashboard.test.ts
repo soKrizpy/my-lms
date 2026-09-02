@@ -119,7 +119,7 @@ const arbMeeting = (index: number): fc.Arbitrary<MeetingTestData> =>
     fc.integer({ min: 1, max: 100 }),
     fc.option(fc.lorem({ maxCount: 5 })),
     fc.boolean(),
-    fc.sampler(['completed', 'in_progress', 'pending'])(1)[0]
+    fc.constantFrom('completed', 'in_progress', 'pending')
   ).map(
     ([id, title, date, link, notes, session_count, session_number, series_id, report, is_completed, status]) => ({
       id: 1000 + index,
@@ -138,7 +138,7 @@ const arbMeeting = (index: number): fc.Arbitrary<MeetingTestData> =>
   );
 
 const arbModule = (index: number): fc.Arbitrary<ModuleTestData> =>
-  fc.tuple(fc.lorem({ maxCount: 2 }), fc.lorem({ maxCount: 5 }), fc.sampler(['beginner', 'intermediate', 'advanced'])(1)[0]).map(
+  fc.tuple(fc.lorem({ maxCount: 2 }), fc.lorem({ maxCount: 5 }), fc.constantFrom('beginner', 'intermediate', 'advanced')).map(
     ([title, desc, level]) => ({
       id: 100 + index,
       title,
@@ -153,7 +153,7 @@ const arbTopic = (moduleId: number, index: number): fc.Arbitrary<TopicTestData> 
     fc.lorem({ maxCount: 8 }),
     fc.webUrl(),
     fc.option(fc.string({ minLength: 5, maxLength: 20 })),
-    fc.sampler(['published', 'draft', 'archived'])(1)[0]
+    fc.constantFrom('published', 'draft', 'archived')
   ).map(([title, desc, link, engineId, status]) => ({
     id: 10000 + index,
     module_id: moduleId,
@@ -677,8 +677,7 @@ describe('Dashboard API - Bug Condition Exploration', () => {
                     {
                       data: [{ module_id: moduleId, modules: { id: moduleId, title: 'Module', description: 'Desc', level: 'beginner' } }],
                       error: null,
-                    },
-                    { numRuns: 1 }
+                    }
                   ),
                 };
               }
