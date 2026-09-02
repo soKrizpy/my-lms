@@ -27,26 +27,56 @@ export async function POST(
       );
     }
 
-    // First delete existing assignments for this module
-    const { error: deleteError } = await supabaseAdmin
-      .from("student_modules")
-      .delete()
-      .eq("module_id", moduleId);
-
-    if (deleteError) throw deleteError;
-
-    // Then insert new assignments if there are any
     if (studentIds.length > 0) {
+      // Determine which students already have an active module assigned
+      // so new assignments don't clobber their active status
+      const { data: existingActives } = await supabaseAdmin
+        .from("student_modules")
+        .select("student_id")
+        .eq("status", "active")
+        .in("student_id", studentIds);
+
+      const alreadyActiveSet = new Set(
+        (existingActives ?? []).map((r: any) => r.student_id as string)
+      );
+
+      // Build rows: new students get 'active' unless they already have an
+      // active module elsewhere (in which case this assignment is 'paused').
+      // For existing assignments to THIS module, upsert preserves their status.
       const rows = studentIds.map((id: string) => ({
         student_id: id,
         module_id: moduleId,
+        status: alreadyActiveSet.has(id) ? "paused" : "active",
       }));
 
-      const { error: insertError } = await supabaseAdmin
+      // Upsert: preserves status for students already assigned to this module;
+      // inserts with computed status for brand-new assignments.
+      const { error: upsertError } = await supabaseAdmin
         .from("student_modules")
-        .insert(rows);
+        .upsert(rows, { onConflict: "student_id,module_id" });
 
-      if (insertError) throw insertError;
+      if (upsertError) throw upsertError;
+
+      // Remove assignments for students no longer in the list
+      const { error: deleteError } = await supabaseAdmin
+        .from("student_modules")
+        .delete()
+        .eq("module_id", moduleId)
+        .not(
+          "student_id",
+          "in",
+          `(${studentIds.map((id: string) => `'${id}'`).join(",")})`
+        );
+
+      if (deleteError) throw deleteError;
+    } else {
+      // Empty list — remove all assignments for this module
+      const { error: deleteError } = await supabaseAdmin
+        .from("student_modules")
+        .delete()
+        .eq("module_id", moduleId);
+
+      if (deleteError) throw deleteError;
     }
 
     return NextResponse.json({ success: true });

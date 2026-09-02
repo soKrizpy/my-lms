@@ -21,6 +21,7 @@ interface ModuleDetail {
   id: number;
   title: string;
   description: string | null;
+  status: 'active' | 'paused';
   topics: TopicDetail[];
   completedCount: number;
   totalCount: number;
@@ -110,6 +111,17 @@ export default function StudentDetailPanel({ studentId, onClose, onEdit, onDelet
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>("learning");
+  const [moduleStatuses, setModuleStatuses] = useState<Record<number, 'active' | 'paused'>>({});
+  const [statusLoading, setStatusLoading] = useState<Record<number, boolean>>({});
+  const [statusError, setStatusError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (data) {
+      const initial: Record<number, 'active' | 'paused'> = {};
+      data.modules.forEach((m) => { initial[m.id] = m.status; });
+      setModuleStatuses(initial);
+    }
+  }, [data]);
 
   useEffect(() => {
     let cancelled = false;
@@ -173,6 +185,47 @@ export default function StudentDetailPanel({ studentId, onClose, onEdit, onDelet
       ),
     },
   ];
+
+  // ── Status Change Handler ────────────────────────────────────────────────────
+  async function handleStatusChange(moduleId: number, action: 'pause' | 'activate') {
+    const previous = { ...moduleStatuses };
+    setStatusError(null);
+    setStatusLoading((prev) => ({ ...prev, [moduleId]: true }));
+
+    // Optimistic update
+    setModuleStatuses((prev) => {
+      const next = { ...prev };
+      if (action === 'pause') {
+        next[moduleId] = 'paused';
+      } else {
+        // activate: all become paused, target becomes active
+        Object.keys(next).forEach((id) => { next[Number(id)] = 'paused'; });
+        next[moduleId] = 'active';
+      }
+      return next;
+    });
+
+    try {
+      const res = await fetch(
+        `/api/admin/students/${studentId}/modules/${moduleId}/status`,
+        {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action }),
+        }
+      );
+      if (!res.ok) {
+        const json = await res.json();
+        throw new Error(json.error || 'Gagal mengubah status.');
+      }
+    } catch (e: any) {
+      // Rollback on failure
+      setModuleStatuses(previous);
+      setStatusError(e.message);
+    } finally {
+      setStatusLoading((prev) => ({ ...prev, [moduleId]: false }));
+    }
+  }
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
@@ -320,6 +373,12 @@ export default function StudentDetailPanel({ studentId, onClose, onEdit, onDelet
               {/* ──────── TAB: Learning Path ──────── */}
               {activeTab === "learning" && (
                 <div className="p-4 space-y-4">
+                  {statusError && (
+                    <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 flex items-center justify-between">
+                      <span>⚠️ {statusError}</span>
+                      <button onClick={() => setStatusError(null)} className="text-red-400 hover:text-red-600 ml-2">✕</button>
+                    </div>
+                  )}
                   {data.modules.length === 0 ? (
                     <EmptyState
                       icon="📚"
@@ -335,12 +394,50 @@ export default function StudentDetailPanel({ studentId, onClose, onEdit, onDelet
                         {/* Module header */}
                         <div className="px-4 py-3 bg-[var(--glass-bg)] border-b border-[var(--glass-border)]">
                           <div className="flex items-center justify-between mb-1.5">
-                            <h3 className="text-sm font-semibold text-[var(--text-primary)] truncate mr-2">
-                              {mod.title}
-                            </h3>
-                            <span className="text-xs font-medium text-[var(--text-muted)] flex-shrink-0">
-                              {mod.completedCount}/{mod.totalCount} topik
-                            </span>
+                            <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+                              <h3 className="text-sm font-semibold text-[var(--text-primary)] truncate">
+                                {mod.title}
+                              </h3>
+                              {/* Status badge — fall back to mod.status before moduleStatuses is initialised */}
+                              {(moduleStatuses[mod.id] ?? mod.status) === 'active' ? (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 flex-shrink-0">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                  Aktif
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 flex-shrink-0">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                  Dijeda
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="text-xs font-medium text-[var(--text-muted)]">
+                                {mod.completedCount}/{mod.totalCount} topik
+                              </span>
+                              {/* Action button — fall back to mod.status before moduleStatuses is initialised */}
+                              {(moduleStatuses[mod.id] ?? mod.status) === 'active' ? (
+                                <button
+                                  onClick={() => handleStatusChange(mod.id, 'pause')}
+                                  disabled={statusLoading[mod.id]}
+                                  className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 transition-colors disabled:opacity-50"
+                                >
+                                  {statusLoading[mod.id] ? (
+                                    <span className="w-3 h-3 border border-amber-600 border-t-transparent rounded-full animate-spin" />
+                                  ) : '⏸'} Jeda
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handleStatusChange(mod.id, 'activate')}
+                                  disabled={statusLoading[mod.id]}
+                                  className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300 transition-colors disabled:opacity-50"
+                                >
+                                  {statusLoading[mod.id] ? (
+                                    <span className="w-3 h-3 border border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                                  ) : '▶'} Aktifkan
+                                </button>
+                              )}
+                            </div>
                           </div>
                           <ProgressBar value={mod.completedCount} max={mod.totalCount} />
                         </div>

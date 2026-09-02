@@ -168,13 +168,11 @@ export async function DELETE(request: Request) {
     }
 
     if (quizIds.length > 0) {
-      const [{ error: attemptsError }, { error: questionsError }] =
-        await Promise.all([
-          supabaseAdmin.from("quiz_attempts").delete().in("quiz_id", quizIds),
-          supabaseAdmin.from("quiz_questions").delete().in("quiz_id", quizIds),
-        ]);
-
-      if (attemptsError) throw attemptsError;
+      // NOTE: quiz_attempts intentionally NOT deleted — preserves student score history
+      const { error: questionsError } = await supabaseAdmin
+        .from("quiz_questions")
+        .delete()
+        .in("quiz_id", quizIds);
       if (questionsError) throw questionsError;
     }
 
@@ -188,6 +186,7 @@ export async function DELETE(request: Request) {
     }
 
     if (topicIds.length > 0) {
+      // NOTE: topic_progress intentionally NOT deleted — preserves student XP and completion data
       const { error: topicsDeleteError } = await supabaseAdmin
         .from("topics")
         .delete()

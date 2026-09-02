@@ -202,3 +202,13 @@ export async function deleteQuizQuestion(id: number) {
   const supabase = getSupabaseAdmin();
   return supabase.from("quiz_questions").delete().eq("id", id);
 }
+
+// --- Pause Learning Path types ---
+
+export type ModuleStatus = 'active' | 'paused';
+
+export interface StudentModuleRow {
+  student_id: string;
+  module_id: number;
+  status: ModuleStatus;
+}

@@ -24,7 +24,7 @@ export async function GET(
     // 2. Assigned modules
     const { data: studentModules } = await supabaseAdmin
       .from("student_modules")
-      .select("module_id, modules(id, title, description)")
+      .select("module_id, status, modules(id, title, description)")
       .eq("student_id", studentId)
       .order("module_id", { ascending: true });
 
@@ -92,6 +92,7 @@ export async function GET(
           id: mod.id,
           title: mod.title,
           description: mod.description,
+          status: sm.status as 'active' | 'paused',
           topics: modTopics,
           completedCount,
           totalCount: modTopics.length,
