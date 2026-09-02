@@ -1,9 +1,6 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import * as animeModule from 'animejs';
-
-const anime = (animeModule as any).default || animeModule;
 
 interface MagicalCounterProps {
   value: number;
@@ -22,6 +19,7 @@ export function MagicalCounter({
 }: MagicalCounterProps) {
   const spanRef = useRef<HTMLSpanElement | null>(null);
   const prevValueRef = useRef<number>(0);
+  const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!spanRef.current) return;
@@ -31,45 +29,55 @@ export function MagicalCounter({
       typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    if (prefersReduced || typeof anime !== 'function') {
+    const startVal = prevValueRef.current;
+    const endVal = value;
+
+    if (prefersReduced || startVal === endVal) {
       if (spanRef.current) {
-        spanRef.current.textContent = `${prefix}${value.toLocaleString()}${suffix}`;
+        spanRef.current.textContent = `${prefix}${endVal.toLocaleString()}${suffix}`;
       }
-      prevValueRef.current = value;
+      prevValueRef.current = endVal;
       return;
     }
 
-    const startVal = prevValueRef.current;
-    const targetObj = { count: startVal };
+    const startTime = performance.now();
 
-    const anim = anime({
-      targets: targetObj,
-      count: value,
-      round: 1,
-      duration: duration,
-      easing: 'easeOutExpo',
-      update: () => {
-        if (spanRef.current) {
-          spanRef.current.textContent = `${prefix}${targetObj.count.toLocaleString()}${suffix}`;
-        }
-      },
-    });
+    function easeOutExpo(t: number): number {
+      return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+    }
 
-    prevValueRef.current = value;
+    function tick(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = easeOutExpo(progress);
+      const current = Math.round(startVal + (endVal - startVal) * eased);
+
+      if (spanRef.current) {
+        spanRef.current.textContent = `${prefix}${current.toLocaleString()}${suffix}`;
+      }
+
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        prevValueRef.current = endVal;
+      }
+    }
+
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+    }
+    rafRef.current = requestAnimationFrame(tick);
 
     return () => {
-      if (anim?.pause) anim.pause();
-      if (spanRef.current && typeof anime.remove === 'function') {
-        anime.remove(spanRef.current);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
       }
     };
   }, [value, duration, prefix, suffix]);
 
   return (
     <span ref={spanRef} className={className}>
-      {prefix}
-      {value.toLocaleString()}
-      {suffix}
+      {prefix}{value.toLocaleString()}{suffix}
     </span>
   );
 }
