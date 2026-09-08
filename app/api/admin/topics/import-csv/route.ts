@@ -13,8 +13,7 @@
 // On failure the whole request returns { error, details }.
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '../../../../../lib/supabase/server';
-import { getSupabaseAdmin } from '../../../../../lib/supabaseAdmin';
+import { requireAdmin } from '../../../../../lib/auth';
 
 // ─── CSV parser (ported from lesson-engine/src/engine/csvImport.ts) ───────────
 
@@ -186,12 +185,10 @@ function buildLessonJson(
 // ─── API Handler ──────────────────────────────────────────────────────────────
 
 export async function POST(req: NextRequest) {
-  // Auth: admin only
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  // Auth + role guard
+  const auth = await requireAdmin(req);
+  if ('error' in auth) return auth.error;
+  const supabaseAdmin = auth.adminClient;
 
   // Parse multipart form
   let formData: FormData;
@@ -236,7 +233,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Load existing topics for this module (to match by engine_topic_id or order_index)
-  const admin = getSupabaseAdmin();
+  const admin = supabaseAdmin;
   const { data: existingTopics, error: topicsError } = await admin
     .from('topics')
     .select('id, title, order_index, engine_topic_id')

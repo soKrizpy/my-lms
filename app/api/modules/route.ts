@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "../../../lib/supabaseAdmin";
+import { requireAdmin } from "../../../lib/auth";
 
 function getErrorMessage(error: unknown, fallback = "Terjadi kesalahan.") {
   return error instanceof Error ? error.message : fallback;
 }
 
 export async function GET() {
-  const supabaseAdmin = getSupabaseAdmin();
+  // GET /api/modules is read-only and used by admin forms — require admin role
+  const auth = await requireAdmin();
+  if ('error' in auth) return auth.error;
+  const supabaseAdmin = auth.adminClient;
   const { data, error } = await supabaseAdmin
     .from("modules")
     .select("id, title, description, level")
@@ -38,7 +41,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
     const body = await request.json();
     const name = typeof body?.name === "string" ? body.name.trim() : "";
     const description =
@@ -88,7 +93,9 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
     const body = await request.json();
     const id = body?.id;
     const name = typeof body?.name === "string" ? body.name.trim() : "";
@@ -129,7 +136,9 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
     const { searchParams } = new URL(request.url);
     const idParam = searchParams.get("id");
     const moduleId = Number(idParam);

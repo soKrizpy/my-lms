@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "../../../../../lib/supabaseAdmin";
+import { requireAdmin } from "../../../../../lib/auth";
 
 function getErrorMessage(error: unknown, fallback = "Terjadi kesalahan.") {
   return error instanceof Error ? error.message : fallback;
@@ -9,6 +9,10 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ moduleId: string }> },
 ) {
+  const auth = await requireAdmin();
+  if ('error' in auth) return auth.error;
+  const supabaseAdmin = auth.adminClient;
+
   const { moduleId } = await params;
 
   if (!moduleId) {
@@ -18,7 +22,6 @@ export async function GET(
     );
   }
 
-  const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from("topics")
     .select("id, title, module_id, order_index, description, project_link")
@@ -46,6 +49,10 @@ export async function POST(
   { params }: { params: Promise<{ moduleId: string }> },
 ) {
   try {
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
+
     const { moduleId } = await params;
     const body = await request.json();
     const title = typeof body?.title === "string" ? body.title.trim() : "";
@@ -66,7 +73,6 @@ export async function POST(
       );
     }
 
-    const supabaseAdmin = getSupabaseAdmin();
     const { data, error } = await supabaseAdmin
       .from("topics")
       .insert({
@@ -95,6 +101,10 @@ export async function PUT(
   { params }: { params: Promise<{ moduleId: string }> },
 ) {
   try {
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
+
     const { moduleId } = await params;
     const body = await request.json();
     const id = Number(body?.id);
@@ -108,7 +118,7 @@ export async function PUT(
         ? body.projectLink.trim()
         : null;
     const orderIndex = Number(body?.orderIndex);
-    
+
     if (!moduleId || !id || !title || !Number.isFinite(orderIndex)) {
       return NextResponse.json(
         { error: "ID, judul, dan urutan topik wajib diisi." },
@@ -116,7 +126,6 @@ export async function PUT(
       );
     }
 
-    const supabaseAdmin = getSupabaseAdmin();
     const { data, error } = await supabaseAdmin
       .from("topics")
       .update({
@@ -137,7 +146,7 @@ export async function PUT(
         { status: 404 },
       );
     }
-    
+
     return NextResponse.json({ success: true, topic: data });
   } catch (error: unknown) {
     return NextResponse.json(
@@ -151,12 +160,15 @@ export async function DELETE(
   request: Request,
 ) {
   try {
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
-    
+
     if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
 
-    const supabaseAdmin = getSupabaseAdmin();
     const { error } = await supabaseAdmin
       .from("topics")
       .delete()

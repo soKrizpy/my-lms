@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "../../../../../../lib/supabaseAdmin";
+import { requireAdmin } from "../../../../../../lib/auth";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
     const { id: meetingId } = await params;
 
     // 1. Get the students in this meeting

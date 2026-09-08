@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "../../../../../lib/supabaseAdmin";
+import { requireAdmin } from "../../../../../lib/auth";
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ moduleId: string }> }
 ) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
+
     const resolvedParams = await params;
     const moduleId = Number(resolvedParams.moduleId);
 

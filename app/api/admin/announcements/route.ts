@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "../../../../lib/supabaseAdmin";
+import { requireAdmin } from "../../../../lib/auth";
 
 export async function GET() {
-  const supabaseAdmin = getSupabaseAdmin();
+  const auth = await requireAdmin();
+  if ('error' in auth) return auth.error;
+  const supabaseAdmin = auth.adminClient;
+
   const { data, error } = await supabaseAdmin
     .from("announcements")
     .select("*")
@@ -17,7 +20,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
     const body = await request.json();
     const { content, durationDays } = body;
 
@@ -49,7 +54,9 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 

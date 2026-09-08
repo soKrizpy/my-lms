@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "../../../../lib/supabase/server";
 import { getSupabaseAdmin } from "../../../../lib/supabaseAdmin";
 import { resolveTopicUnlockMap } from "../../../../lib/topicUnlock";
+import { calculateStreak, type MeetingRecord } from "../../../../lib/streakCalculator";
 
 // GET /api/student/dashboard - fetch all data for student dashboard
 export async function GET() {
@@ -48,6 +49,13 @@ export async function GET() {
     sortedMeetings.forEach((m: any, idx: number) => {
       if (m) m.globalIndex = idx;
     });
+
+    // ── Streak calculation ────────────────────────────────────────────────
+    const meetingRecords: MeetingRecord[] = sortedMeetings.map((m: any) => ({
+      meetingDate: new Date(m.meeting_date as string),
+      hasJoined: m.meeting_students?.[0]?.has_joined === true,
+    }));
+    const streakResult = calculateStreak(meetingRecords);
 
     // Filter upcoming meetings based on visibility rules
     const visibleUpcomingMeetings = sortedMeetings.filter((m: any) => {
@@ -272,6 +280,8 @@ export async function GET() {
       engineXpTotal: typeof engineXpTotal === "number" ? engineXpTotal : 0,
       completedEngineTopics: typeof completedEngineTopics === "number" ? completedEngineTopics : 0,
       topicProgress: Array.isArray(topicProgress) ? topicProgress : [],
+      streak: streakResult.currentStreak,
+      maxStreak: streakResult.maxStreak,
     };
 
     console.log(`Dashboard: Success - student ${studentId}, modules: ${responsePayload.modules.length}, xp: ${responsePayload.engineXpTotal}`);
@@ -294,6 +304,8 @@ export async function GET() {
       engineXpTotal: 0,
       completedEngineTopics: 0,
       topicProgress: [],
+      streak: 0,
+      maxStreak: 0,
     };
     
     return NextResponse.json(fallbackResponse, { status: 200 });

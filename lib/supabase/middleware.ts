@@ -27,37 +27,90 @@ export async function updateSession(request: NextRequest) {
     }
   )
 
-  // This will refresh session if expired - required for Server Components
+  // Refresh session if expired — required for Server Components
   // https://supabase.com/docs/guides/auth/server-side/nextjs
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect the admin routes
-  if (request.nextUrl.pathname.startsWith('/admin')) {
-    if (!user) {
-      // no user, redirect to login page
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      return NextResponse.redirect(url)
-    }
-  }
+  const pathname = request.nextUrl.pathname
 
-  // Protect the student routes
-  if (request.nextUrl.pathname.startsWith('/student')) {
-    if (!user) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      return NextResponse.redirect(url)
-    }
-  }
-
-  // Optional: protect student routes or redirect away from /login if already logged in
-  if (request.nextUrl.pathname === '/login' && user) {
+  // ── Unauthenticated guard ─────────────────────────────────────────────────
+  // Any protected route without a session → login
+  if ((pathname.startsWith('/admin') || pathname.startsWith('/student')) && !user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/admin' // Or direct to appropriate dashboard based on role
+    url.pathname = '/login'
     return NextResponse.redirect(url)
   }
+
+  // ── Already-logged-in redirect ────────────────────────────────────────────
+  // User visits /login while already authenticated → send to correct dashboard.
+  // We read the role here using the service role key so the middleware can
+  // correctly route admins vs students without requiring a layout round-trip.
+  if (pathname === '/login' && user) {
+    // Use service role for role lookup (server-side only — never reaches the browser)
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    let role: string | null = null
+
+    if (serviceKey) {
+      try {
+        const adminClient = createServerClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          serviceKey,
+          { cookies: { getAll: () => [], setAll: () => {} } }
+        )
+        const { data: profile } = await adminClient
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle()
+        role = (profile?.role as string) ?? null
+      } catch {
+        // Fallback: no role lookup — default to student dashboard for safety
+      }
+    }
+
+    const url = request.nextUrl.clone()
+    url.pathname = role === 'admin' ? '/admin' : '/student'
+    return NextResponse.redirect(url)
+  }
+
+  // ── Role-based access control ─────────────────────────────────────────────
+  // Student visiting /admin → redirect to /student.
+  // We rely on the layout (Server Component) for the definitive role check,
+  // but add a fast path here using the cookie-based anon client.
+  // The anon client can read profiles if RLS allows it; if not, the layout
+  // provides the hard enforcement.
+  if (pathname.startsWith('/admin') && user) {
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (serviceKey) {
+      try {
+        const adminClient = createServerClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          serviceKey,
+          { cookies: { getAll: () => [], setAll: () => {} } }
+        )
+        const { data: profile } = await adminClient
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle()
+
+        if ((profile?.role as string) !== 'admin') {
+          // Authenticated but not an admin → send to student dashboard
+          const url = request.nextUrl.clone()
+          url.pathname = '/student'
+          return NextResponse.redirect(url)
+        }
+      } catch {
+        // On error, fall through to layout-level guard
+      }
+    }
+  }
+
+  // ── Student visiting /admin/* API routes ─────────────────────────────────
+  // /api/admin/* routes are protected at the handler level via requireAdmin().
+  // No additional middleware redirect needed for API routes (they return JSON errors).
 
   return supabaseResponse
 }

@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "../../../../lib/supabaseAdmin";
+import { requireAdmin } from "../../../../lib/auth";
 
 export async function GET(request: Request) {
-  const supabaseAdmin = getSupabaseAdmin();
+  const auth = await requireAdmin();
+  if ('error' in auth) return auth.error;
+  const supabaseAdmin = auth.adminClient;
+
   const { searchParams } = new URL(request.url);
   const monthYear = searchParams.get("monthYear");
 
@@ -25,7 +28,9 @@ export async function GET(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
     const body = await request.json();
     const { id, price_per_meeting, bank_account, status, total_amount, attended_meetings } = body;
 

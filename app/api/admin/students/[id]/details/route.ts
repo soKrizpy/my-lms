@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "../../../../../../lib/supabaseAdmin";
+import { requireAdmin } from "../../../../../../lib/auth";
 import { resolveTopicUnlockMap } from "../../../../../../lib/topicUnlock";
 
 export async function GET(
@@ -7,7 +7,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
     const { id: studentId } = await params;
 
     // 1. Student profile

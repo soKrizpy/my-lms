@@ -6,6 +6,7 @@ import { MagicalParticles } from "@/components/MagicalParticles";
 import { MagicalCounter } from "@/components/MagicalCounter";
 import { useLmsEngineListener } from "@/lib/useLmsEngineListener";
 import { EngineModal } from "@/components/EngineModal";
+import { QuestMap } from "@/components/quest-map/QuestMap";
 import { supabase } from "@/lib/supabaseClient";
 import { useTranslations } from "next-intl";
 
@@ -961,6 +962,7 @@ export default function StudentDashboard() {
   const [studentId, setStudentId] = useState<string>('');
   const [locale, setLocale] = useState<string>('id');
   const [engineModal, setEngineModal] = useState<{ topicId: string } | null>(null);
+  const [activeQuiz, setActiveQuiz] = useState<{ id: number; title: string } | null>(null);
 
 
   const fetchInvoices = async () => {
@@ -1005,6 +1007,8 @@ export default function StudentDashboard() {
         engineXpTotal: typeof json.engineXpTotal === "number" ? json.engineXpTotal : 0,
         completedEngineTopics: typeof json.completedEngineTopics === "number" ? json.completedEngineTopics : 0,
         topicProgress: Array.isArray(json.topicProgress) ? json.topicProgress : [],
+        streak: typeof json.streak === "number" ? json.streak : 0,
+        maxStreak: typeof json.maxStreak === "number" ? json.maxStreak : 0,
       };
       
       setData(validatedData);
@@ -1256,8 +1260,26 @@ export default function StudentDashboard() {
 
           {activeTab === "learning" && (
             <div className="space-y-4">
-              <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>{t('learning.heading')}</h2>
-              <LearningPath modules={data.modules} quizAttempts={data.quizAttempts || []} onRefresh={fetchData} onStartLesson={(eid) => setEngineModal({ topicId: eid })} />
+              <QuestMap
+                modules={data.modules || []}
+                quizAttempts={data.quizAttempts || []}
+                topicProgress={data.topicProgress || []}
+                onStartLesson={(eid) => setEngineModal({ topicId: eid })}
+                onRefresh={fetchData}
+                studentName={data.studentName || "Siswa"}
+                engineXpTotal={data.engineXpTotal ?? 0}
+                streak={data.streak ?? 0}
+                maxStreak={data.maxStreak ?? 0}
+                completedEngineTopics={data.completedEngineTopics ?? 0}
+                onOpenQuiz={(quiz) => setActiveQuiz(quiz)}
+              />
+              {activeQuiz && (
+                <QuizModal
+                  quiz={activeQuiz}
+                  onClose={() => setActiveQuiz(null)}
+                  onComplete={() => { setActiveQuiz(null); void fetchData(); }}
+                />
+              )}
             </div>
           )}
 

@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "../../../../../../lib/supabaseAdmin";
+import { requireAdmin } from "../../../../../../lib/auth";
 
 export async function GET(
   _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const supabaseAdmin = getSupabaseAdmin();
+  const auth = await requireAdmin();
+  if ('error' in auth) return auth.error;
+  const supabaseAdmin = auth.adminClient;
+
   const { id } = await params;
 
   const { data: invoice, error: invError } = await supabaseAdmin

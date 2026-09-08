@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Bits2Bytes LMS
+
+Next.js 16 learning management system with Supabase backend.
 
 ## Getting Started
 
-First, run the development server:
-
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev   # starts on http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Environment Variables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Copy `.env.local.example` to `.env.local` and fill in your values.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Variable | Required | Description |
+|---|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | ✅ | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Supabase anon/public key |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Supabase service role key (server only) |
+| `NEXT_PUBLIC_LESSON_ENGINE_URL` | ✅ | Full URL of the Lesson Engine deployment (e.g. `https://engine.bits2bytes.id`). Used as the origin for postMessage validation in `useLmsEngineListener`. |
+| `LESSON_ENGINE_URL` | ⚠️ optional | Server-only URL for the `/learning/*` proxy rewrite. Falls back to `NEXT_PUBLIC_LESSON_ENGINE_URL` then `http://localhost:3001`. |
 
-## Learn More
+### Lesson Engine Integration
 
-To learn more about Next.js, take a look at the following resources:
+The LMS proxies `/learning/*` to the Lesson Engine via `next.config.ts` rewrites.
+This makes the engine same-origin when accessed from the LMS iframe, avoiding CORS.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+/learning/lesson/beginner-html-01  →  {LESSON_ENGINE_URL}/lesson/beginner-html-01
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The `EngineModal` component opens a full-screen iframe at `/learning/lesson/{topicId}` and
+passes `studentId`, `theme`, `lang`, and `lmsOrigin` as query parameters.
 
-## Deploy on Vercel
+The engine sends `postMessage` events back to the LMS:
+- `LESSON_COMPLETE` — topic finished; LMS saves XP + score to `topic_progress`
+- `QUIZ_SUBMITTED` — quiz attempt; LMS upserts `quiz_attempts`
+- `XP_UPDATE` — incremental XP; informational only
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Architecture
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+LMS (port 3000)
+  /learning/* → Engine proxy rewrite
+  EngineModal  → iframe → Engine
+  useLmsEngineListener → /api/student/engine-sync → Supabase
+  /api/engine/progress  → engine_progress table (HybridAdapter sync)
+
+Engine (port 3001)
+  HybridAdapter: Supabase (primary) + localStorage (fallback)
+  useLmsPostMessage: sends events to LMS parent window
+```
+
+## Database Migrations
+
+Apply migrations in order via Supabase Dashboard → SQL Editor:
+
+1. `20250601_001_phase_a_authoring_foundation.sql`
+2. `20250602_001_topic_progress_columns.sql`
+3. `20250603_001_parent_links.sql`
+4. `20250604_001_add_student_modules_status.sql`
+5. `20250605_001_engine_progress.sql` ← Lesson Engine state persistence
+
+## Running Tests
+
+```bash
+npm run test        # run all tests once
+npm run test:watch  # watch mode
+```

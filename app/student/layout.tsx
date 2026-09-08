@@ -1,10 +1,19 @@
+// app/student/layout.tsx
+// Server Component — authentication + role guard for the student area.
+//
+// Defence-in-depth: middleware handles unauthenticated redirects, but
+// this layout provides server-side enforcement that the logged-in user
+// is actually a student (or at minimum not an admin trying to snoop).
+
 import React from "react";
+import { redirect } from 'next/navigation';
 import LogoutButton from "./LogoutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/Logo";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { NextIntlClientProvider } from "next-intl";
 import { cookies } from "next/headers";
+import { getSessionRole } from "@/lib/auth";
 
 // Static imports — always bundled, cannot fail at runtime
 import idMessages from "../../messages/id.json";
@@ -15,7 +24,20 @@ export default async function StudentLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Read locale from cookie — default to 'id' if anything fails
+  // ── Role guard ─────────────────────────────────────────────────────────────
+  const role = await getSessionRole();
+
+  if (role === null) {
+    // Not logged in → login page
+    redirect('/login');
+  }
+
+  if (role === 'admin') {
+    // Admin accidentally landed on /student → send to admin dashboard
+    redirect('/admin');
+  }
+
+  // ── Locale ─────────────────────────────────────────────────────────────────
   let locale = "id";
   try {
     const cookieStore = await cookies();

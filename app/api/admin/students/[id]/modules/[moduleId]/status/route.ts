@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "@/lib/supabaseAdmin";
+import { requireAdmin } from "@/lib/auth";
 import type { ModuleStatus } from "@/lib/lmsData";
 
 // Request body
@@ -22,7 +22,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string; moduleId: string }> }
 ) {
   try {
-    const supabase = getSupabaseAdmin();
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabase = auth.adminClient;
     const { id: studentId, moduleId } = await params;
     const moduleIdNum = Number(moduleId);
 

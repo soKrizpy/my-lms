@@ -5,23 +5,17 @@
 // Returns { url, token } — URL is ready to copy-paste to parents.
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '../../../../lib/supabase/server';
-import { getSupabaseAdmin } from '../../../../lib/supabaseAdmin';
+import { requireAdmin } from '../../../../lib/auth';
 
 export async function POST(req: NextRequest) {
-  // Auth check — same pattern as all other admin routes
-  const supabase = await createClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
+  const auth = await requireAdmin(req);
+  if ('error' in auth) return auth.error;
+  const admin = auth.adminClient;
 
   const body = await req.json() as { studentId: string; invoiceId?: string };
   if (!body.studentId) {
     return NextResponse.json({ error: 'Missing studentId' }, { status: 400 });
   }
-
-  const admin = getSupabaseAdmin();
 
   // Insert new link — token and expires_at have DB defaults
   const { data, error } = await admin

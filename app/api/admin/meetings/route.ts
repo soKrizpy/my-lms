@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "../../../../lib/supabaseAdmin";
+import { requireAdmin } from "../../../../lib/auth";
 import { v4 as uuidv4 } from "uuid";
 
 export async function GET() {
-  const supabaseAdmin = getSupabaseAdmin();
+  const auth = await requireAdmin();
+  if ('error' in auth) return auth.error;
+  const supabaseAdmin = auth.adminClient;
+
   const { data, error } = await supabaseAdmin
     .from("meetings")
     .select(`
@@ -57,7 +60,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
     const body = await request.json();
     const { title, meetingDate, linkUrl, notes, sessionCount, studentIds } = body;
 
@@ -113,7 +118,9 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
     const body = await request.json();
     const { id, title, meetingDate, linkUrl, notes, studentIds, editMode, seriesId, sessionNumber } = body;
 
@@ -189,7 +196,9 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
     const editMode = searchParams.get("editMode");
@@ -218,7 +227,9 @@ export async function DELETE(request: Request) {
 
 export async function PATCH(request: Request) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
     const body = await request.json();
     const { id, progressReport, completionStatus } = body;
 

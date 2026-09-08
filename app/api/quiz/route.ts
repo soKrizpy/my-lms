@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server";
-import { getSupabaseAdmin } from "../../../lib/supabaseAdmin";
+import { requireAdmin } from "../../../lib/auth";
 
 export async function POST(request: Request) {
   try {
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
+
     const body = await request.json();
     const { quizId, question, optionA, optionB, optionC, optionD, correct } = body;
 
@@ -10,7 +14,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "quizId and question are required" }, { status: 400 });
     }
 
-    const supabaseAdmin = getSupabaseAdmin();
     const { error } = await supabaseAdmin.from("quiz_questions").insert({
       quiz_id: Number(quizId),
       question_text: question,
@@ -31,12 +34,15 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
+
     const body = await request.json();
     const { id, question, optionA, optionB, optionC, optionD, correct } = body;
 
     if (!id || !question) return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
 
-    const supabaseAdmin = getSupabaseAdmin();
     const { error } = await supabaseAdmin.from("quiz_questions").update({
       question_text: question,
       option_a: optionA,
@@ -55,12 +61,15 @@ export async function PUT(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
+    const auth = await requireAdmin();
+    if ('error' in auth) return auth.error;
+    const supabaseAdmin = auth.adminClient;
+
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
     if (!id) return NextResponse.json({ error: "Missing ID" }, { status: 400 });
 
-    const supabaseAdmin = getSupabaseAdmin();
     const { error } = await supabaseAdmin.from("quiz_questions").delete().eq("id", Number(id));
     if (error) throw error;
 
