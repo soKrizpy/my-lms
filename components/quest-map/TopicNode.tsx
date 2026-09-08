@@ -46,6 +46,19 @@ interface TopicNodeProps {
   nodeIndex: number;
 }
 
+/**
+ * Derive display state for a topic node.
+ *
+ * completed rules (in order):
+ *  1. Engine lesson finished (topic_progress record exists)
+ *  2. Quiz has been ATTEMPTED AT LEAST ONCE regardless of score
+ *     (student has used their 2 attempts — the topic is "done")
+ *
+ * NOTE: We do NOT gate completed on score >= 70, because:
+ *  - Quiz max attempts = 2, after which the topic is considered done
+ *  - Low-scoring students still completed the topic — they just didn't ace it
+ *  - The quiz button logic separately shows "Quiz ✓ {score}" vs "Quiz" (retry)
+ */
 function deriveNodeState(
   topic: TopicNodeTopic,
   isCurrentActive: boolean,
@@ -54,17 +67,23 @@ function deriveNodeState(
 ): NodeState {
   if (!topic.isUnlocked) return 'locked';
 
-  // Completed: has a topic_progress record (engine lesson done)
-  // OR has a quiz attempt with score >= 70
+  // Engine lesson completed
   const engineDone =
     topic.engine_topic_id !== null &&
     topicProgress.some((tp) => tp.engine_topic_id === topic.engine_topic_id);
 
-  const quizDone =
+  // Quiz maxed out (2 attempts used) — topic is "done" regardless of score
+  const quizAttempt = topic.quiz
+    ? quizAttempts.find((qa) => qa.quiz_id === topic.quiz!.id)
+    : undefined;
+  const quizMaxed = (quizAttempt?.attempts_count ?? 0) >= 2;
+
+  // Quiz attempted at least once with a passing score (>= 70)
+  const quizPassed =
     topic.quiz !== null &&
     quizAttempts.some((qa) => qa.quiz_id === topic.quiz!.id && qa.score >= 70);
 
-  if (engineDone || quizDone) return 'completed';
+  if (engineDone || quizMaxed || quizPassed) return 'completed';
   if (isCurrentActive) return 'active';
   return 'unlocked';
 }
@@ -87,7 +106,9 @@ function TopicNodeInner({
 }: TopicNodeProps) {
   const state = deriveNodeState(topic, isCurrentActive, topicProgress, quizAttempts);
 
-  // Can student start the engine lesson?
+  // Can student access the engine lesson?
+  // Always accessible when unlocked — even after completing quiz or being "completed"
+  // Students should always be able to review their material.
   const canStartEngine =
     state !== 'locked' &&
     topic.engine_topic_id !== null &&
@@ -97,7 +118,9 @@ function TopicNodeInner({
   const quizAttempt = topic.quiz
     ? quizAttempts.find((qa) => qa.quiz_id === topic.quiz!.id)
     : undefined;
-  const quizMaxed = (quizAttempt?.attempts_count ?? 0) >= 2;
+  // attempts_count from DB; fall back to counting from the array if field is missing
+  const attemptsUsed = quizAttempt?.attempts_count ?? (quizAttempt ? 1 : 0);
+  const quizMaxed = attemptsUsed >= 2;
 
   // ── Visual config per state ──────────────────────────────────────────────
   const nodeStyles: Record<NodeState, string> = {
@@ -178,22 +201,27 @@ function TopicNodeInner({
 
       {/* ── Action buttons row ───────────────────────────────────────────── */}
       <div className="flex flex-col items-center gap-1 min-h-[20px]">
-        {canStartEngine && state !== 'completed' && (
+
+        {/* Engine lesson button — show for ALL non-locked topics with engine link */}
+        {canStartEngine && (
           <button
             type="button"
             onClick={() => onStartLesson?.(topic.engine_topic_id!)}
             className="text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors focus:outline-none focus-visible:ring-1"
             style={{
-              background: 'var(--accent)',
-              color: '#fff',
+              background: state === 'completed' ? 'rgba(132,204,22,0.25)' : 'var(--accent)',
+              color: state === 'completed' ? '#84cc16' : '#fff',
+              border: state === 'completed' ? '1px solid #84cc16' : 'none',
             }}
           >
-            {state === 'active' ? '🚀 Mulai!' : '▶ Lanjut'}
+            {state === 'active' ? '🚀 Mulai!' : state === 'completed' ? '▶ Review' : '▶ Lanjut'}
           </button>
         )}
 
+        {/* Quiz button */}
         {topic.quiz && state !== 'locked' && (
           quizMaxed ? (
+            // Max attempts used — show score badge, no more retries
             <span
               className="text-[10px] font-bold px-2 py-0.5 rounded-full"
               style={{ background: 'rgba(132,204,22,0.2)', color: '#84cc16' }}
@@ -201,6 +229,7 @@ function TopicNodeInner({
               Quiz ✓ {quizAttempt?.score ?? 0}
             </span>
           ) : (
+            // Still has attempts remaining — show quiz button
             <button
               type="button"
               onClick={() => onOpenQuiz?.(topic.quiz!)}
@@ -211,11 +240,12 @@ function TopicNodeInner({
                 background: 'rgba(56,189,248,0.1)',
               }}
             >
-              Quiz
+              {quizAttempt ? `Quiz (${attemptsUsed}/2)` : 'Quiz'}
             </button>
           )
         )}
 
+        {/* Coming soon badge — engine_topic_id linked but lesson not published yet */}
         {topic.engine_topic_id && !canStartEngine && state !== 'locked' && (
           <span
             className="text-[10px] px-2 py-0.5 rounded-full"

@@ -40,7 +40,8 @@ function findFirstActiveIndex(
   topicProgress: TopicProgress[],
   quizAttempts: QuizAttempt[]
 ): number {
-  // The first unlocked topic that is NOT yet completed
+  // The first unlocked topic that is NOT yet "done"
+  // "Done" = engine finished OR quiz maxed (2 attempts) OR quiz passed (score >= 70)
   for (let i = 0; i < topics.length; i++) {
     const topic = topics[i];
     if (!topic.isUnlocked) continue;
@@ -48,11 +49,16 @@ function findFirstActiveIndex(
     const engineDone =
       topic.engine_topic_id !== null &&
       topicProgress.some((tp) => tp.engine_topic_id === topic.engine_topic_id);
-    const quizDone =
-      topic.quiz !== null &&
+
+    const quizAttempt = topic.quiz
+      ? quizAttempts.find((qa) => qa.quiz_id === topic.quiz!.id)
+      : undefined;
+    const attemptsUsed = quizAttempt?.attempts_count ?? (quizAttempt ? 1 : 0);
+    const quizMaxed = attemptsUsed >= 2;
+    const quizPassed = topic.quiz !== null &&
       quizAttempts.some((qa) => qa.quiz_id === topic.quiz!.id && qa.score >= 70);
 
-    if (!engineDone && !quizDone) return i;
+    if (!engineDone && !quizMaxed && !quizPassed) return i;
   }
   return -1; // all completed
 }
