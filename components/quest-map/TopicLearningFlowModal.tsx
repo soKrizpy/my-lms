@@ -455,19 +455,19 @@ export function TopicLearningFlowModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* ── TOP HEADER / STEPPER ─────────────────────────────────────────── */}
-        <div className="px-5 py-4 border-b border-[var(--glass-border)] bg-slate-900/60 backdrop-blur-md flex flex-col gap-2.5">
+        <div className="px-5 py-4 border-b border-slate-200/80 dark:border-[var(--glass-border)] bg-slate-50/90 dark:bg-slate-900/60 backdrop-blur-md flex flex-col gap-2.5">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-xl flex-shrink-0" aria-hidden="true">
                 {currentStep === 'celebration' ? '🏆' : currentStep === 'quiz' ? '🧠' : currentStep === 'mimo' ? '⚡' : '📖'}
               </span>
               <div className="min-w-0">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
                   {moduleTitle || 'Learning Path'} · Bab {nodeIndex + 1}
                 </span>
                 <h2
                   id="flow-modal-title"
-                  className="font-bold text-sm sm:text-base text-white truncate leading-tight"
+                  className="font-bold text-sm sm:text-base text-slate-900 dark:text-white truncate leading-tight"
                 >
                   {topic.title}
                 </h2>
@@ -476,14 +476,14 @@ export function TopicLearningFlowModal({
 
             <div className="flex items-center gap-2 flex-shrink-0">
               {isCompleted && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30">
                   ✓ Selesai
                 </span>
               )}
               <button
                 type="button"
                 onClick={onClose}
-                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-200/60 dark:hover:bg-white/10 transition-colors cursor-pointer"
                 aria-label="Tutup"
               >
                 ✕
@@ -518,13 +518,13 @@ export function TopicLearningFlowModal({
                     isActive
                       ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30 ring-1 ring-blue-400'
                       : isPast
-                        ? 'bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 cursor-pointer'
-                        : 'bg-white/5 text-slate-500 cursor-not-allowed'
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-300 hover:bg-emerald-100 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30 dark:hover:bg-emerald-500/30 cursor-pointer'
+                        : 'bg-slate-100 text-slate-400 dark:bg-white/5 dark:text-slate-500 border border-slate-200/60 dark:border-transparent cursor-not-allowed'
                   }`}
                 >
                   <span className="hidden sm:inline">{s.icon}</span>
                   <span className="truncate">{s.label}</span>
-                  {isPast && <span className="text-emerald-400 text-xs">✓</span>}
+                  {isPast && <span className="text-emerald-600 dark:text-emerald-400 text-xs">✓</span>}
                 </button>
               );
             })}
@@ -538,8 +538,8 @@ export function TopicLearningFlowModal({
             <div className="space-y-4 animate-in fade-in slide-in-from-bottom-3 duration-200">
               {/* Slide Counter if teacher added multiple materi nodes */}
               {materiSlides.length > 1 && (
-                <div className="flex items-center justify-between px-1 text-xs text-slate-400 font-semibold">
-                  <span className="text-blue-400 font-bold">
+                <div className="flex items-center justify-between px-1 text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                  <span className="text-blue-600 dark:text-blue-400 font-bold">
                     Bagian {activeMateriSlideIndex + 1} dari {materiSlides.length}
                   </span>
                   <div className="flex items-center gap-1">
@@ -551,7 +551,7 @@ export function TopicLearningFlowModal({
                         className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
                           dotIdx === activeMateriSlideIndex
                             ? 'bg-blue-500 w-5'
-                            : 'bg-white/20 hover:bg-white/40'
+                            : 'bg-slate-300 hover:bg-slate-400 dark:bg-white/20 dark:hover:bg-white/40'
                         }`}
                         aria-label={`Buka bagian materi ${dotIdx + 1}`}
                       />
@@ -562,25 +562,25 @@ export function TopicLearningFlowModal({
 
               {/* Active Materi Card */}
               {currentSlide && (
-                <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-600/15 via-indigo-600/10 to-transparent border border-blue-400/30 space-y-3">
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-slate-50/50 dark:from-blue-600/15 dark:via-indigo-600/10 dark:to-transparent border border-blue-200 dark:border-blue-400/30 space-y-3">
                   <div className="flex items-center justify-between gap-2">
-                    <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                    <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                       <span>💡</span>
                       <span>{currentSlide.title}</span>
                     </h3>
                     {currentSlide.language && (
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase">
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-300 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30 uppercase">
                         {currentSlide.language}
                       </span>
                     )}
                   </div>
 
-                  <div className="text-xs sm:text-sm text-slate-200 leading-relaxed whitespace-pre-wrap">
+                  <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-wrap">
                     {currentSlide.content}
                   </div>
 
                   {currentSlide.codeSnippet && (
-                    <pre className="p-3 rounded-xl bg-black/50 text-emerald-300 text-xs font-mono overflow-x-auto border border-white/10">
+                    <pre className="p-3 rounded-xl bg-slate-900 text-emerald-400 dark:bg-black/60 dark:text-emerald-300 text-xs font-mono overflow-x-auto border border-slate-800 dark:border-white/10">
                       <code>{currentSlide.codeSnippet}</code>
                     </pre>
                   )}
@@ -594,7 +594,7 @@ export function TopicLearningFlowModal({
                     type="button"
                     onClick={() => setActiveMateriSlideIndex((prev) => Math.max(0, prev - 1))}
                     disabled={activeMateriSlideIndex === 0}
-                    className="py-1.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:pointer-events-none text-xs text-slate-300 font-semibold transition-colors cursor-pointer"
+                    className="py-1.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 disabled:opacity-40 disabled:pointer-events-none text-xs text-slate-700 dark:text-slate-300 font-semibold border border-slate-200 dark:border-white/10 transition-colors cursor-pointer"
                   >
                     ← Bagian Sebelumnya
                   </button>
@@ -604,7 +604,7 @@ export function TopicLearningFlowModal({
                       setActiveMateriSlideIndex((prev) => Math.min(materiSlides.length - 1, prev + 1))
                     }
                     disabled={activeMateriSlideIndex === materiSlides.length - 1}
-                    className="py-1.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:pointer-events-none text-xs text-blue-300 font-semibold transition-colors cursor-pointer"
+                    className="py-1.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-white/5 dark:hover:bg-white/10 disabled:opacity-40 disabled:pointer-events-none text-xs text-blue-700 dark:text-blue-300 font-semibold border border-blue-200 dark:border-white/10 transition-colors cursor-pointer"
                   >
                     Bagian Berikutnya →
                   </button>
@@ -613,13 +613,13 @@ export function TopicLearningFlowModal({
 
               {/* Project / Scratch Template Link (if available) */}
               {topic.project_link && (
-                <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-400/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-400/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                   <div>
-                    <div className="flex items-center gap-1.5 text-xs font-bold text-amber-300">
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-amber-800 dark:text-amber-300">
                       <span>💻</span>
                       <span>Proyek / Template Starter</span>
                     </div>
-                    <p className="text-xs text-slate-300 mt-0.5">
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
                       Buka lembar kerja proyek Scratch atau kode latihan di tab baru.
                     </p>
                   </div>
@@ -640,20 +640,20 @@ export function TopicLearningFlowModal({
           {/* ── STEP 2: MIMO INTERACTIVE PRACTICE ─────────────────────────── */}
           {currentStep === 'mimo' && currentMimo && (
             <div className="space-y-4 animate-in fade-in slide-in-from-right-3 duration-200">
-              <div className="flex items-center justify-between text-xs text-slate-400 font-semibold">
+              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-semibold">
                 <span>Latihan Cepat {mimoCurrentIndex + 1} dari {mimoQuestions.length}</span>
-                <span className="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">
+                <span className="px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-500/30 font-bold">
                   ⚡ Mimo Practice
                 </span>
               </div>
 
               {/* Question Card */}
-              <div className="p-5 rounded-2xl bg-white/5 border border-white/10 space-y-3">
-                <h3 className="text-sm sm:text-base font-bold text-white leading-snug">
+              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 space-y-3">
+                <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug">
                   {currentMimo.question}
                 </h3>
                 {currentMimo.codeSnippet && (
-                  <pre className="p-3 rounded-xl bg-black/40 text-emerald-300 text-xs font-mono overflow-x-auto border border-white/10">
+                  <pre className="p-3 rounded-xl bg-slate-900 text-emerald-400 dark:bg-black/40 dark:text-emerald-300 text-xs font-mono overflow-x-auto border border-slate-800 dark:border-white/10">
                     <code>{currentMimo.codeSnippet}</code>
                   </pre>
                 )}
@@ -666,16 +666,17 @@ export function TopicLearningFlowModal({
                   const isCorrect = idx === currentMimo.correctIndex;
                   const showFeedback = mimoFeedback !== null;
 
-                  let optClass = 'bg-white/5 border-white/10 text-slate-200 hover:bg-white/10';
+                  let optClass =
+                    'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/10 shadow-xs dark:shadow-none';
                   if (showFeedback && isSelected) {
                     if (isCorrect) {
                       optClass =
-                        'bg-emerald-500/25 border-emerald-400 text-emerald-100 shadow-[0_0_15px_rgba(52,211,153,0.3)]';
+                        'bg-emerald-50 dark:bg-emerald-500/25 border-emerald-500 text-emerald-900 dark:text-emerald-100 shadow-[0_0_15px_rgba(52,211,153,0.3)] font-semibold';
                     } else {
-                      optClass = 'bg-rose-500/25 border-rose-400 text-rose-100';
+                      optClass = 'bg-rose-50 dark:bg-rose-500/25 border-rose-500 text-rose-900 dark:text-rose-100 font-semibold';
                     }
                   } else if (showFeedback && isCorrect) {
-                    optClass = 'bg-emerald-500/20 border-emerald-400 text-emerald-100';
+                    optClass = 'bg-emerald-50 dark:bg-emerald-500/20 border-emerald-500 text-emerald-900 dark:text-emerald-100 font-semibold';
                   }
 
                   return (
@@ -699,16 +700,16 @@ export function TopicLearningFlowModal({
 
               {/* Feedback Alert */}
               {mimoFeedback === 'correct' && (
-                <div className="p-4 rounded-xl bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 text-xs flex items-center gap-3 animate-in zoom-in-95">
+                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 dark:bg-emerald-500/20 dark:border-emerald-400/40 dark:text-emerald-200 text-xs flex items-center gap-3 animate-in zoom-in-95">
                   <span className="text-2xl">✨</span>
                   <div className="flex-1">
-                    <span className="font-bold block text-emerald-100">Hebat! Jawabanmu Tepat!</span>
+                    <span className="font-bold block text-emerald-950 dark:text-emerald-100">Hebat! Jawabanmu Tepat!</span>
                     <span>{currentMimo.explanation}</span>
                   </div>
                 </div>
               )}
               {mimoFeedback === 'wrong' && (
-                <div className="p-3.5 rounded-xl bg-rose-500/15 border border-rose-400/30 text-rose-200 text-xs flex items-center gap-2.5">
+                <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 dark:bg-rose-500/15 dark:border-rose-400/30 dark:text-rose-200 text-xs flex items-center gap-2.5">
                   <span className="text-xl">💡</span>
                   <span>Hampir tepat! Coba teliti lagi dan pilih jawaban yang paling sesuai.</span>
                 </div>
@@ -719,15 +720,15 @@ export function TopicLearningFlowModal({
           {/* ── STEP 3: 5 QUIZZES ─────────────────────────────────────────── */}
           {currentStep === 'quiz' && (
             <div className="space-y-4 animate-in fade-in slide-in-from-right-3 duration-200">
-              <div className="flex items-center justify-between text-xs text-slate-400 font-semibold">
+              <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-semibold">
                 <span>Evaluasi Pemahaman ({quizQuestions.length} Soal)</span>
-                <span className="px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 font-bold">
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-800 border border-blue-200 dark:bg-blue-500/20 dark:text-blue-300 dark:border-blue-500/30 font-bold">
                   {Object.keys(quizAnswers).length} / {quizQuestions.length} Terjawab
                 </span>
               </div>
 
               {quizLoading ? (
-                <div className="py-12 text-center text-slate-400 text-xs space-y-2">
+                <div className="py-12 text-center text-slate-500 dark:text-slate-400 text-xs space-y-2">
                   <div className="w-8 h-8 mx-auto border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                   <p>Memuat soal kuis...</p>
                 </div>
@@ -745,13 +746,13 @@ export function TopicLearningFlowModal({
                     return (
                       <div
                         key={q.id}
-                        className="p-4 sm:p-5 rounded-2xl bg-white/5 border border-white/10 space-y-3"
+                        className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 space-y-3"
                       >
                         <div className="flex items-start gap-2.5">
-                          <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <span className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center flex-shrink-0 mt-0.5 shadow-xs">
                             {qIndex + 1}
                           </span>
-                          <h4 className="text-xs sm:text-sm font-semibold text-white leading-relaxed">
+                          <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white leading-relaxed">
                             {q.question_text}
                           </h4>
                         </div>
@@ -766,13 +767,13 @@ export function TopicLearningFlowModal({
                                 onClick={() => handleSelectQuizAnswer(q.id, opt.key)}
                                 className={`p-3 rounded-xl border text-left text-xs font-medium transition-all flex items-center gap-2 cursor-pointer ${
                                   isChosen
-                                    ? 'bg-blue-600/30 border-blue-400 text-blue-100 shadow-[0_0_12px_rgba(59,130,246,0.25)]'
-                                    : 'bg-black/20 border-white/5 text-slate-300 hover:bg-white/10'
+                                    ? 'bg-blue-50 dark:bg-blue-600/30 border-blue-500 dark:border-blue-400 text-blue-950 dark:text-blue-100 shadow-[0_0_12px_rgba(59,130,246,0.25)] ring-2 ring-blue-500/30 font-semibold'
+                                    : 'bg-white dark:bg-black/20 border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10 shadow-xs dark:shadow-none'
                                 }`}
                               >
                                 <span
                                   className={`w-5 h-5 rounded-md text-[11px] font-bold flex items-center justify-center ${
-                                    isChosen ? 'bg-blue-500 text-white' : 'bg-white/10 text-slate-400'
+                                    isChosen ? 'bg-blue-600 text-white' : 'bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-400'
                                   }`}
                                 >
                                   {opt.key}
@@ -798,33 +799,33 @@ export function TopicLearningFlowModal({
               </div>
 
               <div className="space-y-1">
-                <h3 className="text-xl sm:text-2xl font-black text-white">
+                <h3 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
                   Luar Biasa, Kamu Berhasil! 🎉
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-400">
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                   Kamu telah menyelesaikan materi dan kuis untuk topik ini.
                 </p>
               </div>
 
               {/* Score Breakdown Card */}
-              <div className="max-w-xs mx-auto p-4 rounded-2xl bg-white/5 border border-white/10 grid grid-cols-2 gap-3 text-center">
-                <div className="p-2 rounded-xl bg-black/30">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">Skor Kuis</span>
-                  <div className="text-2xl font-black text-emerald-400">
+              <div className="max-w-xs mx-auto p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 grid grid-cols-2 gap-3 text-center">
+                <div className="p-2 rounded-xl bg-white dark:bg-black/30 border border-slate-200/80 dark:border-transparent shadow-xs dark:shadow-none">
+                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Skor Kuis</span>
+                  <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
                     {quizResult.score}
                     <span className="text-xs text-slate-400 font-normal">/100</span>
                   </div>
                 </div>
-                <div className="p-2 rounded-xl bg-black/30">
-                  <span className="text-[10px] uppercase font-bold text-slate-400">Jawaban Benar</span>
-                  <div className="text-2xl font-black text-blue-400">
+                <div className="p-2 rounded-xl bg-white dark:bg-black/30 border border-slate-200/80 dark:border-transparent shadow-xs dark:shadow-none">
+                  <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400">Jawaban Benar</span>
+                  <div className="text-2xl font-black text-blue-600 dark:text-blue-400">
                     {quizResult.correct}
                     <span className="text-xs text-slate-400 font-normal">/{quizResult.total}</span>
                   </div>
                 </div>
               </div>
 
-              <p className="text-xs text-emerald-300 font-medium">
+              <p className="text-xs text-emerald-700 dark:text-emerald-300 font-semibold">
                 ⭐ Topik ini kini selalu bisa kamu buka dan review kapan saja di Quest Map!
               </p>
             </div>
@@ -832,13 +833,13 @@ export function TopicLearningFlowModal({
         </div>
 
         {/* ── FOOTER ACTION BUTTONS ────────────────────────────────────────── */}
-        <div className="p-4 border-t border-[var(--glass-border)] bg-slate-900/80 backdrop-blur-md flex items-center justify-between gap-3">
+        <div className="p-4 border-t border-slate-200/80 dark:border-[var(--glass-border)] bg-slate-50/90 dark:bg-slate-900/80 backdrop-blur-md flex items-center justify-between gap-3">
           {currentStep === 'materi' && (
             <>
               <button
                 type="button"
                 onClick={onClose}
-                className="py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 font-semibold text-xs transition-colors cursor-pointer"
+                className="py-2.5 px-4 rounded-xl bg-slate-200/80 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 font-semibold text-xs border border-slate-300/80 dark:border-white/10 transition-colors cursor-pointer"
               >
                 Tutup
               </button>
@@ -858,7 +859,7 @@ export function TopicLearningFlowModal({
               <button
                 type="button"
                 onClick={() => setCurrentStep('materi')}
-                className="py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 font-semibold text-xs transition-colors cursor-pointer"
+                className="py-2.5 px-4 rounded-xl bg-slate-200/80 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 font-semibold text-xs border border-slate-300/80 dark:border-white/10 transition-colors cursor-pointer"
               >
                 Kembali ke Materi
               </button>
@@ -869,7 +870,7 @@ export function TopicLearningFlowModal({
                 className={`flex-1 sm:flex-initial py-2.5 px-6 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all ${
                   mimoFeedback === 'correct'
                     ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30 cursor-pointer'
-                    : 'bg-white/10 text-slate-500 cursor-not-allowed'
+                    : 'bg-slate-200 text-slate-400 dark:bg-white/10 dark:text-slate-500 cursor-not-allowed'
                 }`}
               >
                 <span>
@@ -884,7 +885,7 @@ export function TopicLearningFlowModal({
               <button
                 type="button"
                 onClick={() => setCurrentStep('mimo')}
-                className="py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 font-semibold text-xs transition-colors cursor-pointer"
+                className="py-2.5 px-4 rounded-xl bg-slate-200/80 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 font-semibold text-xs border border-slate-300/80 dark:border-white/10 transition-colors cursor-pointer"
               >
                 Kembali ke Latihan
               </button>
@@ -913,7 +914,7 @@ export function TopicLearningFlowModal({
                 onClick={() => {
                   setCurrentStep('materi');
                 }}
-                className="flex-1 py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 font-semibold text-xs transition-colors cursor-pointer"
+                className="flex-1 py-2.5 px-4 rounded-xl bg-slate-200/80 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 font-semibold text-xs border border-slate-300/80 dark:border-white/10 transition-colors cursor-pointer"
               >
                 🔄 Ulangi Materi / Review
               </button>

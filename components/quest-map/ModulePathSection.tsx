@@ -29,11 +29,11 @@ interface ModulePathSectionProps {
 }
 
 const LEVEL_COLORS: Record<string, string> = {
-  beginner: 'bg-green-100 text-green-700 ring-green-600/20',
-  intermediate: 'bg-orange-100 text-orange-700 ring-orange-600/20',
-  advance: 'bg-red-100 text-red-700 ring-red-600/20',
-  advanced: 'bg-red-100 text-red-700 ring-red-600/20',
-  master: 'bg-purple-100 text-purple-700 ring-purple-600/20',
+  beginner: 'bg-emerald-100 text-emerald-800 ring-emerald-600/20 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-500/30',
+  intermediate: 'bg-amber-100 text-amber-800 ring-amber-600/20 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-500/30',
+  advance: 'bg-rose-100 text-rose-800 ring-rose-600/20 dark:bg-rose-950/60 dark:text-rose-300 dark:ring-rose-500/30',
+  advanced: 'bg-rose-100 text-rose-800 ring-rose-600/20 dark:bg-rose-950/60 dark:text-rose-300 dark:ring-rose-500/30',
+  master: 'bg-purple-100 text-purple-800 ring-purple-600/20 dark:bg-purple-950/60 dark:text-purple-300 dark:ring-purple-500/30',
 };
 
 function findFirstActiveIndex(
@@ -78,7 +78,7 @@ function ModulePathSectionInner({
     topics.length > 0 ? Math.round((unlockedCount / topics.length) * 100) : 0;
   const levelClass =
     LEVEL_COLORS[module.level?.toLowerCase()] ??
-    'bg-blue-100 text-blue-700 ring-blue-600/20';
+    'bg-blue-100 text-blue-800 ring-blue-600/20 dark:bg-blue-950/60 dark:text-blue-300 dark:ring-blue-500/30';
 
   const activeIndex = findFirstActiveIndex(topics, topicProgress, quizAttempts);
 
@@ -92,22 +92,22 @@ function ModulePathSectionInner({
     <div
       className={[
         'rounded-2xl border overflow-hidden transition-all',
-        isModuleLocked ? 'opacity-50' : '',
+        isModuleLocked ? 'opacity-55' : '',
       ].join(' ')}
       style={{
         background: 'var(--glass-bg)',
         borderColor: isModuleComplete
-          ? '#84cc16'
+          ? '#10b981'
           : isModuleLocked
-            ? 'rgba(128,128,128,0.3)'
+            ? 'rgba(128,128,128,0.25)'
             : 'var(--glass-border)',
         boxShadow: isModuleLocked ? 'none' : 'var(--glass-shadow)',
       }}
     >
       {/* ── Module header ─────────────────────────────────────────────── */}
       <div
-        className="px-5 py-4 border-b"
-        style={{ borderColor: 'var(--glass-border)', background: 'rgba(0,0,0,0.15)' }}
+        className="px-5 py-4 border-b bg-slate-50/75 dark:bg-slate-900/40"
+        style={{ borderColor: 'var(--glass-border)' }}
       >
         <div className="flex items-center justify-between gap-3 mb-2">
           <div className="flex items-center gap-2 min-w-0">
@@ -129,18 +129,17 @@ function ModulePathSectionInner({
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <span
-              className={`text-[10px] font-bold px-2 py-0.5 rounded-full ring-1 ring-inset capitalize ${levelClass}`}
+              className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ring-1 ring-inset capitalize ${levelClass}`}
             >
               {module.level}
             </span>
             <span
-              className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-              style={{
-                background: isModuleComplete
-                  ? 'rgba(132,204,22,0.2)'
-                  : 'rgba(128,128,128,0.15)',
-                color: isModuleComplete ? '#84cc16' : 'var(--text-muted)',
-              }}
+              className={[
+                'text-[10px] font-bold px-2 py-0.5 rounded-full border',
+                isModuleComplete
+                  ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-700/50'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700',
+              ].join(' ')}
             >
               {unlockedCount}/{topics.length}
             </span>
@@ -148,20 +147,17 @@ function ModulePathSectionInner({
         </div>
 
         {/* Progress bar */}
-        <div
-          className="h-1.5 rounded-full overflow-hidden"
-          style={{ background: 'rgba(128,128,128,0.2)' }}
-        >
+        <div className="h-1.5 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700/60">
           <div
             className="h-full rounded-full transition-all duration-700"
             style={{
               width: `${progressPercent}%`,
-              background: isModuleComplete ? '#84cc16' : 'var(--accent)',
+              background: isModuleComplete ? '#10b981' : 'var(--accent)',
             }}
           />
         </div>
         {isModuleLocked && (
-          <p className="text-xs mt-2 text-slate-400">
+          <p className="text-xs mt-2 text-slate-500 dark:text-slate-400 font-medium">
             🔒 Modul ini terkunci. Ikuti kelas untuk membuka topik pembelajaran di bab ini.
           </p>
         )}

@@ -129,32 +129,13 @@ function TopicNodeInner({
   // ── Visual config per state ──────────────────────────────────────────────
   const nodeStyles: Record<NodeState, string> = {
     locked:
-      'bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 cursor-pointer hover:scale-105 opacity-65 hover:opacity-90 transition-all',
+      'bg-slate-100 dark:bg-slate-800/60 border-slate-300 dark:border-slate-700/80 cursor-pointer hover:scale-105 opacity-70 hover:opacity-95 transition-all text-slate-400 dark:text-slate-500',
     unlocked:
-      'border-sky-400 dark:border-sky-500 cursor-pointer hover:scale-105 hover:border-sky-300',
+      'bg-sky-50 dark:bg-sky-950/30 border-2 border-sky-500 dark:border-sky-400 cursor-pointer hover:scale-105 hover:border-sky-600 dark:hover:border-sky-300 transition-all shadow-[0_0_12px_rgba(14,165,233,0.25)]',
     active:
-      'border-2 cursor-pointer hover:scale-105 animate-bounce',
+      'border-2 cursor-pointer hover:scale-105 animate-bounce bg-blue-50/90 dark:bg-purple-950/40 border-blue-600 dark:border-purple-400 shadow-[0_0_18px_rgba(59,130,246,0.4)] dark:shadow-[0_0_18px_rgba(168,85,247,0.4)]',
     completed:
-      'border-2 cursor-pointer hover:scale-105',
-  };
-
-  const nodeColorStyle: Record<NodeState, React.CSSProperties> = {
-    locked: {},
-    unlocked: {
-      background: 'rgba(14,165,233,0.12)',
-      borderColor: '#38bdf8',
-      boxShadow: '0 0 10px rgba(56,189,248,0.3)',
-    },
-    active: {
-      background: 'rgba(var(--accent-rgb, 168,85,247),0.15)',
-      borderColor: 'var(--accent)',
-      boxShadow: '0 0 14px var(--accent-glow)',
-    },
-    completed: {
-      background: 'rgba(132,204,22,0.15)',
-      borderColor: '#84cc16',
-      boxShadow: '0 0 10px rgba(132,204,22,0.25)',
-    },
+      'bg-emerald-50 dark:bg-emerald-950/30 border-2 border-emerald-600 dark:border-emerald-400 cursor-pointer hover:scale-105 transition-all shadow-[0_0_12px_rgba(16,185,129,0.25)]',
   };
 
   const handleNodeClick = () => {
@@ -176,31 +157,37 @@ function TopicNodeInner({
         onClick={handleNodeClick}
         aria-label={`${topic.order_index}. ${topic.title} — ${state}`}
         className={[
-          'w-14 h-14 rounded-2xl border flex items-center justify-center text-2xl',
+          'w-14 h-14 rounded-2xl flex items-center justify-center text-2xl',
           'transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
           'focus-visible:ring-[color:var(--accent)] cursor-pointer',
           nodeStyles[state],
         ].join(' ')}
-        style={nodeColorStyle[state]}
       >
         {NODE_ICONS[state]}
       </button>
 
       {/* ── Node index badge ─────────────────────────────────────────────── */}
       <span
-        className="text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center"
-        style={{
-          background: state === 'completed' ? '#84cc16' : state === 'active' ? 'var(--accent)' : 'rgba(128,128,128,0.2)',
-          color: state === 'locked' ? 'var(--text-muted)' : '#fff',
-        }}
+        className={[
+          'text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center shadow-xs',
+          state === 'completed'
+            ? 'bg-emerald-600 text-white'
+            : state === 'active'
+              ? 'bg-brand-primary text-white ring-2 ring-blue-400/40'
+              : state === 'unlocked'
+                ? 'bg-sky-600 dark:bg-sky-500 text-white'
+                : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 border border-slate-300 dark:border-slate-600',
+        ].join(' ')}
       >
         {nodeIndex + 1}
       </span>
 
       {/* ── Topic title ──────────────────────────────────────────────────── */}
       <p
-        className="text-center text-[11px] font-medium leading-tight max-w-[80px] line-clamp-2 cursor-pointer"
-        style={{ color: state === 'locked' ? 'var(--text-muted)' : 'var(--text-secondary)' }}
+        className="text-center text-[11px] font-semibold leading-tight max-w-[84px] line-clamp-2 cursor-pointer transition-colors"
+        style={{
+          color: state === 'locked' ? 'var(--text-muted)' : 'var(--text-primary)',
+        }}
         title={topic.title}
         onClick={handleNodeClick}
       >
@@ -214,22 +201,33 @@ function TopicNodeInner({
           <button
             type="button"
             onClick={handleNodeClick}
-            className="text-[10px] font-medium px-2 py-0.5 rounded-full transition-colors bg-white/5 text-slate-400 hover:bg-white/10 cursor-pointer"
+            className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full transition-colors bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 cursor-pointer"
           >
             🔒 Terkunci
+          </button>
+        ) : state === 'completed' ? (
+          <button
+            type="button"
+            onClick={handleNodeClick}
+            className="text-[10px] font-bold px-2.5 py-0.5 rounded-full transition-colors bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/60 dark:hover:bg-emerald-900/60 dark:text-emerald-300 dark:border-emerald-600/50 cursor-pointer"
+          >
+            ▶ Review
+          </button>
+        ) : state === 'active' ? (
+          <button
+            type="button"
+            onClick={handleNodeClick}
+            className="text-[10px] font-bold px-2.5 py-0.5 rounded-full transition-colors bg-brand-primary hover:brightness-110 text-white shadow-sm shadow-brand-primary/30 cursor-pointer"
+          >
+            🚀 Mulai!
           </button>
         ) : (
           <button
             type="button"
             onClick={handleNodeClick}
-            className="text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors focus:outline-none focus-visible:ring-1 cursor-pointer"
-            style={{
-              background: state === 'completed' ? 'rgba(132,204,22,0.25)' : 'var(--accent)',
-              color: state === 'completed' ? '#84cc16' : '#fff',
-              border: state === 'completed' ? '1px solid #84cc16' : 'none',
-            }}
+            className="text-[10px] font-bold px-2.5 py-0.5 rounded-full transition-colors bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400 text-white shadow-sm cursor-pointer"
           >
-            {state === 'active' ? '🚀 Mulai!' : state === 'completed' ? '▶ Review' : '▶ Buka'}
+            ▶ Buka
           </button>
         )}
 
@@ -238,8 +236,7 @@ function TopicNodeInner({
           quizMaxed ? (
             // Max attempts used — show score badge, no more retries
             <span
-              className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-              style={{ background: 'rgba(132,204,22,0.2)', color: '#84cc16' }}
+              className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-700/50"
             >
               Quiz ✓ {quizAttempt?.score ?? 0}
             </span>
@@ -248,12 +245,7 @@ function TopicNodeInner({
             <button
               type="button"
               onClick={() => onOpenQuiz?.(topic.quiz!)}
-              className="text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-colors focus:outline-none focus-visible:ring-1"
-              style={{
-                borderColor: '#38bdf8',
-                color: '#38bdf8',
-                background: 'rgba(56,189,248,0.1)',
-              }}
+              className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-sky-300 dark:border-sky-500/60 bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/50 transition-colors cursor-pointer"
             >
               {quizAttempt ? `Quiz (${attemptsUsed}/2)` : 'Quiz'}
             </button>
@@ -263,8 +255,7 @@ function TopicNodeInner({
         {/* Coming soon badge — engine_topic_id linked but lesson not published yet */}
         {topic.engine_topic_id && !canStartEngine && state !== 'locked' && (
           <span
-            className="text-[10px] px-2 py-0.5 rounded-full"
-            style={{ background: 'rgba(251,191,36,0.15)', color: '#fbbf24' }}
+            className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700/50"
           >
             ⏳ Segera
           </span>

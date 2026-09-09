@@ -41,6 +41,7 @@
 
   /* Accent */
   --accent:       #3b82f6;
+  --accent-rgb:   59, 130, 246;
   --accent-light: #60a5fa;
   --accent-dark:  #2563eb;
   --accent-glow:  rgba(59,130,246,0.28);
@@ -155,6 +156,7 @@
 
   /* Accent */
   --accent:       #a855f7;
+  --accent-rgb:   168, 85, 247;
   --accent-light: #c084fc;
   --accent-dark:  #9333ea;
   --accent-glow:  rgba(168,85,247,0.42);

@@ -60,33 +60,33 @@ export function TopicLockModal({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header decoration */}
-        <div className="relative p-6 text-center border-b border-[var(--glass-border)] bg-gradient-to-b from-amber-500/15 via-transparent to-transparent">
+        <div className="relative p-6 text-center border-b border-slate-200/80 dark:border-[var(--glass-border)] bg-gradient-to-b from-amber-500/15 via-transparent to-transparent">
           <button
             type="button"
             onClick={onClose}
-            className="absolute top-4 right-4 text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition-colors"
+            className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-colors cursor-pointer"
             aria-label="Tutup modal"
           >
             ✕
           </button>
 
-          <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(245,158,11,0.25)] animate-pulse">
+          <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-amber-100 border border-amber-300 dark:bg-amber-500/20 dark:border-amber-400/40 flex items-center justify-center text-3xl shadow-[0_0_20px_rgba(245,158,11,0.25)] animate-pulse">
             🔒
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-[11px] font-bold tracking-wide uppercase mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-amber-100 border border-amber-300 dark:bg-amber-500/20 dark:border-amber-400/40 text-amber-800 dark:text-amber-300 text-[11px] font-bold tracking-wide uppercase mb-2">
             <span>Materi Terkunci</span>
           </div>
 
           <h3
             id="lock-modal-title"
-            className="text-lg sm:text-xl font-black text-white leading-tight"
+            className="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-tight"
           >
             {nodeIndex + 1}. {topic.title}
           </h3>
 
           {moduleTitle && (
-            <p className="text-xs text-slate-400 mt-1 font-medium">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">
               Bagian dari {moduleTitle}
             </p>
           )}
@@ -95,33 +95,33 @@ export function TopicLockModal({
         {/* Content Body */}
         <div className="p-6 space-y-4 text-left">
           {topic.description ? (
-            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+              <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1">
                 Tentang Topik Ini:
               </p>
-              <p className="text-xs text-slate-300 leading-relaxed line-clamp-4">
+              <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed line-clamp-4">
                 {topic.description.replace(/<[^>]*>?/gm, '')}
               </p>
             </div>
           ) : (
-            <div className="p-3.5 rounded-xl bg-white/5 border border-white/10">
-              <p className="text-xs text-slate-300 leading-relaxed">
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+              <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed">
                 Materi seru dan tantangan koding menunggumu di topik ini!
               </p>
             </div>
           )}
 
-          <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-400/30 flex items-start gap-3">
+          <div className="p-4 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-400/30 flex items-start gap-3">
             <span className="text-xl flex-shrink-0" aria-hidden="true">💡</span>
-            <div className="text-xs leading-relaxed text-blue-200">
-              <span className="font-bold text-blue-100 block mb-0.5">Cara Membuka Topik Ini:</span>
-              Ikuti sesi kelas belajarmu dan klik tombol <span className="font-bold text-white">"Bergabung Sekarang"</span> di tab Jadwal Belajar. Topik akan otomatis terbuka!
+            <div className="text-xs leading-relaxed text-blue-800 dark:text-blue-200">
+              <span className="font-bold text-blue-900 dark:text-blue-100 block mb-0.5">Cara Membuka Topik Ini:</span>
+              Ikuti sesi kelas belajarmu dan klik tombol <span className="font-bold text-blue-950 dark:text-white">"Bergabung Sekarang"</span> di tab Jadwal Belajar. Topik akan otomatis terbuka!
             </div>
           </div>
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-[var(--glass-border)] bg-black/20 flex flex-col sm:flex-row gap-2.5">
+        <div className="p-4 border-t border-slate-200/80 dark:border-[var(--glass-border)] bg-slate-50/80 dark:bg-black/20 flex flex-col sm:flex-row gap-2.5">
           {onGoToSchedule && (
             <button
               type="button"
@@ -138,7 +138,7 @@ export function TopicLockModal({
           <button
             type="button"
             onClick={onClose}
-            className="py-2.5 px-4 rounded-xl bg-white/10 hover:bg-white/15 text-slate-300 font-semibold text-xs transition-colors cursor-pointer"
+            className="py-2.5 px-4 rounded-xl bg-slate-200/80 hover:bg-slate-300 dark:bg-white/10 dark:hover:bg-white/15 text-slate-700 dark:text-slate-300 font-semibold text-xs border border-slate-300/80 dark:border-white/10 transition-colors cursor-pointer"
           >
             Tutup
           </button>

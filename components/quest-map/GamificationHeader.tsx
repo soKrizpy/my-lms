@@ -54,8 +54,8 @@ export function GamificationHeader({
     >
       {/* ── Header row ─────────────────────────────────────────────────── */}
       <div
-        className="flex items-center justify-between px-5 py-3 border-b flex-wrap gap-2"
-        style={{ borderColor: 'var(--glass-border)', background: 'rgba(0,0,0,0.15)' }}
+        className="flex items-center justify-between px-5 py-3 border-b flex-wrap gap-2 bg-slate-50/75 dark:bg-slate-900/50"
+        style={{ borderColor: 'var(--glass-border)' }}
       >
         <div className="flex items-center gap-2">
           <span className="text-lg" aria-hidden="true">🗺️</span>
@@ -71,24 +71,18 @@ export function GamificationHeader({
         <button
           type="button"
           onClick={onOpenCustomize}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all hover:scale-105 active:scale-95 group text-left"
-          style={{
-            background: 'rgba(0,0,0,0.3)',
-            borderColor: 'var(--glass-border)',
-            color: 'var(--text-secondary)',
-            boxShadow: '0 0 10px rgba(0,0,0,0.2)',
-          }}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200/90 dark:border-purple-500/40 bg-white/90 dark:bg-slate-900/70 text-xs font-semibold transition-all hover:scale-105 active:scale-95 group text-left shadow-sm dark:shadow-none cursor-pointer"
           title="Klik untuk kustomisasi avatar dan gelarmu!"
         >
           <AvatarDisplay avatarId={avatarId} size="xs" showAura={false} />
           <div className="flex flex-col leading-none">
-            <span className="font-bold text-white flex items-center gap-1.5">
+            <span className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
               <span>{studentName}</span>
-              <span className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-purple-400">
+              <span className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-purple-600 dark:text-purple-400">
                 ✏️
               </span>
             </span>
-            <span className="text-[10px] text-purple-300 font-medium">
+            <span className="text-[10px] text-purple-700 dark:text-purple-300 font-semibold mt-0.5">
               {title.name}
             </span>
           </div>
@@ -96,7 +90,8 @@ export function GamificationHeader({
       </div>
 
       {/* ── Stats row ──────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-4 divide-x divide-white/10"
+      <div
+        className="grid grid-cols-4 divide-x divide-slate-200/80 dark:divide-white/10"
         style={{ borderColor: 'var(--glass-border)' }}
       >
         {/* XP */}
@@ -147,7 +142,8 @@ export function GamificationHeader({
               <circle
                 cx="18" cy="18" r="15"
                 fill="none"
-                stroke="rgba(128,128,128,0.2)"
+                stroke="currentColor"
+                className="text-slate-200 dark:text-slate-700/60"
                 strokeWidth="3"
               />
               <circle
@@ -191,15 +187,15 @@ export function GamificationHeader({
 
       {/* ── Level XP progress bar ───────────────────────────────────────── */}
       <div
-        className="px-5 py-2 border-t"
-        style={{ borderColor: 'var(--glass-border)', background: 'rgba(0,0,0,0.1)' }}
+        className="px-5 py-2 border-t bg-slate-50/60 dark:bg-slate-900/40"
+        style={{ borderColor: 'var(--glass-border)' }}
       >
         <div className="flex items-center justify-between text-[10px] mb-1" style={{ color: 'var(--text-muted)' }}>
-          <span>Level {level}</span>
-          <span>{xpInLevel}/100 XP</span>
-          <span>Level {level + 1}</span>
+          <span className="font-medium">Level {level}</span>
+          <span className="font-semibold">{xpInLevel}/100 XP</span>
+          <span className="font-medium">Level {level + 1}</span>
         </div>
-        <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(128,128,128,0.2)' }}>
+        <div className="h-1.5 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700/60">
           <div
             className="h-full rounded-full transition-all duration-700"
             style={{

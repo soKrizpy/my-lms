@@ -165,17 +165,11 @@ function BadgePanel({ badges }: { badges: Badge[] }) {
             key={badge.id}
             title={badge.description}
             className={[
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all',
-              badge.unlocked ? '' : 'opacity-35 grayscale',
+              'flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all select-none',
+              badge.unlocked
+                ? 'bg-blue-50 border-blue-200 text-blue-900 shadow-xs dark:bg-purple-950/40 dark:border-purple-500/50 dark:text-purple-100 dark:shadow-[0_0_8px_rgba(168,85,247,0.3)]'
+                : 'opacity-40 grayscale bg-slate-100 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400',
             ].join(' ')}
-            style={{
-              background: badge.unlocked
-                ? 'rgba(var(--accent-rgb, 168,85,247), 0.15)'
-                : 'rgba(128,128,128,0.1)',
-              borderColor: badge.unlocked ? 'var(--accent)' : 'rgba(128,128,128,0.3)',
-              color: badge.unlocked ? 'var(--text-primary)' : 'var(--text-muted)',
-              boxShadow: badge.unlocked ? '0 0 8px var(--accent-glow)' : 'none',
-            }}
           >
             <span aria-hidden="true">{badge.icon}</span>
             <span>{badge.label}</span>
@@ -296,16 +290,15 @@ function QuestMapInner({
       {/* All Locked Guidance Banner */}
       {allLocked && (
         <div
-          className="rounded-2xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 animate-in fade-in"
-          style={{ background: 'rgba(56,189,248,0.1)', borderColor: 'rgba(56,189,248,0.3)' }}
+          className="rounded-2xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 animate-in fade-in bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-500/30"
         >
           <div className="flex items-center gap-3">
             <span className="text-2xl flex-shrink-0" aria-hidden="true">🔒</span>
             <div>
-              <p className="font-bold text-xs sm:text-sm text-white">
+              <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
                 Ikuti kelas belajarmu untuk membuka materi
               </p>
-              <p className="text-xs text-slate-300 mt-0.5">
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
                 Klik "Bergabung Sekarang" di tab Jadwal Belajar saat kelas berlangsung untuk mulai membuka materi!
               </p>
             </div>

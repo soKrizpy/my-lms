@@ -109,23 +109,22 @@ export function CustomizeHeroModal({
       >
         {/* ── Header ────────────────────────────────────────────────────────── */}
         <div
-          className="flex items-center justify-between px-6 py-4 border-b"
-          style={{ borderColor: 'var(--glass-border)', background: 'rgba(0,0,0,0.2)' }}
+          className="flex items-center justify-between px-6 py-4 border-b border-slate-200/80 dark:border-[var(--glass-border)] bg-slate-50/75 dark:bg-slate-900/40"
         >
           <div className="flex items-center gap-2">
             <span className="text-xl" aria-hidden="true">🎨</span>
             <div>
-              <h2 className="text-base font-extrabold" style={{ color: 'var(--text-primary, #f8fafc)' }}>
+              <h2 className="text-base font-extrabold text-slate-900 dark:text-white">
                 Kustomisasi Karakter & Gelar
               </h2>
-              <p className="text-xs" style={{ color: 'var(--text-muted, #94a3b8)' }}>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Pilih avatar favorit dan gelar kebanggaanmu untuk ditampilkan di Quest Map!
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-white transition-colors"
+            className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
             aria-label="Tutup modal"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -136,17 +135,13 @@ export function CustomizeHeroModal({
 
         {/* ── Hero Preview Card ─────────────────────────────────────────────── */}
         <div
-          className="px-6 py-4 border-b flex flex-col sm:flex-row items-center gap-4 justify-between"
-          style={{
-            background: `radial-gradient(ellipse at center, ${equippedAvatar.accentColor}15 0%, rgba(0,0,0,0.2) 100%)`,
-            borderColor: 'var(--glass-border)',
-          }}
+          className="px-6 py-4 border-b border-slate-200/80 dark:border-[var(--glass-border)] flex flex-col sm:flex-row items-center gap-4 justify-between bg-slate-50/50 dark:bg-transparent"
         >
           <div className="flex items-center gap-4">
             <AvatarDisplay avatarId={equippedAvatar.id} size="xl" showAura />
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-white">{studentName}</span>
+                <span className="text-lg font-bold text-slate-900 dark:text-white">{studentName}</span>
                 <span
                   className="px-2 py-0.5 rounded-full text-[11px] font-bold border uppercase tracking-wider"
                   style={{
@@ -159,21 +154,16 @@ export function CustomizeHeroModal({
                 </span>
               </div>
               {/* Equipped Title Badge */}
-              <div className="mt-1 flex items-center gap-2">
+              <div className="mt-1 flex items-center gap-2 flex-wrap">
                 <span
-                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-semibold border"
-                  style={{
-                    background: 'rgba(168, 85, 247, 0.15)',
-                    borderColor: 'var(--accent, #a855f7)',
-                    color: 'var(--accent, #c084fc)',
-                  }}
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-semibold border bg-purple-50 text-purple-800 border-purple-200 dark:bg-purple-950/40 dark:border-purple-500/50 dark:text-purple-300"
                 >
                   <span>🎖️</span>
                   <span>{equippedTitle.name}</span>
                 </span>
-                <span className="text-xs text-slate-400">• Level {stats.level}</span>
+                <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">• Level {stats.level}</span>
                 {stats.streak > 0 && (
-                  <span className="text-xs text-amber-400 font-semibold">• 🔥 {stats.streak}x streak</span>
+                  <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold">• 🔥 {stats.streak}x streak</span>
                 )}
               </div>
             </div>
@@ -181,14 +171,14 @@ export function CustomizeHeroModal({
 
           <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             {feedbackMsg && (
-              <span className="text-xs font-semibold text-emerald-400 animate-pulse mr-2">
+              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 animate-pulse mr-2">
                 {feedbackMsg}
               </span>
             )}
             <button
               onClick={handleSaveAndApply}
               disabled={isSaving}
-              className="px-5 py-2 rounded-xl text-xs font-bold text-white shadow-lg transition-all active:scale-95 disabled:opacity-50"
+              className="px-5 py-2 rounded-xl text-xs font-bold text-white shadow-lg transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
               style={{
                 background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)',
                 boxShadow: '0 0 15px rgba(168, 85, 247, 0.4)',
@@ -200,14 +190,14 @@ export function CustomizeHeroModal({
         </div>
 
         {/* ── Main Tab Navigation ───────────────────────────────────────────── */}
-        <div className="px-6 pt-3 border-b flex items-center gap-4" style={{ borderColor: 'var(--glass-border)' }}>
+        <div className="px-6 pt-3 border-b border-slate-200/80 dark:border-[var(--glass-border)] flex items-center gap-4">
           <button
             onClick={() => setActiveTab('avatars')}
             className={[
-              'pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2',
+              'pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 cursor-pointer',
               activeTab === 'avatars'
-                ? 'border-purple-500 text-purple-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200',
+                ? 'border-purple-500 text-purple-600 dark:text-purple-400'
+                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200',
             ].join(' ')}
           >
             Pilihan Avatar ({AVATARS.length})
@@ -215,10 +205,10 @@ export function CustomizeHeroModal({
           <button
             onClick={() => setActiveTab('titles')}
             className={[
-              'pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2',
+              'pb-3 text-xs font-bold uppercase tracking-wider transition-all border-b-2 cursor-pointer',
               activeTab === 'titles'
-                ? 'border-purple-500 text-purple-400'
-                : 'border-transparent text-slate-400 hover:text-slate-200',
+                ? 'border-purple-500 text-purple-600 dark:text-purple-400'
+                : 'border-transparent text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200',
             ].join(' ')}
           >
             Gelar Kebanggaan ({TITLES.length})
@@ -226,16 +216,16 @@ export function CustomizeHeroModal({
         </div>
 
         {/* ── Category Filter Pills ─────────────────────────────────────────── */}
-        <div className="px-6 py-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar border-b border-white/5">
+        <div className="px-6 py-2.5 flex items-center gap-2 overflow-x-auto no-scrollbar border-b border-slate-200/60 dark:border-white/5">
           {categories.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
               className={[
-                'px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 border',
+                'px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 border cursor-pointer',
                 selectedCategory === cat.id
-                  ? 'bg-purple-600/30 border-purple-500 text-purple-200 shadow-[0_0_8px_rgba(168,85,247,0.3)]'
-                  : 'bg-white/5 border-white/10 text-slate-400 hover:text-slate-200 hover:bg-white/10',
+                  ? 'bg-purple-100 border-purple-300 text-purple-900 dark:bg-purple-600/30 dark:border-purple-500 dark:text-purple-200 shadow-xs dark:shadow-[0_0_8px_rgba(168,85,247,0.3)]'
+                  : 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-white/10',
               ].join(' ')}
             >
               <span>{cat.icon}</span>
@@ -260,33 +250,37 @@ export function CustomizeHeroModal({
                     onClick={() => unlocked && handleEquipAvatar(avatar)}
                     className={[
                       'relative p-3.5 rounded-xl border flex flex-col justify-between transition-all select-none',
-                      unlocked ? 'cursor-pointer hover:border-purple-400/60 hover:bg-white/5' : 'opacity-60 bg-black/20',
-                      isSelected ? 'border-purple-500 ring-2 ring-purple-500/40 bg-purple-950/20' : 'border-white/10',
+                      unlocked
+                        ? 'cursor-pointer hover:border-purple-400/60 bg-white dark:bg-white/5 shadow-xs dark:shadow-none'
+                        : 'opacity-60 bg-slate-100 dark:bg-black/20 border-slate-200 dark:border-white/5',
+                      isSelected
+                        ? 'border-purple-500 ring-2 ring-purple-500/40 bg-purple-50/60 dark:bg-purple-950/20'
+                        : 'border-slate-200 dark:border-white/10',
                     ].join(' ')}
                   >
                     <div className="flex items-start gap-3">
                       <AvatarDisplay avatarId={avatar.id} size="lg" isLocked={!unlocked} showAura={unlocked} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between gap-1">
-                          <h4 className="text-xs font-bold text-white truncate">{avatar.name}</h4>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-slate-300 font-medium">
+                          <h4 className="text-xs font-bold text-slate-900 dark:text-white truncate">{avatar.name}</h4>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 font-medium">
                             {catMeta.icon} {catMeta.label}
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                        <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                           {avatar.description}
                         </p>
                       </div>
                     </div>
 
-                    <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between">
-                      <span className="text-[10px] font-medium text-slate-400">
+                    <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-white/5 flex items-center justify-between">
+                      <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
                         {unlocked ? (
-                          <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                          <span className="text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1">
                             <span>✓</span> Terbuka
                           </span>
                         ) : (
-                          <span className="text-amber-400 flex items-center gap-1">
+                          <span className="text-amber-700 dark:text-amber-400 flex items-center gap-1 font-medium">
                             <span>🔒</span> {unlockDesc}
                           </span>
                         )}
@@ -300,10 +294,10 @@ export function CustomizeHeroModal({
                             handleEquipAvatar(avatar);
                           }}
                           className={[
-                            'px-2.5 py-1 rounded-md text-[11px] font-bold transition-all',
+                            'px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer',
                             isSelected
                               ? 'bg-purple-600 text-white shadow-[0_0_8px_rgba(168,85,247,0.5)]'
-                              : 'bg-white/10 hover:bg-white/20 text-slate-200',
+                              : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-transparent',
                           ].join(' ')}
                         >
                           {isSelected ? 'Terpasang' : 'Pilih'}
@@ -328,31 +322,35 @@ export function CustomizeHeroModal({
                     onClick={() => unlocked && handleEquipTitle(title)}
                     className={[
                       'p-3.5 rounded-xl border flex flex-col justify-between transition-all select-none',
-                      unlocked ? 'cursor-pointer hover:border-purple-400/60 hover:bg-white/5' : 'opacity-60 bg-black/20',
-                      isSelected ? 'border-purple-500 ring-2 ring-purple-500/40 bg-purple-950/20' : 'border-white/10',
+                      unlocked
+                        ? 'cursor-pointer hover:border-purple-400/60 bg-white dark:bg-white/5 shadow-xs dark:shadow-none'
+                        : 'opacity-60 bg-slate-100 dark:bg-black/20 border-slate-200 dark:border-white/5',
+                      isSelected
+                        ? 'border-purple-500 ring-2 ring-purple-500/40 bg-purple-50/60 dark:bg-purple-950/20'
+                        : 'border-slate-200 dark:border-white/10',
                     ].join(' ')}
                   >
                     <div>
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
                           <span className="text-sm">🎖️</span>
-                          <h4 className="text-xs font-bold text-white">{title.name}</h4>
+                          <h4 className="text-xs font-bold text-slate-900 dark:text-white">{title.name}</h4>
                         </div>
-                        <span className="text-[10px] px-2 py-0.5 rounded bg-white/10 text-slate-300 font-medium">
+                        <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 font-medium">
                           {catMeta.icon} {catMeta.label}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-400 mt-1.5">{title.description}</p>
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1.5">{title.description}</p>
                     </div>
 
-                    <div className="mt-3 pt-2 border-t border-white/5 flex items-center justify-between">
-                      <span className="text-[10px] font-medium text-slate-400">
+                    <div className="mt-3 pt-2 border-t border-slate-200/60 dark:border-white/5 flex items-center justify-between">
+                      <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
                         {unlocked ? (
-                          <span className="text-emerald-400 font-semibold flex items-center gap-1">
+                          <span className="text-emerald-700 dark:text-emerald-400 font-semibold flex items-center gap-1">
                             <span>✓</span> Terbuka
                           </span>
                         ) : (
-                          <span className="text-amber-400 flex items-center gap-1">
+                          <span className="text-amber-700 dark:text-amber-400 flex items-center gap-1 font-medium">
                             <span>🔒</span> {unlockDesc}
                           </span>
                         )}
@@ -366,10 +364,10 @@ export function CustomizeHeroModal({
                             handleEquipTitle(title);
                           }}
                           className={[
-                            'px-2.5 py-1 rounded-md text-[11px] font-bold transition-all',
+                            'px-2.5 py-1 rounded-md text-[11px] font-bold transition-all cursor-pointer',
                             isSelected
                               ? 'bg-purple-600 text-white shadow-[0_0_8px_rgba(168,85,247,0.5)]'
-                              : 'bg-white/10 hover:bg-white/20 text-slate-200',
+                              : 'bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-transparent',
                           ].join(' ')}
                         >
                           {isSelected ? 'Terpasang' : 'Pilih'}
