@@ -1094,10 +1094,10 @@ export default function StudentDashboard() {
   return (
     <div className="space-y-5 relative">
       {/* Engine Lesson Modal — full-screen iframe overlay */}
-      {engineModal && studentId && (
+      {engineModal && (data?.studentId || studentId) && (
         <EngineModal
           topicId={engineModal.topicId}
-          studentId={studentId}
+          studentId={data?.studentId || studentId}
           lang={locale}
           onClose={() => setEngineModal(null)}
           onComplete={handleEngineComplete}
@@ -1311,6 +1311,7 @@ export default function StudentDashboard() {
                 completedEngineTopics={data.completedEngineTopics ?? 0}
                 onOpenQuiz={(quiz) => setActiveQuiz(quiz)}
                 onUpdateProfile={handleUpdateProfile}
+                onGoToSchedule={() => setActiveTab("jadwal")}
               />
               {activeQuiz && (
                 <QuizModal

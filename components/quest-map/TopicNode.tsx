@@ -31,6 +31,8 @@ export interface TopicNodeTopic {
   order_index: number;
   engine_topic_id: string | null;
   isUnlocked: boolean;
+  description?: string | null;
+  project_link?: string | null;
   status?: string | null;
   lesson_content?: unknown;
   quiz: { id: number; title: string } | null;
@@ -42,6 +44,7 @@ interface TopicNodeProps {
   topicProgress: TopicProgress[];
   onStartLesson?: (engineTopicId: string) => void;
   onOpenQuiz?: (quiz: { id: number; title: string }) => void;
+  onSelectTopic?: (topic: TopicNodeTopic) => void;
   quizAttempts: QuizAttempt[];
   nodeIndex: number;
 }
@@ -101,6 +104,7 @@ function TopicNodeInner({
   topicProgress,
   onStartLesson,
   onOpenQuiz,
+  onSelectTopic,
   quizAttempts,
   nodeIndex,
 }: TopicNodeProps) {
@@ -125,7 +129,7 @@ function TopicNodeInner({
   // ── Visual config per state ──────────────────────────────────────────────
   const nodeStyles: Record<NodeState, string> = {
     locked:
-      'bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 cursor-not-allowed opacity-60',
+      'bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-600 cursor-pointer hover:scale-105 opacity-65 hover:opacity-90 transition-all',
     unlocked:
       'border-sky-400 dark:border-sky-500 cursor-pointer hover:scale-105 hover:border-sky-300',
     active:
@@ -154,6 +158,10 @@ function TopicNodeInner({
   };
 
   const handleNodeClick = () => {
+    if (onSelectTopic) {
+      onSelectTopic(topic);
+      return;
+    }
     if (state === 'locked') return;
     if (canStartEngine && onStartLesson) {
       onStartLesson(topic.engine_topic_id!);
@@ -166,12 +174,11 @@ function TopicNodeInner({
       <button
         type="button"
         onClick={handleNodeClick}
-        disabled={state === 'locked'}
         aria-label={`${topic.order_index}. ${topic.title} — ${state}`}
         className={[
           'w-14 h-14 rounded-2xl border flex items-center justify-center text-2xl',
           'transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2',
-          'focus-visible:ring-[color:var(--accent)]',
+          'focus-visible:ring-[color:var(--accent)] cursor-pointer',
           nodeStyles[state],
         ].join(' ')}
         style={nodeColorStyle[state]}
@@ -192,29 +199,37 @@ function TopicNodeInner({
 
       {/* ── Topic title ──────────────────────────────────────────────────── */}
       <p
-        className="text-center text-[11px] font-medium leading-tight max-w-[80px] line-clamp-2"
+        className="text-center text-[11px] font-medium leading-tight max-w-[80px] line-clamp-2 cursor-pointer"
         style={{ color: state === 'locked' ? 'var(--text-muted)' : 'var(--text-secondary)' }}
         title={topic.title}
+        onClick={handleNodeClick}
       >
         {topic.title}
       </p>
 
       {/* ── Action buttons row ───────────────────────────────────────────── */}
       <div className="flex flex-col items-center gap-1 min-h-[20px]">
-
-        {/* Engine lesson button — show for ALL non-locked topics with engine link */}
-        {canStartEngine && (
+        {/* State CTA Button */}
+        {state === 'locked' ? (
           <button
             type="button"
-            onClick={() => onStartLesson?.(topic.engine_topic_id!)}
-            className="text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors focus:outline-none focus-visible:ring-1"
+            onClick={handleNodeClick}
+            className="text-[10px] font-medium px-2 py-0.5 rounded-full transition-colors bg-white/5 text-slate-400 hover:bg-white/10 cursor-pointer"
+          >
+            🔒 Terkunci
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleNodeClick}
+            className="text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors focus:outline-none focus-visible:ring-1 cursor-pointer"
             style={{
               background: state === 'completed' ? 'rgba(132,204,22,0.25)' : 'var(--accent)',
               color: state === 'completed' ? '#84cc16' : '#fff',
               border: state === 'completed' ? '1px solid #84cc16' : 'none',
             }}
           >
-            {state === 'active' ? '🚀 Mulai!' : state === 'completed' ? '▶ Review' : '▶ Lanjut'}
+            {state === 'active' ? '🚀 Mulai!' : state === 'completed' ? '▶ Review' : '▶ Buka'}
           </button>
         )}
 

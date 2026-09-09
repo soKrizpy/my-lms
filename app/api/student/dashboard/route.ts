@@ -310,6 +310,7 @@ export async function GET() {
       topicProgress: Array.isArray(topicProgress) ? topicProgress : [],
       streak: streakResult.currentStreak,
       maxStreak: streakResult.maxStreak,
+      studentId,
     };
 
     console.log(`Dashboard: Success - student ${studentId}, modules: ${responsePayload.modules.length}, xp: ${responsePayload.engineXpTotal}, avatar: ${avatarId}`);
@@ -323,6 +324,7 @@ export async function GET() {
     
     // Return partial/default data rather than crashing to prevent Server Component render errors
     const fallbackResponse = {
+      studentId: "",
       upcomingMeetings: [],
       pastMeetings: [],
       modules: [],

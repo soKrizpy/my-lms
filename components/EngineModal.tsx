@@ -29,7 +29,20 @@ export function EngineModal({ topicId, studentId, lang, onClose, onComplete }: E
   const theme = resolvedTheme === 'light' ? 'light' : 'dark';
   const [isCompleted, setIsCompleted] = useState(false);
   const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [hasTimedOut, setHasTimedOut] = useState(false);
+  const [iframeKey, setIframeKey] = useState(0);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Watchdog timer: 8 seconds timeout for iframe load
+  useEffect(() => {
+    if (iframeLoaded) return;
+    const timer = setTimeout(() => {
+      if (!iframeLoaded) {
+        setHasTimedOut(true);
+      }
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [iframeLoaded, iframeKey]);
 
   // Build iframe URL via same-origin rewrite: /learning/* → engine
   // All params are passed as query string so engine can read them via useUrlParams()
@@ -190,8 +203,8 @@ export function EngineModal({ topicId, studentId, lang, onClose, onComplete }: E
         </div>
       </header>
 
-      {/* ── Loading skeleton shown until iframe fires onLoad ─────────── */}
-      {!iframeLoaded && (
+      {/* ── Loading skeleton or Timeout Fallback ─────────── */}
+      {!iframeLoaded && !hasTimedOut && (
         <div
           className="flex-shrink-0 flex items-center justify-center gap-3 py-4 text-sm"
           style={{ color: 'var(--text-muted)', background: 'var(--background)' }}
@@ -206,8 +219,53 @@ export function EngineModal({ topicId, studentId, lang, onClose, onComplete }: E
         </div>
       )}
 
+      {hasTimedOut && !iframeLoaded && (
+        <div
+          className="p-4 mx-4 mt-3 rounded-2xl border flex flex-col sm:flex-row items-center justify-between gap-3 shadow-lg z-20"
+          style={{ background: 'rgba(239,68,68,0.1)', borderColor: 'rgba(239,68,68,0.3)' }}
+        >
+          <div className="flex items-center gap-3 text-left">
+            <span className="text-2xl" aria-hidden="true">⚠️</span>
+            <div>
+              <p className="text-xs sm:text-sm font-bold text-white">
+                {lang === 'en'
+                  ? 'Lesson Engine is taking longer than usual to load.'
+                  : 'Lesson Engine membutuhkan waktu lebih lama untuk memuat.'}
+              </p>
+              <p className="text-[11px] text-slate-300">
+                {lang === 'en'
+                  ? 'You can retry or open the lesson directly in a new tab.'
+                  : 'Kamu dapat mencoba memuat ulang atau membukanya di tab baru.'}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <a
+              href={engineUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="py-1.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs transition-colors cursor-pointer"
+            >
+              {lang === 'en' ? 'Open in New Tab ↗' : 'Buka di Tab Baru ↗'}
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                setHasTimedOut(false);
+                setIframeLoaded(false);
+                setIframeKey((prev) => prev + 1);
+              }}
+              className="py-1.5 px-3 rounded-xl bg-brand-primary text-white font-bold text-xs hover:brightness-110 transition-all cursor-pointer"
+            >
+              {lang === 'en' ? 'Retry 🔄' : 'Coba Lagi 🔄'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── Engine iframe — fills all remaining space ─────────────────── */}
       <iframe
+        key={iframeKey}
         src={engineUrl}
         title={lang === 'en' ? 'Lesson Engine' : 'Mesin Belajar'}
         className="flex-1 w-full border-0"

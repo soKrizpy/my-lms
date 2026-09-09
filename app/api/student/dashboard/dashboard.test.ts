@@ -1316,8 +1316,8 @@ describe('Dashboard API - Bug Condition Exploration', () => {
         errorMsg = error?.message || String(error);
       }
 
-      // Assert: Should crash on unfixed code
-      expect(threwError).toBe(true);
+      // Assert: Dashboard should handle gracefully without crashing
+      expect(threwError).toBe(false);
     });
 
     /**
@@ -1381,8 +1381,8 @@ describe('Dashboard API - Bug Condition Exploration', () => {
         threwError = true;
       }
 
-      // Assert: Should crash on unfixed code
-      expect(threwError).toBe(true);
+      // Assert: Dashboard should handle gracefully without crashing
+      expect(threwError).toBe(false);
     });
 
     /**
@@ -1446,8 +1446,8 @@ describe('Dashboard API - Bug Condition Exploration', () => {
         threwError = true;
       }
 
-      // Assert: Should crash on unfixed code
-      expect(threwError).toBe(true);
+      // Assert: Dashboard should handle gracefully without crashing
+      expect(threwError).toBe(false);
     });
 
     /**
@@ -1511,8 +1511,8 @@ describe('Dashboard API - Bug Condition Exploration', () => {
         threwError = true;
       }
 
-      // Assert: Should crash on unfixed code
-      expect(threwError).toBe(true);
+      // Assert: Dashboard should handle gracefully without crashing
+      expect(threwError).toBe(false);
     });
 
     /**
@@ -1576,8 +1576,8 @@ describe('Dashboard API - Bug Condition Exploration', () => {
         threwError = true;
       }
 
-      // Assert: Should crash on unfixed code
-      expect(threwError).toBe(true);
+      // Assert: Dashboard should handle gracefully without crashing
+      expect(threwError).toBe(false);
     });
   });
 });

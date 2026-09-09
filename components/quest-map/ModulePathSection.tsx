@@ -25,6 +25,7 @@ interface ModulePathSectionProps {
   quizAttempts: QuizAttempt[];
   onStartLesson?: (engineTopicId: string) => void;
   onOpenQuiz?: (quiz: { id: number; title: string }) => void;
+  onSelectTopic?: (topic: TopicNodeTopic, moduleTitle: string, nodeIndex: number) => void;
 }
 
 const LEVEL_COLORS: Record<string, string> = {
@@ -69,6 +70,7 @@ function ModulePathSectionInner({
   quizAttempts,
   onStartLesson,
   onOpenQuiz,
+  onSelectTopic,
 }: ModulePathSectionProps) {
   const { topics, isModuleLocked, isModuleComplete } = module;
   const unlockedCount = topics.filter((t) => t.isUnlocked).length;
@@ -146,116 +148,114 @@ function ModulePathSectionInner({
         </div>
 
         {/* Progress bar */}
-        {!isModuleLocked && (
+        <div
+          className="h-1.5 rounded-full overflow-hidden"
+          style={{ background: 'rgba(128,128,128,0.2)' }}
+        >
           <div
-            className="h-1.5 rounded-full overflow-hidden"
-            style={{ background: 'rgba(128,128,128,0.2)' }}
-          >
-            <div
-              className="h-full rounded-full transition-all duration-700"
-              style={{
-                width: `${progressPercent}%`,
-                background: isModuleComplete ? '#84cc16' : 'var(--accent)',
-              }}
-            />
-          </div>
-        )}
+            className="h-full rounded-full transition-all duration-700"
+            style={{
+              width: `${progressPercent}%`,
+              background: isModuleComplete ? '#84cc16' : 'var(--accent)',
+            }}
+          />
+        </div>
         {isModuleLocked && (
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-            Selesaikan module sebelumnya untuk membuka ini.
+          <p className="text-xs mt-2 text-slate-400">
+            🔒 Modul ini terkunci. Ikuti kelas untuk membuka topik pembelajaran di bab ini.
           </p>
         )}
       </div>
 
-      {/* ── Topic nodes ───────────────────────────────────────────────── */}
-      {!isModuleLocked && (
-        <div className="p-5">
-          {/* ── Mobile: single column ──────────────────────────────── */}
-          <div className="flex flex-col items-center gap-6 lg:hidden">
-            {topics.map((topic, idx) => (
-              <React.Fragment key={topic.id}>
-                <TopicNode
-                  topic={topic}
-                  isCurrentActive={idx === activeIndex}
-                  topicProgress={topicProgress}
-                  quizAttempts={quizAttempts}
-                  onStartLesson={onStartLesson}
-                  onOpenQuiz={onOpenQuiz}
-                  nodeIndex={idx}
+      {/* ── Topic nodes (always rendered dynamically) ─────────────────── */}
+      <div className="p-5">
+        {/* ── Mobile: single column ──────────────────────────────── */}
+        <div className="flex flex-col items-center gap-6 lg:hidden">
+          {topics.map((topic, idx) => (
+            <React.Fragment key={topic.id}>
+              <TopicNode
+                topic={topic}
+                isCurrentActive={idx === activeIndex}
+                topicProgress={topicProgress}
+                quizAttempts={quizAttempts}
+                onStartLesson={onStartLesson}
+                onOpenQuiz={onOpenQuiz}
+                onSelectTopic={(t) => onSelectTopic?.(t, module.title, idx)}
+                nodeIndex={idx}
+              />
+              {/* Connector */}
+              {idx < topics.length - 1 && (
+                <div
+                  className="w-0.5 h-6 rounded-full"
+                  style={{
+                    background: topic.isUnlocked
+                      ? 'var(--accent)'
+                      : 'rgba(128,128,128,0.3)',
+                  }}
+                  aria-hidden="true"
                 />
-                {/* Connector */}
-                {idx < topics.length - 1 && (
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+
+        {/* ── Desktop: zigzag 3-column ────────────────────────────── */}
+        <div className="hidden lg:flex flex-col items-center gap-8">
+          {rows.map((row, rowIdx) => {
+            // Alternate direction: even rows go left→right, odd rows right→left
+            const reversed = rowIdx % 2 === 1;
+            const orderedRow = reversed ? [...row].reverse() : row;
+            const startIdx = rowIdx * 3;
+
+            return (
+              <React.Fragment key={rowIdx}>
+                {/* Connector from previous row */}
+                {rowIdx > 0 && (
                   <div
                     className="w-0.5 h-6 rounded-full"
-                    style={{
-                      background: topic.isUnlocked
-                        ? 'var(--accent)'
-                        : 'rgba(128,128,128,0.3)',
-                    }}
+                    style={{ background: 'rgba(128,128,128,0.3)' }}
                     aria-hidden="true"
                   />
                 )}
-              </React.Fragment>
-            ))}
-          </div>
 
-          {/* ── Desktop: zigzag 3-column ────────────────────────────── */}
-          <div className="hidden lg:flex flex-col items-center gap-8">
-            {rows.map((row, rowIdx) => {
-              // Alternate direction: even rows go left→right, odd rows right→left
-              const reversed = rowIdx % 2 === 1;
-              const orderedRow = reversed ? [...row].reverse() : row;
-              const startIdx = rowIdx * 3;
-
-              return (
-                <React.Fragment key={rowIdx}>
-                  {/* Connector from previous row */}
-                  {rowIdx > 0 && (
-                    <div
-                      className="w-0.5 h-6 rounded-full"
-                      style={{ background: 'rgba(128,128,128,0.3)' }}
-                      aria-hidden="true"
-                    />
-                  )}
-
-                  {/* Node row */}
-                  <div className="grid grid-cols-3 gap-8 w-full max-w-sm">
-                    {orderedRow.map((topic, colIdx) => {
-                      // Map back to original index for active detection
-                      const originalIdx = reversed
+                {/* Node row */}
+                <div className="grid grid-cols-3 gap-8 w-full max-w-sm">
+                  {orderedRow.map((topic, colIdx) => {
+                    // Map back to original index for active detection
+                    const originalIdx = reversed
                         ? startIdx + (row.length - 1 - colIdx)
                         : startIdx + colIdx;
-                      return (
-                        <div key={topic.id} className="flex flex-col items-center">
-                          <TopicNode
-                            topic={topic}
-                            isCurrentActive={originalIdx === activeIndex}
-                            topicProgress={topicProgress}
-                            quizAttempts={quizAttempts}
-                            onStartLesson={onStartLesson}
-                            onOpenQuiz={onOpenQuiz}
-                            nodeIndex={originalIdx}
-                          />
-                        </div>
-                      );
-                    })}
-                    {/* Fill empty cells in last row */}
-                    {orderedRow.length < 3 &&
-                      Array.from({ length: 3 - orderedRow.length }).map((_, i) => (
-                        <div key={`empty-${i}`} aria-hidden="true" />
-                      ))}
-                  </div>
+                    return (
+                      <div key={topic.id} className="flex flex-col items-center">
+                        <TopicNode
+                          topic={topic}
+                          isCurrentActive={originalIdx === activeIndex}
+                          topicProgress={topicProgress}
+                          quizAttempts={quizAttempts}
+                          onStartLesson={onStartLesson}
+                          onOpenQuiz={onOpenQuiz}
+                          onSelectTopic={(t) => onSelectTopic?.(t, module.title, originalIdx)}
+                          nodeIndex={originalIdx}
+                        />
+                      </div>
+                    );
+                  })}
+                  {/* Fill empty cells in last row */}
+                  {orderedRow.length < 3 &&
+                    Array.from({ length: 3 - orderedRow.length }).map((_, i) => (
+                      <div key={`empty-${i}`} aria-hidden="true" />
+                    ))}
+                </div>
 
-                  {/* Horizontal connector line between nodes */}
-                  {row.length > 1 && (
-                    <div className="hidden" aria-hidden="true" />
-                  )}
-                </React.Fragment>
-              );
-            })}
-          </div>
+                {/* Horizontal connector line between nodes */}
+                {row.length > 1 && (
+                  <div className="hidden" aria-hidden="true" />
+                )}
+              </React.Fragment>
+            );
+          })}
         </div>
-      )}
+      </div>
     </div>
   );
 }

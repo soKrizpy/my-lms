@@ -8,6 +8,8 @@ import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { GamificationHeader } from './GamificationHeader';
 import { ModulePathSection } from './ModulePathSection';
 import { CustomizeHeroModal } from '@/components/avatar/CustomizeHeroModal';
+import { TopicLearningFlowModal } from './TopicLearningFlowModal';
+import { TopicLockModal } from './TopicLockModal';
 import type { TopicNodeTopic, TopicProgress, QuizAttempt } from './TopicNode';
 
 // ── Badge definitions ─────────────────────────────────────────────────────────
@@ -98,6 +100,7 @@ interface QuestMapProps {
   completedEngineTopics: number;
   onOpenQuiz?: (quiz: { id: number; title: string }) => void;
   onUpdateProfile?: (avatarId: string, titleId: string) => Promise<boolean> | void;
+  onGoToSchedule?: () => void;
 }
 
 // ── Confetti using animejs ────────────────────────────────────────────────────
@@ -190,6 +193,7 @@ function QuestMapInner({
   quizAttempts,
   topicProgress,
   onStartLesson,
+  onRefresh,
   studentName,
   avatarId,
   titleId,
@@ -200,9 +204,23 @@ function QuestMapInner({
   completedEngineTopics,
   onOpenQuiz,
   onUpdateProfile,
+  onGoToSchedule,
 }: QuestMapProps) {
   const prevCompletedRef = useRef(completedEngineTopics);
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
+
+  // Dynamic Modals State
+  const [selectedUnlockedTopic, setSelectedUnlockedTopic] = useState<{
+    topic: TopicNodeTopic;
+    moduleTitle: string;
+    nodeIndex: number;
+  } | null>(null);
+
+  const [selectedLockedTopic, setSelectedLockedTopic] = useState<{
+    topic: TopicNodeTopic;
+    moduleTitle: string;
+    nodeIndex: number;
+  } | null>(null);
 
   // Trigger confetti when a new topic is completed
   useEffect(() => {
@@ -222,6 +240,17 @@ function QuestMapInner({
   const handleOpenQuiz = useCallback(
     (quiz: { id: number; title: string }) => onOpenQuiz?.(quiz),
     [onOpenQuiz]
+  );
+
+  const handleSelectTopic = useCallback(
+    (topic: TopicNodeTopic, moduleTitle: string, nodeIndex: number) => {
+      if (topic.isUnlocked) {
+        setSelectedUnlockedTopic({ topic, moduleTitle, nodeIndex });
+      } else {
+        setSelectedLockedTopic({ topic, moduleTitle, nodeIndex });
+      }
+    },
+    []
   );
 
   const studentLevel = Math.floor(engineXpTotal / 100) + 1;
@@ -244,24 +273,8 @@ function QuestMapInner({
     );
   }
 
-  // All modules locked
+  // All modules locked indicator
   const allLocked = modules.every((m) => m.isModuleLocked);
-  if (allLocked) {
-    return (
-      <div
-        className="rounded-2xl border p-10 text-center"
-        style={{ background: 'var(--glass-bg)', borderColor: 'var(--glass-border)' }}
-      >
-        <p className="text-3xl mb-3" aria-hidden="true">🔒</p>
-        <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
-          Ikuti kelas untuk membuka materi
-        </p>
-        <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
-          Bergabung ke kelas pertamamu untuk mulai belajar!
-        </p>
-      </div>
-    );
-  }
 
   return (
     <div id="quest-map-root" className="space-y-4">
@@ -279,6 +292,35 @@ function QuestMapInner({
         completedTopics={completedEngineTopics}
         onOpenCustomize={() => setIsCustomizeOpen(true)}
       />
+
+      {/* All Locked Guidance Banner */}
+      {allLocked && (
+        <div
+          className="rounded-2xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 animate-in fade-in"
+          style={{ background: 'rgba(56,189,248,0.1)', borderColor: 'rgba(56,189,248,0.3)' }}
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-2xl flex-shrink-0" aria-hidden="true">🔒</span>
+            <div>
+              <p className="font-bold text-xs sm:text-sm text-white">
+                Ikuti kelas belajarmu untuk membuka materi
+              </p>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Klik "Bergabung Sekarang" di tab Jadwal Belajar saat kelas berlangsung untuk mulai membuka materi!
+              </p>
+            </div>
+          </div>
+          {onGoToSchedule && (
+            <button
+              type="button"
+              onClick={onGoToSchedule}
+              className="py-2 px-3.5 rounded-xl bg-brand-primary text-white text-xs font-bold whitespace-nowrap hover:brightness-110 active:scale-95 transition-all shadow-md shadow-brand-primary/20 flex-shrink-0 cursor-pointer self-start sm:self-auto"
+            >
+              Buka Jadwal ➔
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Hero Customization Modal */}
       <CustomizeHeroModal
@@ -314,9 +356,32 @@ function QuestMapInner({
             quizAttempts={quizAttempts}
             onStartLesson={handleStartLesson}
             onOpenQuiz={handleOpenQuiz}
+            onSelectTopic={handleSelectTopic}
           />
         ))}
       </div>
+
+      {/* ── Duolingo / Mimo Style Learning Flow Modal ──────────────────────── */}
+      <TopicLearningFlowModal
+        isOpen={Boolean(selectedUnlockedTopic)}
+        onClose={() => setSelectedUnlockedTopic(null)}
+        topic={selectedUnlockedTopic?.topic ?? null}
+        moduleTitle={selectedUnlockedTopic?.moduleTitle}
+        nodeIndex={selectedUnlockedTopic?.nodeIndex}
+        topicProgress={topicProgress}
+        quizAttempts={quizAttempts}
+        onQuizCompleted={onRefresh}
+      />
+
+      {/* ── Locked Topic Preview Modal ─────────────────────────────────────── */}
+      <TopicLockModal
+        isOpen={Boolean(selectedLockedTopic)}
+        onClose={() => setSelectedLockedTopic(null)}
+        topic={selectedLockedTopic?.topic ?? null}
+        moduleTitle={selectedLockedTopic?.moduleTitle}
+        nodeIndex={selectedLockedTopic?.nodeIndex}
+        onGoToSchedule={onGoToSchedule}
+      />
     </div>
   );
 }
