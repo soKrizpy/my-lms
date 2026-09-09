@@ -6,6 +6,8 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import { getSupabaseAdmin } from '../../../lib/supabaseAdmin';
+import { AvatarDisplay } from '@/components/avatar/AvatarDisplay';
+import { getTitleById } from '@/lib/gamification/catalog';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface TopicProgressItem {
@@ -35,7 +37,12 @@ interface InvoiceItem {
 }
 
 interface ParentReportData {
-  student: { full_name: string | null; grade: string | null };
+  student: {
+    full_name: string | null;
+    grade: string | null;
+    avatar_id?: string | null;
+    title_id?: string | null;
+  };
   topicProgress: TopicProgressItem[];
   meetings: MeetingItem[];
   invoice: InvoiceItem | null;
@@ -59,10 +66,10 @@ async function fetchParentData(token: string): Promise<ParentReportData | null> 
 
   const studentId = link.student_id as string;
 
-  // 2. Student name + grade only (no PII)
+  // 2. Student name + grade + avatar + title
   const { data: student } = await admin
     .from('students')
-    .select('full_name, grade')
+    .select('full_name, grade, avatar_id, title_id')
     .eq('id', studentId)
     .maybeSingle();
 
@@ -177,13 +184,25 @@ export default async function ParentReportPage({
             <span style={{ fontWeight: 900, fontSize: '1.25rem', color: '#2563eb', letterSpacing: '-0.03em' }}>BITS2BYTES</span>
             <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', color: '#7c3aed', background: '#f5f3ff', padding: '0.2rem 0.6rem', borderRadius: '9999px', border: '1px solid #ddd6fe' }}>Laporan Siswa</span>
           </div>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>
-            {student.full_name ?? '—'}
-          </h1>
-          {student.grade && (
-            <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.25rem' }}>{student.grade}</p>
-          )}
-          <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.5rem' }}>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem', marginBottom: '0.5rem' }}>
+            <AvatarDisplay avatarId={student?.avatar_id} size="xl" showAura />
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: '#1e293b', margin: 0 }}>
+                  {student?.full_name ?? '—'}
+                </h1>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#7c3aed', background: '#f3e8ff', border: '1px solid #d8b4fe', padding: '0.2rem 0.5rem', borderRadius: '9999px' }}>
+                  🎖️ {getTitleById(student?.title_id || 'novice-coder').name}
+                </span>
+              </div>
+              {student?.grade && (
+                <p style={{ fontSize: '0.875rem', color: '#64748b', marginTop: '0.25rem', marginBottom: 0 }}>{student.grade}</p>
+              )}
+            </div>
+          </div>
+
+          <p style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: '0.5rem', marginBottom: 0 }}>
             Link berlaku hingga {new Date(expiresAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
           </p>
         </div>

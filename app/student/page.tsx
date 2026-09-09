@@ -7,6 +7,8 @@ import { MagicalCounter } from "@/components/MagicalCounter";
 import { useLmsEngineListener } from "@/lib/useLmsEngineListener";
 import { EngineModal } from "@/components/EngineModal";
 import { QuestMap } from "@/components/quest-map/QuestMap";
+import { AvatarDisplay } from "@/components/avatar/AvatarDisplay";
+import { getTitleById } from "@/lib/gamification/catalog";
 import { supabase } from "@/lib/supabaseClient";
 import { useTranslations } from "next-intl";
 
@@ -1004,6 +1006,9 @@ export default function StudentDashboard() {
         quizAttempts: Array.isArray(json.quizAttempts) ? json.quizAttempts : [],
         announcement: json.announcement ?? null,
         studentName: json.studentName || "Siswa",
+        avatarId: json.avatarId || "pixel-bot",
+        titleId: json.titleId || "novice-coder",
+        bestQuizScore: typeof json.bestQuizScore === "number" ? json.bestQuizScore : 0,
         engineXpTotal: typeof json.engineXpTotal === "number" ? json.engineXpTotal : 0,
         completedEngineTopics: typeof json.completedEngineTopics === "number" ? json.completedEngineTopics : 0,
         topicProgress: Array.isArray(json.topicProgress) ? json.topicProgress : [],
@@ -1021,6 +1026,26 @@ export default function StudentDashboard() {
       setData(null);
     } finally {
       setLoading(false);
+    }
+  }, []);
+
+  const handleUpdateProfile = useCallback(async (newAvatarId: string, newTitleId: string) => {
+    try {
+      const res = await fetch("/api/student/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ avatarId: newAvatarId, titleId: newTitleId }),
+      });
+      if (res.ok) {
+        setData((prev: any) =>
+          prev ? { ...prev, avatarId: newAvatarId, titleId: newTitleId } : prev
+        );
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("Failed to update profile:", err);
+      return false;
     }
   }, []);
 
@@ -1104,17 +1129,27 @@ export default function StudentDashboard() {
           <div className="absolute top-4 left-1/2 text-white/90 dark:text-cyan-300/80 text-xs pointer-events-none animate-bounce" style={{ animationDuration: '5s' }}>⋆</div>
 
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-            <div className="space-y-1.5">
-              <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/20 dark:bg-purple-600/30 border border-white/35 dark:border-purple-400/50 text-white dark:text-purple-200 text-xs font-semibold backdrop-blur-md shadow-sm mb-0.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-300 dark:text-pink-400 animate-spin" style={{ animationDuration: '6s' }} />
-                <span className="tracking-wide">Student Quest Portal</span>
+            <div className="flex items-center gap-4">
+              <AvatarDisplay avatarId={data.avatarId} size="xl" showAura />
+              <div className="space-y-1.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/20 dark:bg-purple-600/30 border border-white/35 dark:border-purple-400/50 text-white dark:text-purple-200 text-xs font-semibold backdrop-blur-md shadow-sm">
+                    <Sparkles className="w-3 h-3 text-amber-300 dark:text-pink-400 animate-spin" style={{ animationDuration: '6s' }} />
+                    <span className="tracking-wide">Student Quest Portal</span>
+                  </div>
+                  {/* Equipped Title Badge */}
+                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-500/30 border border-purple-400/60 text-purple-100 text-xs font-bold backdrop-blur-md shadow-sm">
+                    <span>🎖️</span>
+                    <span>{getTitleById(data.titleId).name}</span>
+                  </div>
+                </div>
+                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)]">
+                  {t('greeting', { name: data.studentName })} <span className="inline-block hover:scale-125 transition-transform cursor-default animate-bounce" style={{ animationDuration: '3s' }}>✨</span>
+                </h1>
+                <p className="text-sm text-blue-100/95 dark:text-purple-200/90 max-w-lg leading-relaxed font-medium">
+                  {t('greetingSubline')}
+                </p>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)]">
-                {t('greeting', { name: data.studentName })} <span className="inline-block hover:scale-125 transition-transform cursor-default animate-bounce" style={{ animationDuration: '3s' }}>✨</span>
-              </h1>
-              <p className="text-sm text-blue-100/95 dark:text-purple-200/90 max-w-lg leading-relaxed font-medium">
-                {t('greetingSubline')}
-              </p>
             </div>
 
             {/* Live Stats Magical Badges */}
@@ -1127,7 +1162,7 @@ export default function StudentDashboard() {
                 <div>
                   <div className="text-[11px] uppercase tracking-wider text-blue-100 dark:text-purple-300/80 font-bold">{t('stats.completed')}</div>
                   <div className="text-base font-black text-white tabular-nums flex items-center gap-1">
-                    <MagicalCounter value={data.pastMeetings?.filter((m: any) => m.is_completed)?.length || 0} />
+                    <MagicalCounter value={data.pastMeetings?.filter((m: Meeting) => m.is_completed)?.length || 0} />
                     <span className="text-xs font-medium text-blue-100/90 dark:text-slate-300">{t('stats.sessions')}</span>
                   </div>
                 </div>
@@ -1267,11 +1302,15 @@ export default function StudentDashboard() {
                 onStartLesson={(eid) => setEngineModal({ topicId: eid })}
                 onRefresh={fetchData}
                 studentName={data.studentName || "Siswa"}
+                avatarId={data.avatarId}
+                titleId={data.titleId}
+                bestQuizScore={data.bestQuizScore}
                 engineXpTotal={data.engineXpTotal ?? 0}
                 streak={data.streak ?? 0}
                 maxStreak={data.maxStreak ?? 0}
                 completedEngineTopics={data.completedEngineTopics ?? 0}
                 onOpenQuiz={(quiz) => setActiveQuiz(quiz)}
+                onUpdateProfile={handleUpdateProfile}
               />
               {activeQuiz && (
                 <QuizModal

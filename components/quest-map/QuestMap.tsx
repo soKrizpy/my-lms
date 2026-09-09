@@ -4,9 +4,10 @@
 // Main Quest Map component — assembles GamificationHeader + ModulePathSections.
 // Replaces the LearningPath accordion in the student dashboard "learning" tab.
 
-import React, { memo, useCallback, useEffect, useRef } from 'react';
+import React, { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { GamificationHeader } from './GamificationHeader';
 import { ModulePathSection } from './ModulePathSection';
+import { CustomizeHeroModal } from '@/components/avatar/CustomizeHeroModal';
 import type { TopicNodeTopic, TopicProgress, QuizAttempt } from './TopicNode';
 
 // ── Badge definitions ─────────────────────────────────────────────────────────
@@ -88,11 +89,15 @@ interface QuestMapProps {
   onStartLesson?: (engineTopicId: string) => void;
   onRefresh: () => void;
   studentName: string;
+  avatarId?: string | null;
+  titleId?: string | null;
+  bestQuizScore?: number;
   engineXpTotal: number;
   streak: number;
   maxStreak: number;
   completedEngineTopics: number;
   onOpenQuiz?: (quiz: { id: number; title: string }) => void;
+  onUpdateProfile?: (avatarId: string, titleId: string) => Promise<boolean> | void;
 }
 
 // ── Confetti using animejs ────────────────────────────────────────────────────
@@ -186,13 +191,18 @@ function QuestMapInner({
   topicProgress,
   onStartLesson,
   studentName,
+  avatarId,
+  titleId,
+  bestQuizScore,
   engineXpTotal,
   streak,
   maxStreak,
   completedEngineTopics,
   onOpenQuiz,
+  onUpdateProfile,
 }: QuestMapProps) {
   const prevCompletedRef = useRef(completedEngineTopics);
+  const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
 
   // Trigger confetti when a new topic is completed
   useEffect(() => {
@@ -213,6 +223,8 @@ function QuestMapInner({
     (quiz: { id: number; title: string }) => onOpenQuiz?.(quiz),
     [onOpenQuiz]
   );
+
+  const studentLevel = Math.floor(engineXpTotal / 100) + 1;
 
   // Empty state
   if (modules.length === 0) {
@@ -259,10 +271,34 @@ function QuestMapInner({
       {/* Gamification header */}
       <GamificationHeader
         studentName={studentName}
+        avatarId={avatarId}
+        titleId={titleId}
         xpTotal={engineXpTotal}
         streak={streak}
         maxStreak={maxStreak}
         completedTopics={completedEngineTopics}
+        onOpenCustomize={() => setIsCustomizeOpen(true)}
+      />
+
+      {/* Hero Customization Modal */}
+      <CustomizeHeroModal
+        isOpen={isCustomizeOpen}
+        onClose={() => setIsCustomizeOpen(false)}
+        studentName={studentName}
+        currentAvatarId={avatarId || 'pixel-bot'}
+        currentTitleId={titleId || 'novice-coder'}
+        stats={{
+          level: studentLevel,
+          xp: engineXpTotal,
+          streak,
+          maxStreak,
+          bestQuizScore: bestQuizScore ?? 0,
+        }}
+        onSaveProfile={async (newAvatarId, newTitleId) => {
+          if (onUpdateProfile) {
+            await onUpdateProfile(newAvatarId, newTitleId);
+          }
+        }}
       />
 
       {/* Achievement badges */}

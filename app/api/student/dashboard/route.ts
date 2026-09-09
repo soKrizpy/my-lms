@@ -269,6 +269,31 @@ export async function GET() {
     const studentName = user.user_metadata?.full_name || "Siswa";
     const firstName = studentName.split(" ")[0];
 
+    // 9. Student customisation (avatar & title)
+    let avatarId = user.user_metadata?.avatar_id || "pixel-bot";
+    let titleId = user.user_metadata?.title_id || "novice-coder";
+
+    try {
+      const { data: studentData } = await supabaseAdmin
+        .from("students")
+        .select("avatar_id, title_id")
+        .eq("id", studentId)
+        .maybeSingle();
+
+      if (studentData) {
+        if (studentData.avatar_id) avatarId = studentData.avatar_id;
+        if (studentData.title_id) titleId = studentData.title_id;
+      }
+    } catch (studentErr) {
+      console.warn("Could not query avatar/title from students table:", studentErr);
+    }
+
+    // 10. Best quiz score for achievement evaluation
+    const bestQuizScore = (quizAttempts || []).reduce((max: number, qa: any) => {
+      const score = typeof qa?.score === "number" ? qa.score : 0;
+      return score > max ? score : max;
+    }, 0);
+
     // Validate and sanitize response structure before returning
     const responsePayload = {
       upcomingMeetings: Array.isArray(upcomingMeetings) ? upcomingMeetings : [],
@@ -277,6 +302,9 @@ export async function GET() {
       quizAttempts: Array.isArray(quizAttempts) ? quizAttempts : [],
       announcement: announcement ?? null,
       studentName: firstName || "Siswa",
+      avatarId,
+      titleId,
+      bestQuizScore,
       engineXpTotal: typeof engineXpTotal === "number" ? engineXpTotal : 0,
       completedEngineTopics: typeof completedEngineTopics === "number" ? completedEngineTopics : 0,
       topicProgress: Array.isArray(topicProgress) ? topicProgress : [],
@@ -284,7 +312,7 @@ export async function GET() {
       maxStreak: streakResult.maxStreak,
     };
 
-    console.log(`Dashboard: Success - student ${studentId}, modules: ${responsePayload.modules.length}, xp: ${responsePayload.engineXpTotal}`);
+    console.log(`Dashboard: Success - student ${studentId}, modules: ${responsePayload.modules.length}, xp: ${responsePayload.engineXpTotal}, avatar: ${avatarId}`);
     return NextResponse.json(responsePayload);
   } catch (err) {
     console.error("Dashboard API fatal error:", {
@@ -301,6 +329,9 @@ export async function GET() {
       quizAttempts: [],
       announcement: null,
       studentName: "Siswa",
+      avatarId: "pixel-bot",
+      titleId: "novice-coder",
+      bestQuizScore: 0,
       engineXpTotal: 0,
       completedEngineTopics: 0,
       topicProgress: [],

@@ -15,13 +15,19 @@ export async function GET(
     // 1. Student profile
     const { data: student, error: studentError } = await supabaseAdmin
       .from("students")
-      .select("id, email_or_phone, full_name, grade, bio, mpin, created_at")
+      .select("id, email_or_phone, full_name, grade, bio, mpin, created_at, avatar_id, title_id")
       .eq("id", studentId)
       .single();
 
     if (studentError || !student) {
       return NextResponse.json({ error: "Siswa tidak ditemukan." }, { status: 404 });
     }
+
+    const sanitizedStudent = {
+      ...student,
+      avatar_id: student.avatar_id || "pixel-bot",
+      title_id: student.title_id || "novice-coder",
+    };
 
     // 2. Assigned modules
     const { data: studentModules } = await supabaseAdmin
@@ -142,7 +148,7 @@ export async function GET(
     }));
 
     return NextResponse.json({
-      student,
+      student: sanitizedStudent,
       modules: modulesWithTopics,
       meetings,
       quizAttempts: formattedAttempts,

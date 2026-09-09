@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { AvatarDisplay } from "@/components/avatar/AvatarDisplay";
+import { getTitleById } from "@/lib/gamification/catalog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface TopicDetail {
@@ -56,6 +58,8 @@ interface StudentDetail {
   bio: string | null;
   mpin: string;
   created_at: string;
+  avatar_id?: string;
+  title_id?: string;
 }
 
 interface StudentDetailData {
@@ -268,14 +272,17 @@ export default function StudentDetailPanel({ studentId, onClose, onEdit, onDelet
           ) : data ? (
             <div className="flex items-center gap-3">
               {/* Avatar */}
-              <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
-                {data.student.full_name?.charAt(0)?.toUpperCase() || "?"}
-              </div>
+              <AvatarDisplay avatarId={data.student.avatar_id} size="lg" showAura className="flex-shrink-0" />
               <div className="min-w-0 flex-1">
-                <h2 className="text-base font-semibold text-white truncate">
-                  {data.student.full_name}
-                </h2>
-                <p className="text-xs text-slate-400 truncate">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-base font-semibold text-white truncate">
+                    {data.student.full_name}
+                  </h2>
+                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                    🎖️ {getTitleById(data.student.title_id || 'novice-coder').name}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400 truncate mt-0.5">
                   {data.student.email_or_phone} · {data.student.grade || "Kelas —"}
                 </p>
               </div>

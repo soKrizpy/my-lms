@@ -7,13 +7,18 @@
 
 import React from 'react';
 import { MagicalCounter } from '@/components/MagicalCounter';
+import { AvatarDisplay } from '@/components/avatar/AvatarDisplay';
+import { getTitleById } from '@/lib/gamification/catalog';
 
 interface GamificationHeaderProps {
   studentName: string;
+  avatarId?: string | null;
+  titleId?: string | null;
   xpTotal: number;
   streak: number;
   maxStreak: number;
   completedTopics: number;
+  onOpenCustomize?: () => void;
 }
 
 function calcLevel(xp: number): { level: number; xpInLevel: number; xpToNext: number } {
@@ -26,13 +31,17 @@ function calcLevel(xp: number): { level: number; xpInLevel: number; xpToNext: nu
 
 export function GamificationHeader({
   studentName,
+  avatarId,
+  titleId,
   xpTotal,
   streak,
   maxStreak,
   completedTopics,
+  onOpenCustomize,
 }: GamificationHeaderProps) {
   const { level, xpInLevel, xpToNext } = calcLevel(xpTotal);
   const progressPercent = Math.round((xpInLevel / 100) * 100);
+  const title = getTitleById(titleId || 'novice-coder');
 
   return (
     <div
@@ -45,7 +54,7 @@ export function GamificationHeader({
     >
       {/* ── Header row ─────────────────────────────────────────────────── */}
       <div
-        className="flex items-center justify-between px-5 py-3 border-b"
+        className="flex items-center justify-between px-5 py-3 border-b flex-wrap gap-2"
         style={{ borderColor: 'var(--glass-border)', background: 'rgba(0,0,0,0.15)' }}
       >
         <div className="flex items-center gap-2">
@@ -57,17 +66,33 @@ export function GamificationHeader({
             Quest Map
           </h2>
         </div>
-        <div
-          className="flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-semibold"
+
+        {/* Clickable Hero Identity Pill */}
+        <button
+          type="button"
+          onClick={onOpenCustomize}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all hover:scale-105 active:scale-95 group text-left"
           style={{
-            background: 'rgba(0,0,0,0.2)',
+            background: 'rgba(0,0,0,0.3)',
             borderColor: 'var(--glass-border)',
             color: 'var(--text-secondary)',
+            boxShadow: '0 0 10px rgba(0,0,0,0.2)',
           }}
+          title="Klik untuk kustomisasi avatar dan gelarmu!"
         >
-          <span aria-hidden="true">👤</span>
-          <span>{studentName}</span>
-        </div>
+          <AvatarDisplay avatarId={avatarId} size="xs" showAura={false} />
+          <div className="flex flex-col leading-none">
+            <span className="font-bold text-white flex items-center gap-1.5">
+              <span>{studentName}</span>
+              <span className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-purple-400">
+                ✏️
+              </span>
+            </span>
+            <span className="text-[10px] text-purple-300 font-medium">
+              {title.name}
+            </span>
+          </div>
+        </button>
       </div>
 
       {/* ── Stats row ──────────────────────────────────────────────────── */}
