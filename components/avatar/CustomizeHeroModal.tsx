@@ -109,7 +109,7 @@ export function CustomizeHeroModal({
       >
         {/* ── Header ────────────────────────────────────────────────────────── */}
         <div
-          className="flex items-center justify-between px-6 py-4 border-b border-slate-200/80 dark:border-[var(--glass-border)] bg-slate-50/75 dark:bg-slate-900/40"
+          className="flex items-center justify-between px-6 py-4 border-b border-slate-200/80 dark:border-[var(--glass-border)] bg-slate-100/70 dark:bg-black/30"
         >
           <div className="flex items-center gap-2">
             <span className="text-xl" aria-hidden="true">🎨</span>

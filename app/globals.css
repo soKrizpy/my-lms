@@ -152,7 +152,7 @@
   /* Text */
   --text-primary:   #ffffff;
   --text-secondary: #cbd5e1;
-  --text-muted:     #94a3b8;
+  --text-muted:     #cbd5e1;
 
   /* Accent */
   --accent:       #a855f7;
@@ -177,7 +177,7 @@
   --color-primary-glow: rgba(168,85,247,0.45);
 
   /* ---- Dark palette bridge ---- */
-  --p-slate-50:  #18182a;   /* dark surface — was #f4f4ff (unreadable) */
+  --p-slate-50:  #18182a;   /* dark surface */
   --p-slate-100: #1e1e30;
   --p-slate-200: #26263a;
   --p-slate-300: #aaaacc;
@@ -185,9 +185,9 @@
   --p-slate-500: #9090b0;
   --p-slate-600: #b8b8d0;
   --p-slate-700: #d0d0e8;
-  --p-slate-800: #e0e0f0;
-  --p-slate-900: #f0f0ff;
-  --p-slate-950: #ffffff;
+  --p-slate-800: #1e1836;
+  --p-slate-900: #120e26;
+  --p-slate-950: #0a0818;
 
   /* blue → purple neon in dark */
   --p-blue-50:  #1a0a2e;
@@ -408,8 +408,10 @@ input[type="time"]      { color-scheme: light; }
 /* ---- bg-slate-800/900 used as dark badge/countdown bg → stay dark in dark mode ---- */
 /* In light mode these are very dark surfaces with white text.
    In dark mode they must STAY dark (not flip to near-white) so text-white remains readable. */
-.dark .bg-slate-800   { background-color: #2a0a4a !important; }  /* deep violet-dark */
-.dark .bg-slate-900   { background-color: #1e0838 !important; }  /* near-black violet */
+.dark .bg-slate-800,
+.dark [class*="bg-slate-800/"] { background-color: #2a0a4a !important; }  /* deep violet-dark */
+.dark .bg-slate-900,
+.dark [class*="bg-slate-900/"] { background-color: #1e0838 !important; }  /* near-black violet */
 .dark .hover\:bg-slate-700:hover { background-color: #3a1060 !important; }
 .dark .hover\:bg-slate-800:hover { background-color: #2a0a4a !important; }
 .dark .hover\:bg-slate-900:hover { background-color: #3a0f5e !important; }

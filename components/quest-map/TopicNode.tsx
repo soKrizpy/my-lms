@@ -184,10 +184,11 @@ function TopicNodeInner({
 
       {/* ── Topic title ──────────────────────────────────────────────────── */}
       <p
-        className="text-center text-[11px] font-semibold leading-tight max-w-[84px] line-clamp-2 cursor-pointer transition-colors"
-        style={{
-          color: state === 'locked' ? 'var(--text-muted)' : 'var(--text-primary)',
-        }}
+        className={`text-center text-[11px] font-semibold leading-tight max-w-[84px] line-clamp-2 cursor-pointer transition-colors ${
+          state === 'locked'
+            ? 'text-slate-500 dark:text-slate-400'
+            : 'text-slate-900 dark:text-white font-bold'
+        }`}
         title={topic.title}
         onClick={handleNodeClick}
       >
@@ -201,7 +202,7 @@ function TopicNodeInner({
           <button
             type="button"
             onClick={handleNodeClick}
-            className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full transition-colors bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 cursor-pointer"
+            className="text-[10px] font-semibold px-2.5 py-0.5 rounded-full transition-colors bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/15 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/15 cursor-pointer"
           >
             🔒 Terkunci
           </button>

@@ -153,11 +153,8 @@ function BadgePanel({ badges }: { badges: Badge[] }) {
       className="rounded-xl border p-4 mb-4"
       style={{ background: 'var(--glass-bg)', borderColor: 'var(--glass-border)' }}
     >
-      <h3
-        className="text-xs font-bold uppercase tracking-widest mb-3"
-        style={{ color: 'var(--text-muted)' }}
-      >
-        🏅 Achievement Badges
+      <h3 className="text-xs font-bold uppercase tracking-widest mb-3 text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
+        <span aria-hidden="true">🏅</span> Achievement Badges
       </h3>
       <div className="flex flex-wrap gap-2">
         {badges.map((badge) => (
@@ -167,11 +164,13 @@ function BadgePanel({ badges }: { badges: Badge[] }) {
             className={[
               'flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all select-none',
               badge.unlocked
-                ? 'bg-blue-50 border-blue-200 text-blue-900 shadow-xs dark:bg-purple-950/40 dark:border-purple-500/50 dark:text-purple-100 dark:shadow-[0_0_8px_rgba(168,85,247,0.3)]'
-                : 'opacity-40 grayscale bg-slate-100 dark:bg-slate-800/40 border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400',
+                ? 'bg-blue-50 border-blue-200 text-blue-900 shadow-xs dark:bg-purple-950/60 dark:border-purple-500/60 dark:text-purple-100 dark:shadow-[0_0_8px_rgba(168,85,247,0.35)]'
+                : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400',
             ].join(' ')}
           >
-            <span aria-hidden="true">{badge.icon}</span>
+            <span aria-hidden="true" className={badge.unlocked ? '' : 'grayscale opacity-60'}>
+              {badge.icon}
+            </span>
             <span>{badge.label}</span>
           </div>
         ))}

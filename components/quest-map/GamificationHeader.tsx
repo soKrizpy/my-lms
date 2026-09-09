@@ -54,14 +54,13 @@ export function GamificationHeader({
     >
       {/* ── Header row ─────────────────────────────────────────────────── */}
       <div
-        className="flex items-center justify-between px-5 py-3 border-b flex-wrap gap-2 bg-slate-50/75 dark:bg-slate-900/50"
+        className="flex items-center justify-between px-5 py-3 border-b flex-wrap gap-2 bg-slate-100/70 dark:bg-black/30"
         style={{ borderColor: 'var(--glass-border)' }}
       >
         <div className="flex items-center gap-2">
           <span className="text-lg" aria-hidden="true">🗺️</span>
           <h2
-            className="font-extrabold text-sm uppercase tracking-widest"
-            style={{ color: 'var(--accent)' }}
+            className="font-extrabold text-sm uppercase tracking-widest text-purple-700 dark:text-purple-300 drop-shadow-xs"
           >
             Quest Map
           </h2>
@@ -71,18 +70,18 @@ export function GamificationHeader({
         <button
           type="button"
           onClick={onOpenCustomize}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full border border-slate-200/90 dark:border-purple-500/40 bg-white/90 dark:bg-slate-900/70 text-xs font-semibold transition-all hover:scale-105 active:scale-95 group text-left shadow-sm dark:shadow-none cursor-pointer"
+          className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full border border-slate-200 dark:border-purple-500/40 bg-white/90 dark:bg-purple-950/70 hover:bg-slate-50 dark:hover:bg-purple-900/60 text-xs font-semibold transition-all hover:scale-105 active:scale-95 group text-left shadow-sm dark:shadow-[0_0_12px_rgba(168,85,247,0.3)] cursor-pointer"
           title="Klik untuk kustomisasi avatar dan gelarmu!"
         >
           <AvatarDisplay avatarId={avatarId} size="xs" showAura={false} />
-          <div className="flex flex-col leading-none">
+          <div className="flex flex-col leading-tight">
             <span className="font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
               <span>{studentName}</span>
-              <span className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-purple-600 dark:text-purple-400">
+              <span className="text-[10px] opacity-0 group-hover:opacity-100 transition-opacity text-purple-600 dark:text-purple-300">
                 ✏️
               </span>
             </span>
-            <span className="text-[10px] text-purple-700 dark:text-purple-300 font-semibold mt-0.5">
+            <span className="text-[10px] text-purple-600 dark:text-purple-300 font-semibold mt-0.5">
               {title.name}
             </span>
           </div>
@@ -91,20 +90,20 @@ export function GamificationHeader({
 
       {/* ── Stats row ──────────────────────────────────────────────────── */}
       <div
-        className="grid grid-cols-4 divide-x divide-slate-200/80 dark:divide-white/10"
+        className="grid grid-cols-4 divide-x divide-slate-200 dark:divide-white/10"
         style={{ borderColor: 'var(--glass-border)' }}
       >
         {/* XP */}
         <div className="flex flex-col items-center justify-center px-2 py-4 gap-1">
           <span className="text-lg leading-none" aria-hidden="true">⭐</span>
-          <span style={{ color: 'var(--accent)' }}>
+          <span className="text-purple-700 dark:text-purple-300">
             <MagicalCounter
               value={xpTotal}
               suffix=" XP"
               className="text-base font-extrabold tabular-nums"
             />
           </span>
-          <span className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+          <span className="text-[10px] uppercase tracking-wide font-bold text-slate-600 dark:text-slate-300">
             Total XP
           </span>
         </div>
@@ -124,11 +123,11 @@ export function GamificationHeader({
           >
             {streak}
           </span>
-          <span className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+          <span className="text-[10px] uppercase tracking-wide font-bold text-slate-600 dark:text-slate-300">
             Streak
           </span>
           {maxStreak > 0 && (
-            <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>
+            <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
               best: {maxStreak}
             </span>
           )}
@@ -143,29 +142,29 @@ export function GamificationHeader({
                 cx="18" cy="18" r="15"
                 fill="none"
                 stroke="currentColor"
-                className="text-slate-200 dark:text-slate-700/60"
+                className="text-slate-200 dark:text-white/15"
                 strokeWidth="3"
               />
               <circle
                 cx="18" cy="18" r="15"
                 fill="none"
-                stroke="var(--accent)"
+                stroke="currentColor"
+                className="text-purple-600 dark:text-purple-400"
                 strokeWidth="3"
                 strokeDasharray={`${(progressPercent / 100) * 94.2} 94.2`}
                 strokeLinecap="round"
               />
             </svg>
             <span
-              className="absolute inset-0 flex items-center justify-center text-xs font-extrabold"
-              style={{ color: 'var(--accent)' }}
+              className="absolute inset-0 flex items-center justify-center text-xs font-extrabold text-purple-700 dark:text-purple-300"
             >
               {level}
             </span>
           </div>
-          <span className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>
+          <span className="text-[10px] uppercase tracking-wide font-bold text-slate-600 dark:text-slate-300">
             Level
           </span>
-          <span className="text-[9px]" style={{ color: 'var(--text-muted)' }}>
+          <span className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">
             {xpToNext} XP lagi
           </span>
         </div>
@@ -174,12 +173,11 @@ export function GamificationHeader({
         <div className="flex flex-col items-center justify-center px-2 py-4 gap-1">
           <span className="text-lg leading-none" aria-hidden="true">🏆</span>
           <span
-            className="text-base font-extrabold tabular-nums"
-            style={{ color: 'var(--text-primary)' }}
+            className="text-base font-extrabold tabular-nums text-slate-900 dark:text-white"
           >
             {completedTopics}
           </span>
-          <span className="text-[10px] uppercase tracking-wide text-center" style={{ color: 'var(--text-muted)' }}>
+          <span className="text-[10px] uppercase tracking-wide text-center font-bold text-slate-600 dark:text-slate-300 leading-tight">
             Lesson<br />Selesai
           </span>
         </div>
@@ -187,21 +185,20 @@ export function GamificationHeader({
 
       {/* ── Level XP progress bar ───────────────────────────────────────── */}
       <div
-        className="px-5 py-2 border-t bg-slate-50/60 dark:bg-slate-900/40"
+        className="px-5 py-2.5 border-t bg-slate-100/60 dark:bg-black/30"
         style={{ borderColor: 'var(--glass-border)' }}
       >
-        <div className="flex items-center justify-between text-[10px] mb-1" style={{ color: 'var(--text-muted)' }}>
-          <span className="font-medium">Level {level}</span>
-          <span className="font-semibold">{xpInLevel}/100 XP</span>
-          <span className="font-medium">Level {level + 1}</span>
+        <div className="flex items-center justify-between text-[11px] mb-1.5">
+          <span className="font-bold text-slate-600 dark:text-slate-300">Level {level}</span>
+          <span className="font-extrabold text-slate-800 dark:text-white">{xpInLevel}/100 XP</span>
+          <span className="font-bold text-slate-600 dark:text-slate-300">Level {level + 1}</span>
         </div>
-        <div className="h-1.5 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-700/60">
+        <div className="h-2 rounded-full overflow-hidden bg-slate-200 dark:bg-white/15">
           <div
-            className="h-full rounded-full transition-all duration-700"
+            className="h-full rounded-full transition-all duration-700 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-purple-500 dark:to-pink-500"
             style={{
               width: `${progressPercent}%`,
-              background: 'var(--accent)',
-              boxShadow: '0 0 6px var(--accent-glow)',
+              boxShadow: '0 0 8px rgba(168,85,247,0.5)',
             }}
           />
         </div>

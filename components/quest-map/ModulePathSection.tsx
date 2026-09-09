@@ -29,11 +29,11 @@ interface ModulePathSectionProps {
 }
 
 const LEVEL_COLORS: Record<string, string> = {
-  beginner: 'bg-emerald-100 text-emerald-800 ring-emerald-600/20 dark:bg-emerald-950/60 dark:text-emerald-300 dark:ring-emerald-500/30',
-  intermediate: 'bg-amber-100 text-amber-800 ring-amber-600/20 dark:bg-amber-950/60 dark:text-amber-300 dark:ring-amber-500/30',
-  advance: 'bg-rose-100 text-rose-800 ring-rose-600/20 dark:bg-rose-950/60 dark:text-rose-300 dark:ring-rose-500/30',
-  advanced: 'bg-rose-100 text-rose-800 ring-rose-600/20 dark:bg-rose-950/60 dark:text-rose-300 dark:ring-rose-500/30',
-  master: 'bg-purple-100 text-purple-800 ring-purple-600/20 dark:bg-purple-950/60 dark:text-purple-300 dark:ring-purple-500/30',
+  beginner: 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-500/50',
+  intermediate: 'bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-200 dark:border-amber-500/50',
+  advance: 'bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950/80 dark:text-rose-200 dark:border-rose-500/50',
+  advanced: 'bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-950/80 dark:text-rose-200 dark:border-rose-500/50',
+  master: 'bg-purple-100 text-purple-800 border border-purple-300 dark:bg-purple-950/80 dark:text-purple-200 dark:border-purple-500/50',
 };
 
 function findFirstActiveIndex(
@@ -78,7 +78,7 @@ function ModulePathSectionInner({
     topics.length > 0 ? Math.round((unlockedCount / topics.length) * 100) : 0;
   const levelClass =
     LEVEL_COLORS[module.level?.toLowerCase()] ??
-    'bg-blue-100 text-blue-800 ring-blue-600/20 dark:bg-blue-950/60 dark:text-blue-300 dark:ring-blue-500/30';
+    'bg-blue-100 text-blue-800 border border-blue-300 dark:bg-blue-950/80 dark:text-blue-200 dark:border-blue-500/50';
 
   const activeIndex = findFirstActiveIndex(topics, topicProgress, quizAttempts);
 
@@ -106,7 +106,7 @@ function ModulePathSectionInner({
     >
       {/* ── Module header ─────────────────────────────────────────────── */}
       <div
-        className="px-5 py-4 border-b bg-slate-50/75 dark:bg-slate-900/40"
+        className="px-5 py-4 border-b bg-slate-100/70 dark:bg-black/30"
         style={{ borderColor: 'var(--glass-border)' }}
       >
         <div className="flex items-center justify-between gap-3 mb-2">
@@ -121,24 +121,23 @@ function ModulePathSectionInner({
               <span className="text-base" aria-hidden="true">📚</span>
             )}
             <h3
-              className="font-bold text-sm truncate"
-              style={{ color: 'var(--text-primary)' }}
+              className="font-bold text-sm truncate text-slate-900 dark:text-white"
             >
               {module.title}
             </h3>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <span
-              className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full ring-1 ring-inset capitalize ${levelClass}`}
+              className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full capitalize shadow-xs ${levelClass}`}
             >
               {module.level}
             </span>
             <span
               className={[
-                'text-[10px] font-bold px-2 py-0.5 rounded-full border',
+                'text-[10px] font-bold px-2.5 py-0.5 rounded-full border shadow-xs',
                 isModuleComplete
-                  ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-700/50'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700',
+                  ? 'bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/80 dark:text-emerald-200 dark:border-emerald-500/40'
+                  : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-white/10 dark:text-slate-200 dark:border-white/15',
               ].join(' ')}
             >
               {unlockedCount}/{topics.length}
@@ -157,7 +156,7 @@ function ModulePathSectionInner({
           />
         </div>
         {isModuleLocked && (
-          <p className="text-xs mt-2 text-slate-500 dark:text-slate-400 font-medium">
+          <p className="text-xs mt-2 text-slate-600 dark:text-slate-300 font-medium">
             🔒 Modul ini terkunci. Ikuti kelas untuk membuka topik pembelajaran di bab ini.
           </p>
         )}
