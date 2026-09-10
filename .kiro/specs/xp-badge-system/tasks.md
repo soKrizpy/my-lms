@@ -248,7 +248,7 @@ Vercel serverless-compatible.
     - `newBadges` is `[]` when no new badges are earned
     - _Requirements: 5.3, 5.4_
 
-- [-] 12. Git push to feature branch
+- [x] 12. Git push to feature branch
   - Create a new feature branch: `git checkout -b feature/xp-badge-system`
   - Stage all new and modified files (be specific — do not use `git add .`)
     - New: `supabase/migrations/20250610_001_student_badges.sql`
@@ -261,7 +261,7 @@ Vercel serverless-compatible.
   - Push: `git push -u origin feature/xp-badge-system`
   - Create PR using `gh pr create` with title "feat: XP & Badge Gamification System" and a description summarising the four delivery pillars
 
-- [~] 13. Final checkpoint
+- [x] 13. Final checkpoint
   - Ensure all tests pass, the feature branch PR is open, and the implementation is complete.
   - Ask the user if any questions arise.
 
