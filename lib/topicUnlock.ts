@@ -7,6 +7,8 @@
 //       — positional modulo: if there are more meetings than topics, index wraps
 //   (b) There is a topic_progress row for this topic's engine_topic_id
 //       — engine lesson completion also unlocks
+//   (c) There is a quiz_attempts row for a quiz linked to this topic
+//       — quiz completion also unlocks (covers students who do the work outside meetings)
 //
 // Used by:
 //   - app/api/student/dashboard/route.ts
@@ -103,6 +105,31 @@ export async function resolveTopicUnlockMap(
       }
     }
 
+    // 3b. Topics unlocked via quiz attempt (quiz_id → topic_id via quizzes table)
+    let quizAttemptedTopicIds = new Set<number>();
+    const allTopicIds = topics.map((t) => t?.id).filter(Boolean) as number[];
+    if (allTopicIds.length > 0) {
+      try {
+        const { data: quizData, error: quizError } = await admin
+          .from('quiz_attempts')
+          .select('quiz_id, quizzes!inner(topic_id)')
+          .eq('student_id', studentId)
+          .not('quizzes', 'is', null);
+
+        if (!quizError && quizData) {
+          for (const row of quizData) {
+            const topicId = (row as any).quizzes?.topic_id;
+            if (typeof topicId === 'number') {
+              quizAttemptedTopicIds.add(topicId);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Exception fetching quiz attempts for unlock:', err);
+        quizAttemptedTopicIds = new Set();
+      }
+    }
+
     // 4. Build result map
     const result = new Map<number, TopicUnlockResult>();
     const totalTopics = topics.length;
@@ -129,10 +156,12 @@ export async function resolveTopicUnlockMap(
           ? completedEngineTopicIds.has(topic.engine_topic_id)
           : false;
 
+      const unlockedByQuiz: boolean = quizAttemptedTopicIds.has(topic.id as number);
+
       result.set(topic.id as number, {
         topicId: topic.id as number,
         engineTopicId: topic?.engine_topic_id ?? null,
-        isUnlocked: unlockedByJoin || unlockedByEngine,
+        isUnlocked: unlockedByJoin || unlockedByEngine || unlockedByQuiz,
       });
     });
 
