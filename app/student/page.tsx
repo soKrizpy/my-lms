@@ -1014,6 +1014,7 @@ export default function StudentDashboard() {
         topicProgress: Array.isArray(json.topicProgress) ? json.topicProgress : [],
         streak: typeof json.streak === "number" ? json.streak : 0,
         maxStreak: typeof json.maxStreak === "number" ? json.maxStreak : 0,
+        assessmentSummaries: Array.isArray(json.assessmentSummaries) ? json.assessmentSummaries : [],
       };
       
       setData(validatedData);
@@ -1312,6 +1313,7 @@ export default function StudentDashboard() {
                 onOpenQuiz={(quiz) => setActiveQuiz(quiz)}
                 onUpdateProfile={handleUpdateProfile}
                 onGoToSchedule={() => setActiveTab("jadwal")}
+                assessmentSummaries={data.assessmentSummaries || []}
               />
               {activeQuiz && (
                 <QuizModal

@@ -212,3 +212,154 @@ export interface StudentModuleRow {
   module_id: number;
   status: ModuleStatus;
 }
+
+// ── Module Assessment types ──────────────────────────────────────────────────
+
+export type AssessmentRecord = {
+  id: number;
+  module_id: number;
+  title: string;
+  created_at: string;
+};
+
+export type AssessmentQuestionRecord = {
+  id: number;
+  assessment_id: number;
+  question_text: string;
+  option_a: string;
+  option_b: string;
+  option_c: string;
+  option_d: string;
+  correct_option: 'A' | 'B' | 'C' | 'D';
+  order_index: number;
+  created_at: string;
+};
+
+// Question as returned to the student (no correct_option field)
+export type AssessmentQuestionPublic = Omit<AssessmentQuestionRecord, 'correct_option' | 'created_at'>;
+
+export type AssessmentAttemptRecord = {
+  id: number;
+  student_id: string;
+  assessment_id: number;
+  attempt_number: 1 | 2;
+  score: number;          // 0–100
+  best_score: number;     // 0–100, MAX of all attempts for this student+assessment
+  total_questions: number;
+  correct_count: number;
+  answers: Record<string, 'A' | 'B' | 'C' | 'D'>;  // { "<questionId>": "A"|"B"|"C"|"D" }
+  submitted_at: string;
+};
+
+// Summary included in student dashboard response
+export type AssessmentSummary = {
+  assessment_id: number;
+  attempt_count: number;   // 0, 1, or 2
+  best_score: number;      // 0–100; 0 when attempt_count === 0
+};
+
+// Single attempt score shown on results/history screen
+export type AttemptScore = {
+  attempt_number: 1 | 2;
+  score: number;
+  submitted_at: string;
+};
+
+// Per-question result shown on the result screen after submission
+export type QuestionResult = {
+  question_id: number;
+  question_text: string;
+  selected_option: 'A' | 'B' | 'C' | 'D';
+  correct_option: 'A' | 'B' | 'C' | 'D';
+  is_correct: boolean;
+};
+
+// Full result returned from POST /api/student/assessment/submit
+export type AssessmentSubmitResult = {
+  score: number;
+  best_score: number;
+  attempt_number: 1 | 2;
+  total_questions: number;
+  correct_count: number;
+  question_results: QuestionResult[];
+};
+
+// State of an assessment from the student's perspective
+export type AssessmentState =
+  | { status: 'locked' }                                        // module not complete
+  | { status: 'no_assessment' }                                 // module has no assessment yet
+  | { status: 'available'; assessment_id: number; attempt_count: 0 | 1 }
+  | { status: 'exhausted'; assessment_id: number; best_score: number; attempt_scores: AttemptScore[] };
+
+// ── Module Assessment helpers ────────────────────────────────────────────────
+
+export async function getAssessmentByModuleId(moduleId: number) {
+  const supabase = getSupabaseAdmin();
+  return supabase
+    .from("module_assessments")
+    .select("id, module_id, title, created_at")
+    .eq("module_id", moduleId)
+    .maybeSingle();
+}
+
+export async function getAssessmentQuestions(assessmentId: number) {
+  const supabase = getSupabaseAdmin();
+  return supabase
+    .from("module_assessment_questions")
+    .select(
+      "id, assessment_id, question_text, option_a, option_b, option_c, option_d, correct_option, order_index, created_at",
+    )
+    .eq("assessment_id", assessmentId)
+    .order("order_index", { ascending: true });
+}
+
+export async function getAssessmentAttempts(studentId: string, assessmentId: number) {
+  const supabase = getSupabaseAdmin();
+  return supabase
+    .from("module_assessment_attempts")
+    .select(
+      "id, student_id, assessment_id, attempt_number, score, best_score, total_questions, correct_count, answers, submitted_at",
+    )
+    .eq("student_id", studentId)
+    .eq("assessment_id", assessmentId)
+    .order("attempt_number", { ascending: true });
+}
+
+export async function getAssessmentSummariesForStudent(
+  studentId: string,
+  assessmentIds: number[],
+): Promise<AssessmentSummary[]> {
+  if (assessmentIds.length === 0) return [];
+
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("module_assessment_attempts")
+    .select("assessment_id, score")
+    .eq("student_id", studentId)
+    .in("assessment_id", assessmentIds);
+
+  if (error) {
+    console.error("getAssessmentSummariesForStudent: error fetching attempts", error);
+    // Graceful degradation: return zero-attempt summaries for all ids
+    return assessmentIds.map((id) => ({ assessment_id: id, attempt_count: 0, best_score: 0 }));
+  }
+
+  const rows = data ?? [];
+
+  // Group attempts by assessment_id
+  const grouped = new Map<number, number[]>();
+  for (const row of rows) {
+    const existing = grouped.get(row.assessment_id) ?? [];
+    existing.push(row.score as number);
+    grouped.set(row.assessment_id, existing);
+  }
+
+  return assessmentIds.map((id) => {
+    const scores = grouped.get(id) ?? [];
+    return {
+      assessment_id: id,
+      attempt_count: scores.length,
+      best_score: scores.length > 0 ? Math.max(...scores) : 0,
+    };
+  });
+}

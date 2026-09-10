@@ -3,6 +3,7 @@ import { createClient } from "../../../../lib/supabase/server";
 import { getSupabaseAdmin } from "../../../../lib/supabaseAdmin";
 import { resolveTopicUnlockMap } from "../../../../lib/topicUnlock";
 import { calculateStreak, type MeetingRecord } from "../../../../lib/streakCalculator";
+import { getAssessmentSummariesForStudent, type AssessmentSummary } from "../../../../lib/lmsData";
 
 // GET /api/student/dashboard - fetch all data for student dashboard
 export async function GET() {
@@ -214,6 +215,27 @@ export async function GET() {
           };
         })
         .filter((m: any): m is object => m !== null);
+
+      // Attach assessment metadata (assessmentId + assessmentTitle) to each module
+      let assessmentList: Array<{ id: number; module_id: number; title: string }> = [];
+      try {
+        if (moduleIds.length > 0) {
+          const { data: asmData } = await supabaseAdmin
+            .from('module_assessments')
+            .select('id, module_id, title')
+            .in('module_id', moduleIds);
+          assessmentList = (asmData ?? []) as Array<{ id: number; module_id: number; title: string }>;
+        }
+      } catch { /* graceful degradation — assessmentList stays [] */ }
+
+      modulesWithTopics = modulesWithTopics.map((mod: any) => {
+        const asm = assessmentList.find((a) => a.module_id === mod.id);
+        return {
+          ...mod,
+          assessmentId: asm?.id ?? null,
+          assessmentTitle: asm?.title ?? null,
+        };
+      });
     }
 
     // 7. Active announcements
@@ -266,6 +288,24 @@ export async function GET() {
       completedEngineTopics = 0;
     }
 
+    // 10b. Module assessment summaries
+    // assessmentList was already fetched in the module assembly step above.
+    // Re-declare here to make it accessible if moduleIds was empty (assessmentList = []).
+    let assessmentSummaries: AssessmentSummary[] = [];
+    try {
+      // Collect assessmentList from the already-enriched modulesWithTopics
+      const enrichedAssessmentIds = (modulesWithTopics as any[])
+        .map((m: any) => m?.assessmentId)
+        .filter((id: any): id is number => typeof id === 'number');
+
+      if (enrichedAssessmentIds.length > 0) {
+        assessmentSummaries = await getAssessmentSummariesForStudent(studentId, enrichedAssessmentIds);
+      }
+    } catch (assessmentErr) {
+      console.error('Dashboard: error fetching assessment summaries', assessmentErr);
+      assessmentSummaries = []; // graceful degradation
+    }
+
     const studentName = user.user_metadata?.full_name || "Siswa";
     const firstName = studentName.split(" ")[0];
 
@@ -311,6 +351,7 @@ export async function GET() {
       streak: streakResult.currentStreak,
       maxStreak: streakResult.maxStreak,
       studentId,
+      assessmentSummaries: Array.isArray(assessmentSummaries) ? assessmentSummaries : [],
     };
 
     console.log(`Dashboard: Success - student ${studentId}, modules: ${responsePayload.modules.length}, xp: ${responsePayload.engineXpTotal}, avatar: ${avatarId}`);
@@ -339,6 +380,7 @@ export async function GET() {
       topicProgress: [],
       streak: 0,
       maxStreak: 0,
+      assessmentSummaries: [],
     };
     
     return NextResponse.json(fallbackResponse, { status: 200 });

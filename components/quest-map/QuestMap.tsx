@@ -10,7 +10,9 @@ import { ModulePathSection } from './ModulePathSection';
 import { CustomizeHeroModal } from '@/components/avatar/CustomizeHeroModal';
 import { TopicLearningFlowModal } from './TopicLearningFlowModal';
 import { TopicLockModal } from './TopicLockModal';
+import { AssessmentModal } from '../assessment/AssessmentModal';
 import type { TopicNodeTopic, TopicProgress, QuizAttempt } from './TopicNode';
+import type { AssessmentSummary, AssessmentState } from '../../lib/lmsData';
 
 // ── Badge definitions ─────────────────────────────────────────────────────────
 
@@ -80,6 +82,8 @@ interface Module {
   isModuleLocked: boolean;
   isModuleActive: boolean;
   isModuleComplete: boolean;
+  assessmentId?: number | null;
+  assessmentTitle?: string | null;
 }
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -101,6 +105,7 @@ interface QuestMapProps {
   onOpenQuiz?: (quiz: { id: number; title: string }) => void;
   onUpdateProfile?: (avatarId: string, titleId: string) => Promise<boolean> | void;
   onGoToSchedule?: () => void;
+  assessmentSummaries?: AssessmentSummary[];
 }
 
 // ── Confetti using animejs ────────────────────────────────────────────────────
@@ -179,6 +184,31 @@ function BadgePanel({ badges }: { badges: Badge[] }) {
   );
 }
 
+// ── Assessment state builder ──────────────────────────────────────────────────
+
+function buildAssessmentState(
+  mod: Module,
+  summaries: AssessmentSummary[],
+): AssessmentState {
+  if (!mod.assessmentId) return { status: 'no_assessment' };
+  if (!mod.isModuleComplete) return { status: 'locked' };
+  const summary = summaries.find((s) => s.assessment_id === mod.assessmentId);
+  const attemptCount = summary?.attempt_count ?? 0;
+  if (attemptCount >= 2) {
+    return {
+      status: 'exhausted',
+      assessment_id: mod.assessmentId,
+      best_score: summary?.best_score ?? 0,
+      attempt_scores: [],
+    };
+  }
+  return {
+    status: 'available',
+    assessment_id: mod.assessmentId,
+    attempt_count: attemptCount as 0 | 1,
+  };
+}
+
 // ── QuestMap ──────────────────────────────────────────────────────────────────
 
 function QuestMapInner({
@@ -198,6 +228,7 @@ function QuestMapInner({
   onOpenQuiz,
   onUpdateProfile,
   onGoToSchedule,
+  assessmentSummaries,
 }: QuestMapProps) {
   const prevCompletedRef = useRef(completedEngineTopics);
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
@@ -213,6 +244,12 @@ function QuestMapInner({
     topic: TopicNodeTopic;
     moduleTitle: string;
     nodeIndex: number;
+  } | null>(null);
+
+  const [activeAssessment, setActiveAssessment] = useState<{
+    assessmentId: number;
+    assessmentTitle: string;
+    attemptCount: 0 | 1;
   } | null>(null);
 
   // Trigger confetti when a new topic is completed
@@ -298,7 +335,7 @@ function QuestMapInner({
                 Ikuti kelas belajarmu untuk membuka materi
               </p>
               <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
-                Klik "Bergabung Sekarang" di tab Jadwal Belajar saat kelas berlangsung untuk mulai membuka materi!
+                Klik &quot;Bergabung Sekarang&quot; di tab Jadwal Belajar saat kelas berlangsung untuk mulai membuka materi!
               </p>
             </div>
           </div>
@@ -349,6 +386,17 @@ function QuestMapInner({
             onStartLesson={handleStartLesson}
             onOpenQuiz={handleOpenQuiz}
             onSelectTopic={handleSelectTopic}
+            assessmentState={buildAssessmentState(mod, assessmentSummaries ?? [])}
+            onOpenAssessment={() => {
+              if (!mod.assessmentId) return;
+              const state = buildAssessmentState(mod, assessmentSummaries ?? []);
+              if (state.status !== 'available') return;
+              setActiveAssessment({
+                assessmentId: mod.assessmentId,
+                assessmentTitle: mod.assessmentTitle ?? 'Tryout',
+                attemptCount: state.attempt_count,
+              });
+            }}
           />
         ))}
       </div>
@@ -374,6 +422,20 @@ function QuestMapInner({
         nodeIndex={selectedLockedTopic?.nodeIndex}
         onGoToSchedule={onGoToSchedule}
       />
+
+      {/* ── Assessment Modal ───────────────────────────────────────────────── */}
+      {activeAssessment && (
+        <AssessmentModal
+          assessmentId={activeAssessment.assessmentId}
+          assessmentTitle={activeAssessment.assessmentTitle}
+          attemptCount={activeAssessment.attemptCount}
+          onClose={() => setActiveAssessment(null)}
+          onSuccess={() => {
+            setActiveAssessment(null);
+            onRefresh();
+          }}
+        />
+      )}
     </div>
   );
 }

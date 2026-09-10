@@ -1,5 +1,6 @@
 // app/admin/modules/[id]/topics/page.tsx
 
+import Link from "next/link";
 import { getSupabaseAdmin } from "../../../../../lib/supabaseAdmin";
 import { AddTopicForm } from "./AddTopicForm";
 import { TopicList } from "./TopicList";
@@ -68,6 +69,13 @@ export default async function ModuleTopicsPage({ params }: PageProps) {
           {moduleData?.description ?? "Tidak ada deskripsi."}
         </p>
       </div>
+
+      <Link
+        href={`/admin/modules/${moduleIdParam}/assessment`}
+        className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+      >
+        📋 Kelola Tryout
+      </Link>
 
       <AddTopicForm moduleId={moduleIdParam} usedEngineTopicIds={usedEngineTopicIds} />
 

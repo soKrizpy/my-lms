@@ -7,6 +7,8 @@
 
 import React, { memo } from 'react';
 import { TopicNode, type TopicNodeTopic, type TopicProgress, type QuizAttempt } from './TopicNode';
+import { AssessmentNode } from './AssessmentNode';
+import { type AssessmentState } from '../../lib/lmsData';
 
 interface Module {
   id: number;
@@ -26,6 +28,8 @@ interface ModulePathSectionProps {
   onStartLesson?: (engineTopicId: string) => void;
   onOpenQuiz?: (quiz: { id: number; title: string }) => void;
   onSelectTopic?: (topic: TopicNodeTopic, moduleTitle: string, nodeIndex: number) => void;
+  assessmentState?: AssessmentState;
+  onOpenAssessment?: () => void;
 }
 
 const LEVEL_COLORS: Record<string, string> = {
@@ -71,6 +75,8 @@ function ModulePathSectionInner({
   onStartLesson,
   onOpenQuiz,
   onSelectTopic,
+  assessmentState,
+  onOpenAssessment,
 }: ModulePathSectionProps) {
   const { topics, isModuleLocked, isModuleComplete } = module;
   const unlockedCount = topics.filter((t) => t.isUnlocked).length;
@@ -192,6 +198,20 @@ function ModulePathSectionInner({
               )}
             </React.Fragment>
           ))}
+          {/* Assessment node — shown after the last topic */}
+          {assessmentState && assessmentState.status !== 'no_assessment' && (
+            <>
+              <div
+                className="w-0.5 h-6 rounded-full"
+                style={{ background: 'var(--accent)' }}
+                aria-hidden="true"
+              />
+              <AssessmentNode
+                assessmentState={assessmentState}
+                onOpen={onOpenAssessment ?? (() => {})}
+              />
+            </>
+          )}
         </div>
 
         {/* ── Desktop: zigzag 3-column ────────────────────────────── */}
@@ -249,6 +269,22 @@ function ModulePathSectionInner({
               </React.Fragment>
             );
           })}
+          {/* Assessment node — shown after the last row */}
+          {assessmentState && assessmentState.status !== 'no_assessment' && (
+            <>
+              <div
+                className="w-0.5 h-6 rounded-full"
+                style={{ background: 'var(--accent)' }}
+                aria-hidden="true"
+              />
+              <div className="flex justify-center">
+                <AssessmentNode
+                  assessmentState={assessmentState}
+                  onOpen={onOpenAssessment ?? (() => {})}
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
