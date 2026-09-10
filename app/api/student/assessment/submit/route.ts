@@ -12,6 +12,8 @@ import {
   computeBestScore,
   buildQuestionResults,
 } from "../../../../../lib/assessmentScoring";
+import { evaluateBadges } from '../../../../../lib/gamification/badgeEvaluator';
+import type { BadgeDefinition } from '../../../../../lib/gamification/badgeCatalog';
 
 // POST /api/student/assessment/submit
 // Body: { assessmentId: number, answers: Record<string, 'A'|'B'|'C'|'D'> }
@@ -187,6 +189,10 @@ export async function POST(request: Request) {
     );
   }
 
+  // 12b. Evaluate badges after successful attempt insert
+  let newBadges: BadgeDefinition[] = [];
+  try { newBadges = await evaluateBadges(studentId); } catch { newBadges = []; }
+
   // 13. Build per-question results
   const questionResults = buildQuestionResults(answers as Record<string, 'A' | 'B' | 'C' | 'D'>, questionList);
 
@@ -200,5 +206,5 @@ export async function POST(request: Request) {
     question_results: questionResults,
   };
 
-  return NextResponse.json(result, { status: 200 });
+  return NextResponse.json({ ...result, newBadges }, { status: 200 });
 }

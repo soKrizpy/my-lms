@@ -1,5 +1,7 @@
 'use client';
 
+import type { BadgeDefinition } from './gamification/badgeCatalog';
+
 // lib/useLmsEngineListener.ts
 // Listens for postMessage events from bits2bytes-lesson-engine.
 // Use this hook in StudentDashboard.
@@ -21,7 +23,7 @@ interface LmsEvent {
 
 interface UseLmsEngineListenerOptions {
   onEvent?: (event: LmsEvent) => void;
-  onSynced?: (topicId: string, type: LmsEvent['type']) => void;
+  onSynced?: (topicId: string, type: LmsEvent['type'], newBadges: BadgeDefinition[]) => void;
 }
 
 export function useLmsEngineListener(options: UseLmsEngineListenerOptions = {}) {
@@ -65,7 +67,10 @@ export function useLmsEngineListener(options: UseLmsEngineListenerOptions = {}) 
             payload: data.payload,
           }),
         });
-        if (res.ok) options.onSynced?.(data.topicId, data.type);
+        if (res.ok) {
+          const json = await res.json() as { ok: boolean; newBadges?: BadgeDefinition[] };
+          options.onSynced?.(data.topicId, data.type, json.newBadges ?? []);
+        }
       } catch {
         console.warn('[LMS] Engine sync failed for', data.topicId);
       }

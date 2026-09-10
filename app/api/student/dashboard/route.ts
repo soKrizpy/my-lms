@@ -4,6 +4,8 @@ import { getSupabaseAdmin } from "../../../../lib/supabaseAdmin";
 import { resolveTopicUnlockMap } from "../../../../lib/topicUnlock";
 import { calculateStreak, type MeetingRecord } from "../../../../lib/streakCalculator";
 import { getAssessmentSummariesForStudent, type AssessmentSummary } from "../../../../lib/lmsData";
+import { computeTotalXP, computeLevel, type AssessmentXPRow } from '../../../../lib/gamification/xpCalculator';
+import type { EarnedBadgeRow } from '../../../../lib/gamification/badgeCatalog';
 
 // GET /api/student/dashboard - fetch all data for student dashboard
 export async function GET() {
@@ -306,6 +308,27 @@ export async function GET() {
       assessmentSummaries = []; // graceful degradation
     }
 
+    // 10c. Compute unified XP and level
+    const assessmentXPRows: AssessmentXPRow[] = assessmentSummaries.map((s) => ({
+      assessment_id: s.assessment_id,
+      score: s.best_score,
+    }));
+    const totalXP = computeTotalXP(engineXpTotal, assessmentXPRows);
+    const level = computeLevel(totalXP);
+
+    // 10d. Fetch earned badges
+    let earnedBadges: EarnedBadgeRow[] = [];
+    try {
+      const { data: badgeRows } = await supabaseAdmin
+        .from('student_badges')
+        .select('badge_id, earned_at')
+        .eq('student_id', studentId);
+      earnedBadges = (badgeRows ?? []) as EarnedBadgeRow[];
+    } catch (badgeErr) {
+      console.error('Dashboard: error fetching student_badges', badgeErr);
+      earnedBadges = []; // graceful degradation
+    }
+
     const studentName = user.user_metadata?.full_name || "Siswa";
     const firstName = studentName.split(" ")[0];
 
@@ -352,6 +375,9 @@ export async function GET() {
       maxStreak: streakResult.maxStreak,
       studentId,
       assessmentSummaries: Array.isArray(assessmentSummaries) ? assessmentSummaries : [],
+      totalXP,
+      level,
+      earnedBadges: Array.isArray(earnedBadges) ? earnedBadges : [],
     };
 
     console.log(`Dashboard: Success - student ${studentId}, modules: ${responsePayload.modules.length}, xp: ${responsePayload.engineXpTotal}, avatar: ${avatarId}`);
@@ -381,6 +407,9 @@ export async function GET() {
       streak: 0,
       maxStreak: 0,
       assessmentSummaries: [],
+      totalXP: 0,
+      level: 1,
+      earnedBadges: [],
     };
     
     return NextResponse.json(fallbackResponse, { status: 200 });

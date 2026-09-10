@@ -11,8 +11,11 @@ import { CustomizeHeroModal } from '@/components/avatar/CustomizeHeroModal';
 import { TopicLearningFlowModal } from './TopicLearningFlowModal';
 import { TopicLockModal } from './TopicLockModal';
 import { AssessmentModal } from '../assessment/AssessmentModal';
+import { triggerConfetti } from '@/lib/triggerConfetti';
 import type { TopicNodeTopic, TopicProgress, QuizAttempt } from './TopicNode';
 import type { AssessmentSummary, AssessmentState } from '../../lib/lmsData';
+import { BadgeWall } from '@/components/gamification/BadgeWall';
+import type { EarnedBadgeRow, BadgeDefinition } from '@/lib/gamification/badgeCatalog';
 
 // ── Badge definitions ─────────────────────────────────────────────────────────
 
@@ -106,48 +109,9 @@ interface QuestMapProps {
   onUpdateProfile?: (avatarId: string, titleId: string) => Promise<boolean> | void;
   onGoToSchedule?: () => void;
   assessmentSummaries?: AssessmentSummary[];
-}
-
-// ── Confetti using animejs ────────────────────────────────────────────────────
-
-async function triggerConfetti(): Promise<void> {
-  if (typeof window === 'undefined') return;
-  try {
-    const { animate, stagger, utils } = await import('animejs');
-    const container = document.getElementById('quest-map-confetti');
-    if (!container) return;
-
-    // Create 30 confetti dots
-    const colors = ['#a3e635', '#38bdf8', '#f97316', '#c084fc', '#ef4444', '#fbbf24'];
-    const dots = Array.from({ length: 30 }, () => {
-      const el = document.createElement('div');
-      el.style.cssText = [
-        'position:fixed',
-        `left:${utils.random(10, 90)}vw`,
-        'top:-20px',
-        'width:8px',
-        'height:8px',
-        `border-radius:${utils.random(0, 50)}%`,
-        `background:${colors[utils.random(0, colors.length - 1)]}`,
-        'pointer-events:none',
-        'z-index:9999',
-      ].join(';');
-      document.body.appendChild(el);
-      return el;
-    });
-
-    animate(dots, {
-      translateY: ['0vh', '110vh'],
-      rotate: () => utils.random(-360, 360),
-      opacity: [1, 0],
-      duration: 1800,
-      delay: stagger(60),
-      ease: 'outQuad',
-      onComplete: () => dots.forEach((d) => d.remove()),
-    });
-  } catch {
-    // animejs unavailable — silently skip
-  }
+  totalXP?: number;
+  earnedBadges?: EarnedBadgeRow[];
+  onAssessmentSuccess?: (newBadges: BadgeDefinition[]) => void;
 }
 
 // ── BadgePanel ────────────────────────────────────────────────────────────────
@@ -229,6 +193,9 @@ function QuestMapInner({
   onUpdateProfile,
   onGoToSchedule,
   assessmentSummaries,
+  totalXP,
+  earnedBadges,
+  onAssessmentSuccess,
 }: QuestMapProps) {
   const prevCompletedRef = useRef(completedEngineTopics);
   const [isCustomizeOpen, setIsCustomizeOpen] = useState(false);
@@ -283,7 +250,7 @@ function QuestMapInner({
     []
   );
 
-  const studentLevel = Math.floor(engineXpTotal / 100) + 1;
+  const studentLevel = Math.floor((totalXP ?? engineXpTotal) / 100) + 1;
 
   // Empty state
   if (modules.length === 0) {
@@ -316,7 +283,7 @@ function QuestMapInner({
         studentName={studentName}
         avatarId={avatarId}
         titleId={titleId}
-        xpTotal={engineXpTotal}
+        xpTotal={totalXP ?? engineXpTotal}
         streak={streak}
         maxStreak={maxStreak}
         completedTopics={completedEngineTopics}
@@ -375,6 +342,9 @@ function QuestMapInner({
       {/* Achievement badges */}
       <BadgePanel badges={badges} />
 
+      {/* Badge Wall — full catalog with earned/locked state */}
+      <BadgeWall earnedBadges={earnedBadges ?? []} />
+
       {/* Module path sections */}
       <div className="space-y-4">
         {modules.map((mod) => (
@@ -430,10 +400,11 @@ function QuestMapInner({
           assessmentTitle={activeAssessment.assessmentTitle}
           attemptCount={activeAssessment.attemptCount}
           onClose={() => setActiveAssessment(null)}
-          onSuccess={() => {
-            setActiveAssessment(null);
-            onRefresh();
-          }}
+          onSuccess={(newBadges) => {
+              setActiveAssessment(null);
+              onAssessmentSuccess?.(newBadges);
+              onRefresh();
+            }}
         />
       )}
     </div>

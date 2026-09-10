@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import type { AssessmentQuestionPublic, AssessmentSubmitResult } from '../../lib/lmsData';
+import type { BadgeDefinition } from '../../lib/gamification/badgeCatalog';
 import { formatAttemptLabel } from '../../lib/assessmentHelpers';
 import AssessmentForm from './AssessmentForm';
 import AssessmentResultScreen from './AssessmentResultScreen';
@@ -15,7 +16,7 @@ interface AssessmentModalProps {
   attemptCount: 0 | 1;
   onClose: () => void;
   /** Called on successful submission so the parent can refresh dashboard data */
-  onSuccess: () => void;
+  onSuccess: (newBadges: BadgeDefinition[]) => void;
 }
 
 type Phase = 'loading' | 'taking' | 'result';
@@ -153,7 +154,8 @@ export function AssessmentModal({
   // ── Close handler (result phase) ───────────────────────────────────────────
 
   const handleResultClose = () => {
-    onSuccess();
+    const resultWithBadges = submittedResult as (typeof submittedResult & { newBadges?: BadgeDefinition[] });
+    onSuccess(resultWithBadges?.newBadges ?? []);
     onClose();
   };
 

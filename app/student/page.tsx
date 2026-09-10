@@ -11,6 +11,8 @@ import { AvatarDisplay } from "@/components/avatar/AvatarDisplay";
 import { getTitleById } from "@/lib/gamification/catalog";
 import { supabase } from "@/lib/supabaseClient";
 import { useTranslations } from "next-intl";
+import type { BadgeDefinition, EarnedBadgeRow } from '@/lib/gamification/badgeCatalog';
+import { BadgeCelebrationModal } from '@/components/gamification/BadgeCelebrationModal';
 
 // --- Types ---
 interface Meeting {
@@ -965,6 +967,10 @@ export default function StudentDashboard() {
   const [locale, setLocale] = useState<string>('id');
   const [engineModal, setEngineModal] = useState<{ topicId: string } | null>(null);
   const [activeQuiz, setActiveQuiz] = useState<{ id: number; title: string } | null>(null);
+  const [badgeQueue, setBadgeQueue] = useState<BadgeDefinition[]>([]);
+  const [earnedBadges, setEarnedBadges] = useState<EarnedBadgeRow[]>([]);
+  const [totalXP, setTotalXP] = useState(0);
+  const [level, setLevel] = useState(1);
 
 
   const fetchInvoices = async () => {
@@ -1015,9 +1021,15 @@ export default function StudentDashboard() {
         streak: typeof json.streak === "number" ? json.streak : 0,
         maxStreak: typeof json.maxStreak === "number" ? json.maxStreak : 0,
         assessmentSummaries: Array.isArray(json.assessmentSummaries) ? json.assessmentSummaries : [],
+        totalXP: typeof json.totalXP === 'number' ? json.totalXP : json.engineXpTotal ?? 0,
+        level: typeof json.level === 'number' ? json.level : 1,
+        earnedBadges: Array.isArray(json.earnedBadges) ? json.earnedBadges : [],
       };
       
       setData(validatedData);
+      setTotalXP(validatedData.totalXP);
+      setLevel(validatedData.level);
+      setEarnedBadges(validatedData.earnedBadges);
       if (validatedData.announcement) setAnnouncement(validatedData.announcement);
     } catch (err) {
       console.error("Failed to fetch dashboard data:", {
@@ -1050,8 +1062,22 @@ export default function StudentDashboard() {
     }
   }, []);
 
+  const enqueueBadges = useCallback((newBadges: BadgeDefinition[]) => {
+    if (!newBadges.length) return;
+    setBadgeQueue((prev) => [...prev, ...newBadges]);
+  }, []);
+
+  const handleBadgeDismiss = useCallback(() => {
+    setBadgeQueue((prev) => prev.slice(1));
+  }, []);
+
   // Sync lesson engine events (quiz score + XP) to Supabase via postMessage
-  useLmsEngineListener({ onSynced: () => { void fetchData(); } });
+  useLmsEngineListener({
+    onSynced: (_topicId, _type, newBadges) => {
+      enqueueBadges(newBadges);
+      void fetchData();
+    },
+  });
 
   // Resolve studentId from Supabase auth (client-side)
   useEffect(() => {
@@ -1314,6 +1340,12 @@ export default function StudentDashboard() {
                 onUpdateProfile={handleUpdateProfile}
                 onGoToSchedule={() => setActiveTab("jadwal")}
                 assessmentSummaries={data.assessmentSummaries || []}
+                totalXP={totalXP}
+                earnedBadges={earnedBadges}
+                onAssessmentSuccess={(newBadges) => {
+                  enqueueBadges(newBadges);
+                  void fetchData();
+                }}
               />
               {activeQuiz && (
                 <QuizModal
@@ -1333,6 +1365,7 @@ export default function StudentDashboard() {
           )}
         </>
       )}
+      <BadgeCelebrationModal queue={badgeQueue} onDismiss={handleBadgeDismiss} />
     </div>
   );
 }

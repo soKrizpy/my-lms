@@ -5,6 +5,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '../../../../lib/supabase/server';
 import { getSupabaseAdmin } from '../../../../lib/supabaseAdmin';
+import { evaluateBadges } from '../../../../lib/gamification/badgeEvaluator';
+import type { BadgeDefinition } from '../../../../lib/gamification/badgeCatalog';
 
 export async function POST(req: NextRequest) {
   const supabase = await createClient();
@@ -31,7 +33,9 @@ export async function POST(req: NextRequest) {
         xp_earned: xpEarned, best_quiz_score: bestQuizScore, completed_at: new Date().toISOString() },
       { onConflict: 'student_id,topic_id' }
     );
-    return NextResponse.json({ ok: true });
+    let newBadges: BadgeDefinition[] = [];
+    try { newBadges = await evaluateBadges(studentId); } catch { newBadges = []; }
+    return NextResponse.json({ ok: true, newBadges });
   }
 
   if (body.type === 'QUIZ_SUBMITTED') {
@@ -55,7 +59,9 @@ export async function POST(req: NextRequest) {
         total_questions: totalQuestions, attempts_count: attemptNumber, engine_sourced: true },
       { onConflict: 'student_id,quiz_id' }
     );
-    return NextResponse.json({ ok: true });
+    let newBadges: BadgeDefinition[] = [];
+    try { newBadges = await evaluateBadges(studentId); } catch { newBadges = []; }
+    return NextResponse.json({ ok: true, newBadges });
   }
 
   return NextResponse.json({ error: 'Unknown event type' }, { status: 400 });
