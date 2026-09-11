@@ -1102,16 +1102,28 @@ export default function StudentDashboard() {
   ];
 
   // Handler: open lesson in a new tab
-  const handleStartLesson = useCallback((engineTopicId: string) => {
-    const url = `/learning/lesson/${encodeURIComponent(engineTopicId)}` +
-      `?studentId=${encodeURIComponent(data?.studentId || studentId)}` +
-      `&theme=dark` +
-      `&lang=${locale}` +
-      `&lmsOrigin=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : '')}`;
-    window.open(url, '_blank', 'noopener');
-    // Poll dashboard after a short delay so new progress shows up when they return
-    setTimeout(() => void fetchData(), 3000);
-  }, [data?.studentId, studentId, locale, fetchData]);
+  const handleStartLesson = useCallback(async (engineTopicId: string) => {
+    // Get student ID — try state first, then fetch from auth
+    let resolvedStudentId = studentId;
+    if (!resolvedStudentId) {
+      const { data: authData } = await supabase.auth.getUser();
+      resolvedStudentId = authData.user?.id ?? '';
+    }
+
+    const lmsOrigin = encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : '');
+    const params = `?studentId=${encodeURIComponent(resolvedStudentId)}&theme=dark&lang=${locale}&lmsOrigin=${lmsOrigin}`;
+
+    // Use proxy URL (same-origin, avoids CORS)
+    const proxyUrl = `/learning/lesson/${encodeURIComponent(engineTopicId)}${params}`;
+
+    const newTab = window.open(proxyUrl, '_blank', 'noopener');
+
+    // Poll dashboard after 5s so new progress shows up when student returns
+    // Also poll every 30s while the tab might still be open
+    setTimeout(() => void fetchData(), 5000);
+    setTimeout(() => void fetchData(), 30000);
+    setTimeout(() => void fetchData(), 60000);
+  }, [studentId, locale, fetchData]);
 
   // Handler: student clicked "Bergabung Sekarang" — topic unlocked, maybe open engine
   const handleJoined = useCallback((unlockedTopic: UnlockedTopic | null) => {
@@ -1315,6 +1327,13 @@ export default function StudentDashboard() {
 
           {activeTab === "learning" && (
             <div className="space-y-4">
+              {/* Refresh button — tap after completing a lesson in a new tab */}
+              <button
+                onClick={() => void fetchData()}
+                className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl border border-[var(--glass-border)] text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] hover:bg-[var(--glass-bg)] transition-all"
+              >
+                🔄 Perbarui Progress Setelah Selesai Lesson
+              </button>
               <QuestMap
                 modules={data.modules || []}
                 quizAttempts={data.quizAttempts || []}
