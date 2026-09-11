@@ -122,9 +122,7 @@ function TopicNodeInner({
   const quizAttempt = topic.quiz
     ? quizAttempts.find((qa) => qa.quiz_id === topic.quiz!.id)
     : undefined;
-  // attempts_count from DB; fall back to counting from the array if field is missing
-  const attemptsUsed = quizAttempt?.attempts_count ?? (quizAttempt ? 1 : 0);
-  const quizMaxed = attemptsUsed >= 2;
+  // (attemptsUsed / quizMaxed removed — quiz section now only checks whether any attempt exists)
 
   // ── Visual config per state ──────────────────────────────────────────────
   const nodeStyles: Record<NodeState, string> = {
@@ -232,23 +230,23 @@ function TopicNodeInner({
           </button>
         )}
 
-        {/* Quiz button */}
+        {/* Quiz badge / nudge */}
         {topic.quiz && state !== 'locked' && (
-          quizMaxed ? (
-            // Max attempts used — show score badge, no more retries
+          quizAttempt ? (
+            // Attempted — show best score (score column always stores the highest)
             <span
               className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-700/50"
             >
-              Quiz ✓ {quizAttempt?.score ?? 0}
+              Quiz ✓ {quizAttempt.score}
             </span>
           ) : (
-            // Still has attempts remaining — show quiz button
+            // No attempt yet — nudge student
             <button
               type="button"
               onClick={() => onOpenQuiz?.(topic.quiz!)}
-              className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-sky-300 dark:border-sky-500/60 bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 hover:bg-sky-100 dark:hover:bg-sky-900/50 transition-colors cursor-pointer"
+              className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-500/60 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
             >
-              {quizAttempt ? `Quiz (${attemptsUsed}/2)` : 'Quiz'}
+              📝 Kerjakan Quiz!
             </button>
           )
         )}
