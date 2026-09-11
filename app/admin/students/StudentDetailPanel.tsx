@@ -488,9 +488,19 @@ export default function StudentDetailPanel({ studentId, onClose, onEdit, onDelet
                                           )}
                                         </>
                                       ) : (
-                                        <span className="text-xs text-[var(--text-muted)] italic">
-                                          Quiz belum dikerjakan
-                                        </span>
+                                        <ManualScoreEntry
+                                          topicId={topic.id}
+                                          quizId={topic.quiz!.id}
+                                          studentId={studentId}
+                                          onScoreSaved={() => {
+                                            setData(null);
+                                            setLoading(true);
+                                            fetch(`/api/admin/students/${studentId}/details`)
+                                              .then((r) => r.json())
+                                              .then((json) => { setData(json); setLoading(false); })
+                                              .catch(() => setLoading(false));
+                                          }}
+                                        />
                                       )}
                                     </div>
                                   )}
@@ -717,5 +727,100 @@ function StatusPill({
     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-600 flex-shrink-0">
       ✗ {status === "terlewat" ? "Terlewat" : "Tidak Hadir"}
     </span>
+  );
+}
+
+// ─── Manual Score Entry ───────────────────────────────────────────────────────
+
+function ManualScoreEntry({
+  quizId,
+  studentId,
+  onScoreSaved,
+}: {
+  topicId: number;
+  quizId: number;
+  studentId: string;
+  onScoreSaved: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [score, setScore] = useState("");
+  const [total, setTotal] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function handleSave() {
+    const s = Number(score);
+    const t = Number(total);
+    if ((!s && s !== 0) || !t || t <= 0 || s > t) {
+      setErr("Masukkan skor valid (0–total soal).");
+      return;
+    }
+    setSaving(true);
+    setErr(null);
+    try {
+      const res = await fetch(`/api/admin/students/${studentId}/quiz-score`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quiz_id: quizId, score: s, total_questions: t }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setErr(json.error || "Gagal menyimpan skor.");
+        return;
+      }
+      setOpen(false);
+      onScoreSaved();
+    } catch {
+      setErr("Network error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => setOpen(true)}
+        className="text-xs text-blue-600 hover:text-blue-800 font-medium italic"
+      >
+        Quiz belum dikerjakan — ✏️ Input manual
+      </button>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap mt-1">
+      <input
+        type="number"
+        min="0"
+        placeholder="Skor"
+        value={score}
+        onChange={(e) => setScore(e.target.value)}
+        className="w-16 text-xs border border-slate-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
+      />
+      <span className="text-xs text-slate-400">/</span>
+      <input
+        type="number"
+        min="1"
+        placeholder="Total"
+        value={total}
+        onChange={(e) => setTotal(e.target.value)}
+        className="w-16 text-xs border border-slate-300 rounded px-2 py-1 focus:outline-none focus:border-blue-500"
+      />
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className="text-xs bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 disabled:opacity-50"
+      >
+        {saving ? "…" : "Simpan"}
+      </button>
+      <button
+        onClick={() => setOpen(false)}
+        className="text-xs text-slate-400 hover:text-slate-600"
+      >
+        Batal
+      </button>
+      {err && <span className="text-xs text-red-500">{err}</span>}
+    </div>
   );
 }
