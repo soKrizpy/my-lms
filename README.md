@@ -140,3 +140,37 @@ Stronger borders, blue-tinted backgrounds, deeper accent color `#2563eb`.
 **Yang diinginkan:** A preview panel that shows the lesson title/description/objectives when admin selects an `engine_topic_id`, so they can verify before saving.
 
 **Files:** `app/admin/modules/[id]/topics/TopicList.tsx`
+
+---
+
+### 7. Admin: 3-Tab Topic Management (PRIORITY NEXT)
+
+Rework `/admin/modules/[id]/topics` menjadi 3 tab yang jelas.
+
+**Tab 1 — Input Manual**
+- Admin input: Judul Topik, Deskripsi Materi, Embed code (Coddy Tech / Canva iframe)
+- Admin kelola quiz sendiri via "Kelola Quiz" link
+- Tidak perlu engine_topic_id atau lesson JSON
+- Flow: Simpan → Publish → Siswa bisa akses → dapat XP/badge/achievement
+- Quiz dikelola manual di `/admin/modules/[id]/topics/[topicId]/quiz`
+
+**Tab 2 — Engine Lesson**
+- Admin pilih lesson dari `public/lessons/` yang sudah ada di engine
+- Dropdown/browser yang menampilkan lesson dari `topicRegistry.ts` (semua 45+ lesson: HTML 01–24, Scratch 01–21)
+- Admin hanya input Judul Topik — deskripsi, quiz, materi sudah ada di lesson JSON
+- Tidak perlu kelola quiz manual karena quiz sudah ada di dalam lesson JSON
+- Flow: Pilih lesson → Simpan (auto set engine_topic_id) → Publish → Siswa bisa akses → dapat XP/badge/achievement
+
+**Tab 3 — Bulk Upload CSV**
+- Upload CSV yang berisi: Judul, Deskripsi, Materi (nodes), Quiz sekaligus
+- Template CSV sudah tersedia di `/public/templates/lesson-template.csv`
+- CSV diparse → disimpan ke `lesson_content` di DB → admin tinggal Publish
+- Flow: Upload CSV → Review hasil → Publish → Siswa bisa akses → dapat XP/badge/achievement
+
+**Files to modify:**
+- `app/admin/modules/[id]/topics/page.tsx` — replace 2-section layout with 3-tab UI
+- `app/admin/modules/[id]/topics/AddTopicForm.tsx` — rename/repurpose as ManualInputTab
+- `app/admin/modules/[id]/topics/CsvImportForm.tsx` — becomes Tab 3 content
+- New: `app/admin/modules/[id]/topics/EngineTopicTab.tsx` — Tab 2 with lesson browser
+
+**Key constraint:** All 3 paths must result in a topic that is publishable and accessible by students in the Quest Map, awarding XP/badges/achievements on completion.
