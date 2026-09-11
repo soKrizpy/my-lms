@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from "../../../../../lib/supabaseAdmin";
 import { AddTopicForm } from "./AddTopicForm";
 import { TopicList } from "./TopicList";
 import { CsvImportForm } from "./CsvImportForm";
+import { SeedEngineTopicsButton } from "./SeedEngineTopicsButton";
 
 type PageProps = {
   params:
@@ -75,6 +76,18 @@ export default async function ModuleTopicsPage({ params }: PageProps) {
         >
           📋 Kelola Tryout
         </Link>
+      </div>
+
+      {/* Section 0: Sync from Engine Lessons */}
+      <div className="rounded-lg border-2 border-green-200 bg-green-50/40 p-4 space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">🔗</span>
+          <div>
+            <h2 className="text-sm font-bold text-slate-900">Sync dari Lesson Engine</h2>
+            <p className="text-xs text-slate-500">Tambahkan semua lesson bawaan dari engine ke modul ini sekaligus. Pilih kategori — semua topik langsung ter-publish dan siap dipakai siswa.</p>
+          </div>
+        </div>
+        <SeedEngineTopicsButton moduleId={moduleIdParam} />
       </div>
 
       {/* Section 1: Add topic + Topic list */}
