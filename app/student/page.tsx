@@ -5,7 +5,6 @@ import { Calendar, BookOpen, Users, Sparkles, Trophy, CheckCircle2 } from "lucid
 import { MagicalParticles } from "@/components/MagicalParticles";
 import { MagicalCounter } from "@/components/MagicalCounter";
 import { useLmsEngineListener } from "@/lib/useLmsEngineListener";
-import { EngineModal } from "@/components/EngineModal";
 import { QuestMap } from "@/components/quest-map/QuestMap";
 import { AvatarDisplay } from "@/components/avatar/AvatarDisplay";
 import { getTitleById } from "@/lib/gamification/catalog";
@@ -965,7 +964,6 @@ export default function StudentDashboard() {
   const [announcement, setAnnouncement] = useState<string | null>(null);
   const [studentId, setStudentId] = useState<string>('');
   const [locale, setLocale] = useState<string>('id');
-  const [engineModal, setEngineModal] = useState<{ topicId: string } | null>(null);
   const [activeQuiz, setActiveQuiz] = useState<{ id: number; title: string } | null>(null);
   const [badgeQueue, setBadgeQueue] = useState<BadgeDefinition[]>([]);
   const [earnedBadges, setEarnedBadges] = useState<EarnedBadgeRow[]>([]);
@@ -1103,33 +1101,28 @@ export default function StudentDashboard() {
     { id: "parent" as const, label: "Parent Hub", icon: Users },
   ];
 
+  // Handler: open lesson in a new tab
+  const handleStartLesson = useCallback((engineTopicId: string) => {
+    const url = `/learning/lesson/${encodeURIComponent(engineTopicId)}` +
+      `?studentId=${encodeURIComponent(data?.studentId || studentId)}` +
+      `&theme=dark` +
+      `&lang=${locale}` +
+      `&lmsOrigin=${encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : '')}`;
+    window.open(url, '_blank', 'noopener');
+    // Poll dashboard after a short delay so new progress shows up when they return
+    setTimeout(() => void fetchData(), 3000);
+  }, [data?.studentId, studentId, locale, fetchData]);
+
   // Handler: student clicked "Bergabung Sekarang" — topic unlocked, maybe open engine
   const handleJoined = useCallback((unlockedTopic: UnlockedTopic | null) => {
     void fetchData(); // refresh unlock status
     if (unlockedTopic?.canStartEngine && unlockedTopic.engine_topic_id) {
-      setEngineModal({ topicId: unlockedTopic.engine_topic_id });
+      handleStartLesson(unlockedTopic.engine_topic_id);
     }
-  }, [fetchData]);
-
-  // Handler: student completed a lesson in the engine
-  const handleEngineComplete = useCallback((topicId: string) => {
-    // engine-sync API call is handled by useLmsEngineListener → fetchData already fires
-    // Proactively close modal after a brief delay for achievement screen
-    void fetchData();
-  }, [fetchData]);
+  }, [fetchData, handleStartLesson]);
 
   return (
     <div className="space-y-5 relative">
-      {/* Engine Lesson Modal — full-screen iframe overlay */}
-      {engineModal && (data?.studentId || studentId) && (
-        <EngineModal
-          topicId={engineModal.topicId}
-          studentId={data?.studentId || studentId}
-          lang={locale}
-          onClose={() => setEngineModal(null)}
-          onComplete={handleEngineComplete}
-        />
-      )}
       {/* Invoice Banners */}
       <div className="fixed bottom-20 md:bottom-4 left-1/2 -translate-x-1/2 w-full max-w-lg z-40 flex flex-col gap-3 px-4 pointer-events-none">
         {invoices.map((inv) => (
@@ -1326,7 +1319,7 @@ export default function StudentDashboard() {
                 modules={data.modules || []}
                 quizAttempts={data.quizAttempts || []}
                 topicProgress={data.topicProgress || []}
-                onStartLesson={(eid) => setEngineModal({ topicId: eid })}
+                onStartLesson={(eid) => handleStartLesson(eid)}
                 onRefresh={fetchData}
                 studentName={data.studentName || "Siswa"}
                 avatarId={data.avatarId}

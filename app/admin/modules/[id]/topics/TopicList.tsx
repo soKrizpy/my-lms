@@ -72,7 +72,7 @@ export function TopicList({
                       }`}>
                         {topic.status === 'published'
                           ? `✅ Published${topic.published_at ? ` · ${new Date(topic.published_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}` : ''}`
-                          : '📝 Draft'}
+                          : '⚠️ Draft — belum terlihat siswa'}
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
@@ -154,13 +154,13 @@ export function TopicList({
                     <button
                       type="submit"
                       disabled={isPending}
-                      className={`rounded-md px-2.5 py-1 text-xs font-semibold transition-colors disabled:opacity-50 ${
+                      className={`rounded-md px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-50 ${
                         topic.status === 'published'
-                          ? 'border border-amber-300 text-amber-700 hover:bg-amber-50'
-                          : 'border border-green-300 text-green-700 hover:bg-green-50'
+                          ? 'bg-amber-100 border border-amber-300 text-amber-800 hover:bg-amber-200'
+                          : 'bg-green-600 text-white hover:bg-green-700 shadow-sm'
                       }`}
                     >
-                      {topic.status === 'published' ? '📤 Unpublish' : '🚀 Publish'}
+                      {topic.status === 'published' ? '📤 Unpublish' : '🚀 Publish Sekarang!'}
                     </button>
                   </form>
                 )}

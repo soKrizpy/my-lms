@@ -61,41 +61,53 @@ export default async function ModuleTopicsPage({ params }: PageProps) {
 
   return (
     <section className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-slate-900">
-          Topik untuk Modul: {moduleData?.title ?? "-"}
-        </h1>
-        <p className="text-sm text-slate-600">
-          {moduleData?.description ?? "Tidak ada deskripsi."}
-        </p>
+      {/* Header */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">
+            Topik — {moduleData?.title ?? '-'}
+          </h1>
+          <p className="text-sm text-slate-500">{moduleData?.description ?? ''}</p>
+        </div>
+        <Link
+          href={`/admin/modules/${moduleIdParam}/assessment`}
+          className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 shrink-0"
+        >
+          📋 Kelola Tryout
+        </Link>
       </div>
 
-      <Link
-        href={`/admin/modules/${moduleIdParam}/assessment`}
-        className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
-      >
-        📋 Kelola Tryout
-      </Link>
+      {/* Section 1: Add topic + Topic list */}
+      <div className="rounded-lg border-2 border-blue-200 bg-blue-50/40 p-4 space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">📝</span>
+          <div>
+            <h2 className="text-sm font-bold text-slate-900">Input Manual</h2>
+            <p className="text-xs text-slate-500">Tambah topik satu per satu, hubungkan ke lesson engine bawaan, dan set publish.</p>
+          </div>
+        </div>
+        <AddTopicForm moduleId={moduleIdParam} usedEngineTopicIds={usedEngineTopicIds} />
+        {topicsError && <p className="text-sm text-red-600">Error: {topicsError.message}</p>}
+        <div className="rounded-lg border border-slate-200 bg-white p-4">
+          <h3 className="mb-3 text-sm font-semibold text-slate-900">Daftar Topik</h3>
+          {!topics || topics.length === 0 ? (
+            <p className="text-sm text-slate-500">Belum ada topik untuk modul ini.</p>
+          ) : (
+            <TopicList initialTopics={topics} moduleId={moduleIdParam} />
+          )}
+        </div>
+      </div>
 
-      <AddTopicForm moduleId={moduleIdParam} usedEngineTopicIds={usedEngineTopicIds} />
-
-      <CsvImportForm moduleId={moduleIdParam} />
-
-      {topicsError && (
-        <p style={{ color: "red" }}>Error topik: {topicsError.message}</p>
-      )}
-
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-        <h2 className="mb-3 text-sm font-semibold text-slate-900">
-          Daftar Topik
-        </h2>
-        {!topics || topics.length === 0 ? (
-          <p className="text-sm text-slate-500">
-            Belum ada topik untuk modul ini.
-          </p>
-        ) : (
-          <TopicList initialTopics={topics} moduleId={moduleIdParam} />
-        )}
+      {/* Section 2: CSV bulk upload */}
+      <div className="rounded-lg border-2 border-purple-200 bg-purple-50/40 p-4 space-y-4">
+        <div className="flex items-center gap-2">
+          <span className="text-lg">📦</span>
+          <div>
+            <h2 className="text-sm font-bold text-slate-900">Bulk Upload via CSV</h2>
+            <p className="text-xs text-slate-500">Upload banyak konten lesson sekaligus. Setiap lesson harus sudah punya topik (dibuat via Input Manual). Setelah upload, klik Publish di daftar topik.</p>
+          </div>
+        </div>
+        <CsvImportForm moduleId={moduleIdParam} />
       </div>
     </section>
   );
