@@ -137,13 +137,15 @@ function TopicNodeInner({
   };
 
   const handleNodeClick = () => {
-    if (onSelectTopic) {
-      onSelectTopic(topic);
-      return;
-    }
     if (state === 'locked') return;
+    // Engine lesson takes priority: open in new tab
     if (canStartEngine && onStartLesson) {
       onStartLesson(topic.engine_topic_id!);
+      return;
+    }
+    // No engine lesson — open the LMS topic flow modal (manual content)
+    if (onSelectTopic) {
+      onSelectTopic(topic);
     }
   };
 
