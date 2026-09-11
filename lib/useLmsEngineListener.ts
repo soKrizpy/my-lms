@@ -6,9 +6,10 @@ import type { BadgeDefinition } from './gamification/badgeCatalog';
 // Listens for postMessage events from bits2bytes-lesson-engine.
 // Use this hook in StudentDashboard.
 //
-// Origin validation: accepts events only from the configured Lesson Engine origin.
-// Falls back to same-origin (window.location.origin) when NEXT_PUBLIC_LESSON_ENGINE_URL
-// is not set — this covers local development where the proxy makes both same-origin.
+// Origin validation: accepts events from:
+//   1. The configured Lesson Engine origin (NEXT_PUBLIC_LESSON_ENGINE_URL)
+//   2. Same-origin — when the engine is loaded via the /learning/* proxy rewrite
+//      (this is the production setup where iframe.src = /learning/lesson/...)
 
 import { useEffect } from 'react';
 
@@ -43,9 +44,9 @@ export function useLmsEngineListener(options: UseLmsEngineListenerOptions = {}) 
     }
 
     async function handleMessage(raw: MessageEvent) {
-      // Reject events from any origin that is not the configured Lesson Engine.
-      // Never accept '*'.
-      if (raw.origin !== allowedOrigin) return;
+      // Accept same-origin messages (engine loaded via /learning/* proxy rewrite)
+      // AND direct engine origin messages (for deployments without proxy)
+      if (raw.origin !== allowedOrigin && raw.origin !== window.location.origin) return;
 
       const data = raw.data as LmsEvent;
       if (!data || data.source !== 'bits2bytes-lesson-engine') return;
