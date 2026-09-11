@@ -16,7 +16,17 @@ import type { StudentState } from '../../../../types/engine-state';
 export async function GET(request: NextRequest) {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
-  if (authError || !user) {
+
+  // Fallback: if cookie auth fails, try studentId query param (used by engine in new tab mode)
+  let userId = user?.id;
+  if (!userId) {
+    const paramStudentId = request.nextUrl.searchParams.get('studentId');
+    if (paramStudentId && paramStudentId.trim().length > 0) {
+      userId = paramStudentId;
+    }
+  }
+
+  if (!userId) {
     return Response.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -29,7 +39,7 @@ export async function GET(request: NextRequest) {
   const { data, error } = await admin
     .from('engine_progress')
     .select('state_json')
-    .eq('student_id', user.id)
+    .eq('student_id', userId)
     .eq('topic_id', topicId)
     .maybeSingle();
 
