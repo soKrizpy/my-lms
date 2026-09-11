@@ -73,58 +73,70 @@ npm run test:watch  # watch mode
 
 ---
 
+## Admin Setup Checklist (Do This Now!)
+
+Before students can see lessons in the Quest Map, each topic needs an `engine_topic_id` set:
+
+1. Go to `/admin/modules/[id]/topics`
+2. Click **Edit Topik** on each topic
+3. In the **"Hubungkan ke Lesson Engine"** dropdown, pick the matching lesson
+   - e.g., "beginner-html-01 — Build Your First Web Page"
+4. Click **Simpan**
+5. After saving, click **🚀 Publish Sekarang!** on that topic
+
+The lesson will then appear as a **"▶ Buka"** or **"🚀 Mulai!"** button on the student's Quest Map.
+
+Clicking it opens the lesson in a **new browser tab**. When the student completes the lesson, XP and progress are saved automatically.
+
+---
+
+## Vercel Deployment
+
+Both projects are deployed and linked:
+
+| Project | URL |
+|---|---|
+| LMS | https://bits2bytes.vercel.app |
+| Lesson Engine | https://bits2bytes-lesson-engine.vercel.app |
+
+The LMS proxies `/learning/*` → Engine. Env vars set on Vercel:
+- `LESSON_ENGINE_URL` = `https://bits2bytes-lesson-engine.vercel.app`
+- `NEXT_PUBLIC_LESSON_ENGINE_URL` = `https://bits2bytes-lesson-engine.vercel.app`
+
+---
+
 ## Next Tasks (Backlog)
 
-### 1. Fix: Topic 1 masih terkunci padahal Sarah sudah selesaikan quiz
+### ✅ 1. Fix: Topic unlock via quiz completion — DONE
+Added signal (c) to `lib/topicUnlock.ts`: quiz attempt now unlocks a topic.
 
-**Context:** Sarah sudah menyelesaikan beberapa topik dan quiz di modul "Basic Visual Web", tapi Topic 1 masih terkunci di Learning Path.
+### ✅ 2. Lesson Engine: Mimo/Duolingo style — DONE
+Full rework: TopProgressBar, StickyCtaBar, one node per screen, quiz one question at a time.
 
-**Root cause to investigate:**
-- Topic unlock di `lib/topicUnlock.ts` pakai 2 sinyal: (a) `meeting_students.has_joined = true` dan (b) `topic_progress` dari lesson engine. Kalau topic belum punya `engine_topic_id` yang diisi, sinyal (b) tidak aktif sama sekali.
-- Kemungkinan: unlock hanya terjadi saat siswa JOIN meeting, bukan saat selesaikan quiz. Perlu dikaji apakah quiz completion seharusnya juga bisa membuka topik berikutnya tanpa harus join meeting.
-- Cek di admin apakah semua topik di modul "Basic Visual Web" sudah diisi `engine_topic_id`-nya.
+### ✅ 3. LMS Learning Path: Quiz score di setiap topik — DONE
+`Quiz ✓ 80` badge on completed topics; `📝 Kerjakan Quiz!` nudge when not attempted.
 
-**Files:** `lib/topicUnlock.ts`, `/admin/modules/[id]/topics`
-
----
-
-### 2. Lesson Engine: Rework tampilan ke gaya Mimo/Duolingo
-
-**Context:** Format lesson engine sekarang linear panjang. JSON lesson sudah bagus — `learningPath` berisi node `lesson`, `code`, `practice`, `challenge`, `quiz` secara terurut (lihat `public/lessons/beginner/html/beginner-html-01.json`). Tinggal tampilannya yang perlu diubah.
-
-**Yang diinginkan:**
-- Tampilkan 1 node per layar — student klik "Lanjut" untuk maju
-- Setelah setiap node materi (lesson/code), langsung muncul pertanyaan/practice di layar yang sama
-- Di akhir semua node materi, baru tampilkan quiz final sebelum completion screen
-- Progress bar di atas menunjukkan posisi node saat ini dari total node
-
-**Repo:** `bits2bytes-lesson-engine` — `src/app/lesson/`, `src/components/`
+### ✅ 4. UI: Light mode contrast — DONE
+Stronger borders, blue-tinted backgrounds, deeper accent color `#2563eb`.
 
 ---
 
-### 3. LMS Learning Path: Tampilkan quiz score di setiap topik
+### 5. Lesson Engine: postMessage sync after new-tab completion
 
-**Context:** Di tab Learning Path, topik yang sudah dikerjakan tampil sebagai checklist, tapi tidak ada info skor quiz. Data sudah ada di `quizAttempts` yang di-fetch dashboard.
+**Context:** Lessons now open in new tab. When student completes and closes the tab, the LMS polls `fetchData()` after 3s. But if the student takes longer, the progress won't reflect until they manually refresh.
 
-**Yang diinginkan:**
-- Tampilkan best quiz score di bawah nama topik yang sudah dibuka
-- Format: badge kecil `Quiz ✓ 80` atau `Quiz: 80/100`
-- Kalau belum ada attempt, tidak perlu tampilkan apa-apa
+**Solution options:**
+- (A) Student clicks "Kembali ke Dashboard" button inside engine → engine fires postMessage → LMS catches it via `useLmsEngineListener` (already wired)
+- (B) Add a visible "Saya Sudah Selesai" button on the student dashboard that manually refreshes progress
 
-**Files:** `components/quest-map/TopicNode.tsx`, `components/quest-map/ModulePathSection.tsx`
-
----
-
-### 4. UI: Light mode terlalu samar — perkuat border dan warna card
-
-**Context:** Di light mode, border card tipis/transparan sehingga konten sulit dibaca. Perlu disesuaikan dengan color theme logo Bits2Bytes.
-
-**Yang diinginkan:**
-- Border card lebih tegas di light mode (misal `border-slate-300` atau lebih gelap)
-- Background card lebih kontras — putih bersih atau warna sangat muda
-- Aksen warna (brand primary/secondary) disesuaikan dengan palet logo Bits2Bytes
-- Update CSS variables light mode di `app/globals.css`: `--glass-border`, `--glass-bg`, `--text-primary`, `--text-secondary`
-
-**Files:** `app/globals.css`, `css/`, komponen yang pakai `var(--glass-*)` variables
+**Files:** `app/student/page.tsx` (increase poll interval or add refresh button)
 
 ---
+
+### 6. Admin: Built-in lesson browser
+
+**Context:** Admin has to manually type or select `engine_topic_id` from a dropdown. For topics like `beginner-scratch-01` to `beginner-scratch-21`, this is tedious.
+
+**Yang diinginkan:** A preview panel that shows the lesson title/description/objectives when admin selects an `engine_topic_id`, so they can verify before saving.
+
+**Files:** `app/admin/modules/[id]/topics/TopicList.tsx`
