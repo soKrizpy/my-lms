@@ -89,7 +89,7 @@ export async function GET() {
     try {
       const { data, error } = await supabaseAdmin
         .from("student_modules")
-        .select(`module_id, modules(id, title, description, level)`)
+        .select(`module_id, status, modules(id, title, description, level)`)
         .eq("student_id", studentId)
         .order("module_id", { ascending: true });
 
@@ -207,6 +207,7 @@ export async function GET() {
           const isModuleLocked = unlockedCount === 0;
           const isModuleActive = unlockedCount > 0 && unlockedCount < modTopics.length;
           const isModuleComplete = modTopics.length > 0 && unlockedCount === modTopics.length;
+          const moduleStatus: 'active' | 'paused' = (sm?.status === 'paused') ? 'paused' : 'active';
 
           return {
             ...mod,
@@ -214,6 +215,7 @@ export async function GET() {
             isModuleLocked,
             isModuleActive,
             isModuleComplete,
+            moduleStatus,
           };
         })
         .filter((m: any): m is object => m !== null);

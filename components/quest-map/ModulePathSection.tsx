@@ -5,7 +5,7 @@
 // Desktop: 3-column zigzag layout (matching gamifikasi3.html style).
 // Mobile: single vertical column.
 
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 import { TopicNode, type TopicNodeTopic, type TopicProgress, type QuizAttempt } from './TopicNode';
 import { AssessmentNode } from './AssessmentNode';
 import { type AssessmentState } from '../../lib/lmsData';
@@ -19,6 +19,7 @@ interface Module {
   isModuleLocked: boolean;
   isModuleActive: boolean;
   isModuleComplete: boolean;
+  moduleStatus?: 'active' | 'paused';  // ← add this
 }
 
 interface ModulePathSectionProps {
@@ -79,6 +80,9 @@ function ModulePathSectionInner({
   onOpenAssessment,
 }: ModulePathSectionProps) {
   const { topics, isModuleLocked, isModuleComplete } = module;
+  const isPaused = module.moduleStatus === 'paused';
+  const [isExpanded, setIsExpanded] = useState(!isPaused);
+  // Active modules start expanded; paused modules start collapsed
   const unlockedCount = topics.filter((t) => t.isUnlocked).length;
   const progressPercent =
     topics.length > 0 ? Math.round((unlockedCount / topics.length) * 100) : 0;
@@ -104,16 +108,22 @@ function ModulePathSectionInner({
         background: 'var(--glass-bg)',
         borderColor: isModuleComplete
           ? '#10b981'
+          : isPaused
+          ? '#f59e0b'
           : isModuleLocked
             ? 'rgba(128,128,128,0.25)'
             : 'var(--glass-border)',
-        boxShadow: isModuleLocked ? 'none' : 'var(--glass-shadow)',
+        boxShadow: isModuleLocked || isPaused ? 'none' : 'var(--glass-shadow)',
+        opacity: isPaused ? 0.85 : 1,
       }}
     >
       {/* ── Module header ─────────────────────────────────────────────── */}
       <div
-        className="px-5 py-4 border-b bg-slate-100/70 dark:bg-black/30"
+        className="px-5 py-4 border-b bg-slate-100/70 dark:bg-black/30 cursor-pointer select-none"
         style={{ borderColor: 'var(--glass-border)' }}
+        onClick={() => setIsExpanded(prev => !prev)}
+        role="button"
+        aria-expanded={isExpanded}
       >
         <div className="flex items-center justify-between gap-3 mb-2">
           <div className="flex items-center gap-2 min-w-0">
@@ -131,6 +141,11 @@ function ModulePathSectionInner({
             >
               {module.title}
             </h3>
+            {isPaused && (
+              <span className="ml-1 inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-500/50 flex-shrink-0">
+                ⏸ Dijeda
+              </span>
+            )}
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <span
@@ -169,6 +184,7 @@ function ModulePathSectionInner({
       </div>
 
       {/* ── Topic nodes (always rendered dynamically) ─────────────────── */}
+      {isExpanded && (
       <div className="p-5">
         {/* ── Mobile: single column ──────────────────────────────── */}
         <div className="flex flex-col items-center gap-6 lg:hidden">
@@ -179,8 +195,8 @@ function ModulePathSectionInner({
                 isCurrentActive={idx === activeIndex}
                 topicProgress={topicProgress}
                 quizAttempts={quizAttempts}
-                onStartLesson={onStartLesson}
-                onOpenQuiz={onOpenQuiz}
+                onStartLesson={isPaused ? undefined : onStartLesson}
+                onOpenQuiz={isPaused ? undefined : onOpenQuiz}
                 onSelectTopic={(t) => onSelectTopic?.(t, module.title, idx)}
                 nodeIndex={idx}
               />
@@ -247,8 +263,8 @@ function ModulePathSectionInner({
                           isCurrentActive={originalIdx === activeIndex}
                           topicProgress={topicProgress}
                           quizAttempts={quizAttempts}
-                          onStartLesson={onStartLesson}
-                          onOpenQuiz={onOpenQuiz}
+                          onStartLesson={isPaused ? undefined : onStartLesson}
+                          onOpenQuiz={isPaused ? undefined : onOpenQuiz}
                           onSelectTopic={(t) => onSelectTopic?.(t, module.title, originalIdx)}
                           nodeIndex={originalIdx}
                         />
@@ -287,6 +303,7 @@ function ModulePathSectionInner({
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

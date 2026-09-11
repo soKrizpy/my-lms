@@ -87,6 +87,7 @@ interface Module {
   isModuleComplete: boolean;
   assessmentId?: number | null;
   assessmentTitle?: string | null;
+  moduleStatus?: 'active' | 'paused';
 }
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -345,9 +346,16 @@ function QuestMapInner({
       {/* Badge Wall — full catalog with earned/locked state */}
       <BadgeWall earnedBadges={earnedBadges ?? []} />
 
-      {/* Module path sections */}
+      {/* Module path sections — active first, then paused */}
       <div className="space-y-4">
-        {modules.map((mod) => (
+        {[...modules]
+          .sort((a, b) => {
+            const aStatus = a.moduleStatus ?? 'active';
+            const bStatus = b.moduleStatus ?? 'active';
+            if (aStatus === bStatus) return 0;
+            return aStatus === 'active' ? -1 : 1;
+          })
+          .map((mod) => (
           <ModulePathSection
             key={mod.id}
             module={mod}
