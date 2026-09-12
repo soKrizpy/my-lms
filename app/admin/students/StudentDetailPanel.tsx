@@ -118,12 +118,19 @@ export default function StudentDetailPanel({ studentId, onClose, onEdit, onDelet
   const [moduleStatuses, setModuleStatuses] = useState<Record<number, 'active' | 'paused'>>({});
   const [statusLoading, setStatusLoading] = useState<Record<number, boolean>>({});
   const [statusError, setStatusError] = useState<string | null>(null);
+  const [openModules, setOpenModules] = useState<Record<number, boolean>>({});
 
   useEffect(() => {
     if (data) {
       const initial: Record<number, 'active' | 'paused'> = {};
-      data.modules.forEach((m) => { initial[m.id] = m.status; });
+      const initialOpen: Record<number, boolean> = {};
+      data.modules.forEach((m) => {
+        initial[m.id] = m.status;
+        // Active modules start expanded, paused ones start collapsed
+        initialOpen[m.id] = m.status === 'active';
+      });
       setModuleStatuses(initial);
+      setOpenModules(initialOpen);
     }
   }, [data]);
 
@@ -393,124 +400,149 @@ export default function StudentDetailPanel({ studentId, onClose, onEdit, onDelet
                       desc="Siswa ini belum di-assign ke modul manapun."
                     />
                   ) : (
-                    data.modules.map((mod) => (
-                      <div
-                        key={mod.id}
-                        className="glass-panel rounded-xl overflow-hidden shadow-sm"
-                      >
-                        {/* Module header */}
-                        <div className="px-4 py-3 bg-[var(--glass-bg)] border-b border-[var(--glass-border)]">
-                          <div className="flex items-center justify-between mb-1.5">
-                            <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
-                              <h3 className="text-sm font-semibold text-[var(--text-primary)] truncate">
-                                {mod.title}
-                              </h3>
-                              {/* Status badge — fall back to mod.status before moduleStatuses is initialised */}
-                              {(moduleStatuses[mod.id] ?? mod.status) === 'active' ? (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 flex-shrink-0">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                  Aktif
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 flex-shrink-0">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                                  Dijeda
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <span className="text-xs font-medium text-[var(--text-muted)]">
-                                {mod.completedCount}/{mod.totalCount} topik
-                              </span>
-                              {/* Action button — fall back to mod.status before moduleStatuses is initialised */}
-                              {(moduleStatuses[mod.id] ?? mod.status) === 'active' ? (
-                                <button
-                                  onClick={() => handleStatusChange(mod.id, 'pause')}
-                                  disabled={statusLoading[mod.id]}
-                                  className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 transition-colors disabled:opacity-50"
-                                >
-                                  {statusLoading[mod.id] ? (
-                                    <span className="w-3 h-3 border border-amber-600 border-t-transparent rounded-full animate-spin" />
-                                  ) : '⏸'} Jeda
-                                </button>
-                              ) : (
-                                <button
-                                  onClick={() => handleStatusChange(mod.id, 'activate')}
-                                  disabled={statusLoading[mod.id]}
-                                  className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300 transition-colors disabled:opacity-50"
-                                >
-                                  {statusLoading[mod.id] ? (
-                                    <span className="w-3 h-3 border border-emerald-600 border-t-transparent rounded-full animate-spin" />
-                                  ) : '▶'} Aktifkan
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                          <ProgressBar value={mod.completedCount} max={mod.totalCount} />
-                        </div>
+                    data.modules.map((mod, modIdx) => {
+                      const isOpen = openModules[mod.id] ?? (mod.status === 'active');
+                      const currentStatus = moduleStatuses[mod.id] ?? mod.status;
+                      // Alternate background depth for visual separation
+                      const cardBg = modIdx % 2 === 0
+                        ? "bg-[var(--glass-bg)]"
+                        : "bg-[rgba(0,0,0,0.06)] dark:bg-[rgba(255,255,255,0.04)]";
 
-                        {/* Topics list */}
-                        <div className="divide-y divide-[var(--glass-border)]">
-                          {mod.topics.length === 0 ? (
-                            <p className="px-4 py-3 text-xs text-[var(--text-muted)] italic">
-                              Belum ada topik di modul ini.
-                            </p>
-                          ) : (
-                            mod.topics.map((topic) => (
-                              <div key={topic.id} className="flex items-start gap-3 px-4 py-3">
-                                {/* Status icon */}
-                                <div className="flex-shrink-0 mt-0.5">
-                                  {topic.isUnlocked ? (
-                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">✓</span>
-                                  ) : (
-                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-muted)] text-[10px]">🔒</span>
-                                  )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className={`text-sm font-medium ${topic.isUnlocked ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]"}`}>
-                                    {topic.order_index}. {topic.title}
-                                  </p>
-                                  {topic.quiz && (
-                                    <div className="flex items-center gap-2 mt-1">
-                                      {topic.quiz.bestScore !== null && topic.quiz.totalQuestions ? (
-                                        <>
-                                          <span className="text-xs text-[var(--text-muted)]">
-                                            Quiz: <strong className="text-[var(--text-secondary)]">{topic.quiz.bestScore}/{topic.quiz.totalQuestions}</strong>
-                                          </span>
-                                          <ScoreBadge
-                                            score={topic.quiz.bestScore}
-                                            total={topic.quiz.totalQuestions}
-                                          />
-                                          {topic.quiz.attemptsCount > 1 && (
-                                            <span className="text-[10px] text-[var(--text-muted)]">
-                                              ({topic.quiz.attemptsCount}× percobaan)
-                                            </span>
-                                          )}
-                                        </>
+                      return (
+                        <div
+                          key={mod.id}
+                          className={`rounded-xl overflow-hidden shadow-sm border border-[var(--glass-border)] ${cardBg}`}
+                        >
+                          {/* Module header — fully clickable to toggle */}
+                          <button
+                            type="button"
+                            onClick={() => setOpenModules(prev => ({ ...prev, [mod.id]: !prev[mod.id] }))}
+                            className="w-full text-left px-4 py-3 border-b border-[var(--glass-border)] transition-colors hover:bg-[var(--accent)]/5"
+                          >
+                            <div className="flex items-center justify-between mb-1.5">
+                              <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+                                {/* Chevron arrow */}
+                                <svg
+                                  className={`w-4 h-4 flex-shrink-0 text-[var(--text-muted)] transition-transform duration-200 ${isOpen ? "rotate-180" : "rotate-0"}`}
+                                  fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                                </svg>
+                                <h3 className="text-sm font-semibold text-[var(--text-primary)] truncate">
+                                  {mod.title}
+                                </h3>
+                                {/* Status badge */}
+                                {currentStatus === 'active' ? (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 flex-shrink-0">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                    Aktif
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 flex-shrink-0">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                    Dijeda
+                                  </span>
+                                )}
+                              </div>
+                              {/* Right side: topic count + action button — stop propagation so clicking doesn't also toggle collapse */}
+                              <div
+                                className="flex items-center gap-2 flex-shrink-0"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <span className="text-xs font-medium text-[var(--text-muted)]">
+                                  {mod.completedCount}/{mod.totalCount} topik
+                                </span>
+                                {currentStatus === 'active' ? (
+                                  <button
+                                    onClick={() => handleStatusChange(mod.id, 'pause')}
+                                    disabled={statusLoading[mod.id]}
+                                    className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-md bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300 transition-colors disabled:opacity-50"
+                                  >
+                                    {statusLoading[mod.id] ? (
+                                      <span className="w-3 h-3 border border-amber-600 border-t-transparent rounded-full animate-spin" />
+                                    ) : '⏸'} Jeda
+                                  </button>
+                                ) : (
+                                  <button
+                                    onClick={() => handleStatusChange(mod.id, 'activate')}
+                                    disabled={statusLoading[mod.id]}
+                                    className="flex items-center gap-1 text-[10px] font-semibold px-2.5 py-1 rounded-md bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300 transition-colors disabled:opacity-50"
+                                  >
+                                    {statusLoading[mod.id] ? (
+                                      <span className="w-3 h-3 border border-emerald-600 border-t-transparent rounded-full animate-spin" />
+                                    ) : '▶'} Aktifkan
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                            <ProgressBar value={mod.completedCount} max={mod.totalCount} />
+                          </button>
+
+                          {/* Topics list — collapsible */}
+                          {isOpen && (
+                            <div className="divide-y divide-[var(--glass-border)]">
+                              {mod.topics.length === 0 ? (
+                                <p className="px-4 py-3 text-xs text-[var(--text-muted)] italic">
+                                  Belum ada topik di modul ini.
+                                </p>
+                              ) : (
+                                mod.topics.map((topic) => (
+                                  <div key={topic.id} className="flex items-start gap-3 px-4 py-3">
+                                    {/* Status icon */}
+                                    <div className="flex-shrink-0 mt-0.5">
+                                      {topic.isUnlocked ? (
+                                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 text-[11px] font-bold">✓</span>
                                       ) : (
-                                        <ManualScoreEntry
-                                          topicId={topic.id}
-                                          quizId={topic.quiz!.id}
-                                          studentId={studentId}
-                                          onScoreSaved={() => {
-                                            setData(null);
-                                            setLoading(true);
-                                            fetch(`/api/admin/students/${studentId}/details`)
-                                              .then((r) => r.json())
-                                              .then((json) => { setData(json); setLoading(false); })
-                                              .catch(() => setLoading(false));
-                                          }}
-                                        />
+                                        <span className="flex items-center justify-center w-5 h-5 rounded-full bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-muted)] text-[10px]">🔒</span>
                                       )}
                                     </div>
-                                  )}
-                                </div>
-                              </div>
-                            ))
+                                    <div className="flex-1 min-w-0">
+                                      <p className={`text-sm font-medium ${topic.isUnlocked ? "text-[var(--text-primary)]" : "text-[var(--text-muted)]"}`}>
+                                        {topic.order_index}. {topic.title}
+                                      </p>
+                                      {topic.quiz && (
+                                        <div className="flex items-center gap-2 mt-1">
+                                          {topic.quiz.bestScore !== null && topic.quiz.totalQuestions ? (
+                                            <>
+                                              <span className="text-xs text-[var(--text-muted)]">
+                                                Quiz: <strong className="text-[var(--text-secondary)]">{topic.quiz.bestScore}/{topic.quiz.totalQuestions}</strong>
+                                              </span>
+                                              <ScoreBadge
+                                                score={topic.quiz.bestScore}
+                                                total={topic.quiz.totalQuestions}
+                                              />
+                                              {topic.quiz.attemptsCount > 1 && (
+                                                <span className="text-[10px] text-[var(--text-muted)]">
+                                                  ({topic.quiz.attemptsCount}× percobaan)
+                                                </span>
+                                              )}
+                                            </>
+                                          ) : (
+                                            <ManualScoreEntry
+                                              topicId={topic.id}
+                                              quizId={topic.quiz!.id}
+                                              studentId={studentId}
+                                              onScoreSaved={() => {
+                                                setData(null);
+                                                setLoading(true);
+                                                fetch(`/api/admin/students/${studentId}/details`)
+                                                  .then((r) => r.json())
+                                                  .then((json) => { setData(json); setLoading(false); })
+                                                  .catch(() => setLoading(false));
+                                              }}
+                                            />
+                                          )}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
                           )}
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               )}
