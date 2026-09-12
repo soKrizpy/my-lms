@@ -23,11 +23,11 @@ export function CreateAssessmentForm({ moduleId }: Props) {
   return (
     <form
       action={formAction}
-      className="space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+      className="space-y-4 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] p-4 shadow-sm"
     >
       <input type="hidden" name="moduleId" value={moduleId} />
 
-      <h2 className="text-sm font-semibold text-slate-900">Buat Assessment Baru</h2>
+      <h2 className="text-sm font-semibold text-[var(--text-primary)]">Buat Assessment Baru</h2>
 
       {state?.error && (
         <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -57,7 +57,7 @@ export function CreateAssessmentForm({ moduleId }: Props) {
       <button
         type="submit"
         disabled={isPending}
-        className="rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:opacity-60"
+        className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--accent-dark)] disabled:opacity-60"
       >
         {isPending ? "Menyimpan..." : "Buat Assessment"}
       </button>

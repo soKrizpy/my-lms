@@ -105,12 +105,12 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
   const topicsTabContent = (
     <div className="space-y-6">
       {/* Section 0: Sync from Engine */}
-      <div className="rounded-lg border-2 border-green-200 bg-green-50/40 p-4 space-y-4">
+      <div className="rounded-lg border-2 border-[var(--success)]/40 bg-[var(--success)]/5 p-4 space-y-4">
         <div className="flex items-center gap-2">
           <span className="text-lg">🔗</span>
           <div>
-            <h2 className="text-sm font-bold text-slate-900">Sync dari Lesson Engine</h2>
-            <p className="text-xs text-slate-500">
+            <h2 className="text-sm font-bold text-[var(--text-primary)]">Sync dari Lesson Engine</h2>
+            <p className="text-xs text-[var(--text-muted)]">
               Tambahkan semua lesson bawaan dari engine ke modul ini sekaligus. Pilih kategori —
               semua topik langsung ter-publish dan siap dipakai siswa.
             </p>
@@ -120,12 +120,12 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
       </div>
 
       {/* Section 1: Manual input + topic list */}
-      <div className="rounded-lg border-2 border-blue-200 bg-blue-50/40 p-4 space-y-4">
+      <div className="rounded-lg border-2 border-[var(--accent)]/30 bg-[var(--accent)]/5 p-4 space-y-4">
         <div className="flex items-center gap-2">
           <span className="text-lg">📝</span>
           <div>
-            <h2 className="text-sm font-bold text-slate-900">Input Manual</h2>
-            <p className="text-xs text-slate-500">
+            <h2 className="text-sm font-bold text-[var(--text-primary)]">Input Manual</h2>
+            <p className="text-xs text-[var(--text-muted)]">
               Tambah topik satu per satu, hubungkan ke lesson engine bawaan, dan set publish.
             </p>
           </div>
@@ -134,10 +134,10 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
         {topicsError && (
           <p className="text-sm text-red-600">Error: {topicsError.message}</p>
         )}
-        <div className="rounded-lg border border-slate-200 bg-white p-4">
-          <h3 className="mb-3 text-sm font-semibold text-slate-900">Daftar Topik</h3>
+        <div className="glass-panel rounded-lg p-4">
+          <h3 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">Daftar Topik</h3>
           {!topics || topics.length === 0 ? (
-            <p className="text-sm text-slate-500">Belum ada topik untuk modul ini.</p>
+            <p className="text-sm text-[var(--text-muted)]">Belum ada topik untuk modul ini.</p>
           ) : (
             <TopicList initialTopics={topics} moduleId={moduleIdParam} />
           )}
@@ -145,12 +145,12 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
       </div>
 
       {/* Section 2: Bulk CSV upload */}
-      <div className="rounded-lg border-2 border-purple-200 bg-purple-50/40 p-4 space-y-4">
+      <div className="rounded-lg border-2 border-[var(--accent-light)]/30 bg-[var(--accent-light)]/5 p-4 space-y-4">
         <div className="flex items-center gap-2">
           <span className="text-lg">📦</span>
           <div>
-            <h2 className="text-sm font-bold text-slate-900">Bulk Upload via CSV</h2>
-            <p className="text-xs text-slate-500">
+            <h2 className="text-sm font-bold text-[var(--text-primary)]">Bulk Upload via CSV</h2>
+            <p className="text-xs text-[var(--text-muted)]">
               Upload banyak konten lesson sekaligus. Setiap lesson harus sudah punya topik
               (dibuat via Input Manual). Setelah upload, klik Publish di daftar topik.
             </p>
@@ -164,16 +164,16 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
   // ── Tab 2: Quiz navigation ─────────────────────────────────────────────────
   const quizTabContent = (
     <div className="space-y-4">
-      <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-        <p className="text-sm text-slate-600 leading-relaxed">
+      <div className="glass-panel rounded-lg p-4">
+        <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
           Klik topik di bawah untuk mengelola quiz-nya. Setiap topik memiliki quiz tersendiri
           yang berisi soal pilihan ganda untuk siswa.
         </p>
       </div>
 
       {!topics || topics.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center">
-          <p className="text-sm text-slate-500">
+        <div className="rounded-lg border border-dashed border-[var(--glass-border)] bg-[var(--glass-bg)] p-8 text-center">
+          <p className="text-sm text-[var(--text-muted)]">
             Belum ada topik. Tambahkan topik di tab{" "}
             <Link
               href={`?tab=topics`}
@@ -192,10 +192,10 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
             <li key={topic.id}>
               <Link
                 href={`/admin/modules/${moduleIdParam}/topics/${topic.id}/quiz`}
-                className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm transition-colors hover:border-brand-primary hover:bg-brand-primary/5"
+                className="flex items-center justify-between glass-panel rounded-lg px-4 py-3 transition-colors hover:border-brand-primary hover:bg-brand-primary/5"
               >
                 <div className="min-w-0 flex-1">
-                  <span className="text-sm font-medium text-slate-900">
+                  <span className="text-sm font-medium text-[var(--text-primary)]">
                     {topic.order_index}. {topic.title}
                   </span>
                   {topic.engine_topic_id && (
@@ -220,8 +220,8 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
     <div className="space-y-6">
       {!assessment ? (
         /* No assessment yet */
-        <div className="rounded-lg border border-slate-200 bg-slate-50 p-6">
-          <p className="mb-4 text-sm text-slate-600">
+        <div className="glass-panel rounded-lg p-6">
+          <p className="mb-4 text-sm text-[var(--text-secondary)]">
             Modul ini belum memiliki assessment. Buat assessment baru untuk mengaktifkan fitur
             tryout.
           </p>
@@ -230,13 +230,13 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
       ) : (
         <>
           {/* Assessment title bar */}
-          <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm">
+          <div className="flex items-center gap-3 glass-panel rounded-lg px-4 py-3">
             <span className="text-lg">📋</span>
             <div className="min-w-0 flex-1">
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+              <p className="text-xs font-medium uppercase tracking-wide text-[var(--text-muted)]">
                 Assessment
               </p>
-              <p className="truncate text-sm font-semibold text-slate-900">
+              <p className="truncate text-sm font-semibold text-[var(--text-primary)]">
                 {assessment.title}
               </p>
             </div>
@@ -263,10 +263,10 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
           )}
 
           {/* Question list */}
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-            <h2 className="mb-3 text-sm font-semibold text-slate-900">Daftar Soal</h2>
+          <div className="glass-panel rounded-lg p-4">
+            <h2 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">Daftar Soal</h2>
             {!questions || questions.length === 0 ? (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-[var(--text-muted)]">
                 Belum ada soal. Tambahkan soal di bawah.
               </p>
             ) : (

@@ -40,15 +40,15 @@ export function EditQuestionModal({ question, moduleId, onClose }: Props) {
       aria-modal="true"
       aria-label="Edit soal assessment"
     >
-      <div className="w-full max-w-2xl rounded-lg bg-white shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="w-full max-w-2xl rounded-lg bg-[var(--glass-bg)] shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Modal header */}
-        <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
-          <h2 className="text-base font-semibold text-slate-900">Edit Soal</h2>
+        <div className="flex items-center justify-between border-b border-[var(--glass-border)] bg-[var(--input-bg)] px-4 py-3">
+          <h2 className="text-base font-semibold text-[var(--text-primary)]">Edit Soal</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Tutup modal"
-            className="rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-md p-1 text-[var(--text-muted)] hover:bg-[var(--accent)]/10 hover:text-[var(--accent)]"
           >
             <svg
               className="h-5 w-5"
@@ -155,18 +155,18 @@ export function EditQuestionModal({ question, moduleId, onClose }: Props) {
             </fieldset>
 
             {/* Footer actions */}
-            <div className="flex justify-end gap-2 border-t border-slate-200 pt-4">
+            <div className="flex justify-end gap-2 border-t border-[var(--glass-border)] pt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-md border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                className="rounded-md border border-[var(--glass-border)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--accent)]/10"
               >
                 Tutup
               </button>
               <button
                 type="submit"
                 disabled={isPending}
-                className="rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:opacity-60"
+                className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--accent-dark)] disabled:opacity-60"
               >
                 {isPending ? "Menyimpan..." : "Simpan Perubahan"}
               </button>

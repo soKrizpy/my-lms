@@ -29,11 +29,11 @@ export function AddTopicForm({ moduleId, usedEngineTopicIds = [] }: Props) {
   return (
     <form
       action={formAction}
-      className="space-y-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm"
+      className="space-y-4 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] p-4 shadow-sm"
     >
       <input type="hidden" name="moduleId" value={moduleId} />
 
-      <h2 className="text-sm font-semibold text-slate-900">Tambah Topik Baru</h2>
+      <h2 className="text-sm font-semibold text-[var(--text-primary)]">Tambah Topik Baru</h2>
 
       {/* Error banner */}
       {state?.error && (
@@ -107,7 +107,7 @@ export function AddTopicForm({ moduleId, usedEngineTopicIds = [] }: Props) {
         <select
           id="new-topic-engine-topic-id"
           name="engineTopicId"
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+          className="w-full rounded-md border border-slate-300 bg-[var(--input-bg)] px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
         >
           <option value="">— Tidak dihubungkan —</option>
           {["HTML", "CSS", "JavaScript", "Scratch"].map((cat) => {
@@ -149,7 +149,7 @@ export function AddTopicForm({ moduleId, usedEngineTopicIds = [] }: Props) {
       <button
         type="submit"
         disabled={isPending}
-        className="rounded-md bg-slate-900 px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800 disabled:opacity-60"
+        className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--accent-dark)] disabled:opacity-60"
       >
         {isPending ? "Menyimpan..." : "Simpan Topik"}
       </button>
