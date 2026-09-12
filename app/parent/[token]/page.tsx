@@ -169,7 +169,7 @@ export default async function ParentReportPage({
   const data = await fetchParentData(token);
   if (!data) notFound();
 
-  const { student, topicProgress, meetings, invoice, summary, expiresAt } = data;
+  const { student, meetings, invoice, summary, expiresAt } = data;
   const attendanceRate = summary.totalMeetings > 0
     ? Math.round((summary.totalAttended / summary.totalMeetings) * 100)
     : 0;
@@ -208,7 +208,7 @@ export default async function ParentReportPage({
         </div>
 
         {/* ── Summary stats ─────────────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '0.75rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: '0.75rem' }}>
           {[
             {
               label: 'Kehadiran', value: `${summary.totalAttended}/${summary.totalMeetings}`,
@@ -218,7 +218,6 @@ export default async function ParentReportPage({
               border: attendanceRate >= 80 ? '#bbf7d0' : attendanceRate >= 60 ? '#fde68a' : '#fecdd3',
             },
             { label: 'Rata-rata Nilai', value: `${summary.avgScore}%`, sub: scoreLabel(summary.avgScore), color: scoreColor(summary.avgScore), bg: '#eff6ff', border: '#bfdbfe' },
-            { label: 'Total XP', value: `⭐ ${summary.totalXp}`, sub: `${topicProgress.length} lesson`, color: '#7c3aed', bg: '#faf5ff', border: '#ddd6fe' },
           ].map(({ label, value, sub, color, bg, border }) => (
             <div key={label} style={{ background: bg, border: `1px solid ${border}`, borderRadius: '0.875rem', padding: '1rem 0.75rem', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
               <div style={{ fontSize: '1.4rem', fontWeight: 900, color, lineHeight: 1.1 }}>{value}</div>
@@ -227,41 +226,6 @@ export default async function ParentReportPage({
             </div>
           ))}
         </div>
-
-        {/* ── Lesson scores ─────────────────────────────────────────── */}
-        {topicProgress.length > 0 && (
-          <div style={{ background: '#fff', borderRadius: '1rem', overflow: 'hidden', border: '1px solid #e0e7ff', boxShadow: '0 1px 4px rgba(59,130,246,0.06)' }}>
-            <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #e0e7ff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1rem' }}>🎯</span>
-              <h2 style={{ margin: 0, fontSize: '0.95rem', fontWeight: 700, color: '#1e293b' }}>Nilai per Topik</h2>
-            </div>
-            {topicProgress.map((tp, idx) => {
-              const score = tp.best_quiz_score;
-              const color = scoreColor(score);
-              const title = (tp.topics as any)?.title ?? tp.engine_topic_id;
-              return (
-                <div key={tp.engine_topic_id} style={{ padding: '0.875rem 1.25rem', borderBottom: idx < topicProgress.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                    <div>
-                      <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: '#1e293b' }}>{title}</p>
-                      <p style={{ margin: 0, fontSize: '0.7rem', color: '#94a3b8', marginTop: '0.1rem' }}>
-                        {new Date(tp.completed_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
-                        {tp.xp_earned > 0 && ` · ⭐ ${tp.xp_earned} XP`}
-                      </p>
-                    </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '0.75rem' }}>
-                      <span style={{ fontSize: '1.25rem', fontWeight: 900, color }}>{score}%</span>
-                      <p style={{ margin: 0, fontSize: '0.65rem', color: '#94a3b8' }}>Nilai terbaik</p>
-                    </div>
-                  </div>
-                  <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '9999px', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${Math.min(score, 100)}%`, background: color, borderRadius: '9999px' }} />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
 
         {/* ── Meeting reports ───────────────────────────────────────── */}
         {meetings.length > 0 && (
