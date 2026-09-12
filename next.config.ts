@@ -1,4 +1,4 @@
-import type { NextConfig } from 'next';
+﻿import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   turbopack: {
@@ -13,8 +13,15 @@ const nextConfig: NextConfig = {
       'http://localhost:3001';
     return [
       {
+        // Proxy all engine routes (lesson pages, API, _next assets)
         source: '/learning/:path*',
         destination: `${engineUrl}/:path*`,
+      },
+      {
+        // Proxy engine static lesson JSON files so fetch('/lessons/...') works
+        // when the engine page is loaded via the /learning/* proxy on this origin.
+        source: '/lessons/:path*',
+        destination: `${engineUrl}/lessons/:path*`,
       },
     ];
   },
