@@ -32,12 +32,22 @@ export async function evaluateBadges(studentId: string): Promise<BadgeDefinition
       .not('completed_at', 'is', null);
     const completedTopicsCount = (topicRows ?? []).length;
 
-    // 3. Quiz scores from topic quizzes
+    // 3. Quiz scores from topic quizzes and the lesson engine. Engine lessons
+    // do not always have a separate LMS quiz row, but their best-of-two score
+    // is persisted in topic_progress on completion.
     const { data: quizRows } = await admin
       .from('quiz_attempts')
       .select('score')
       .eq('student_id', studentId);
     const quizScores = (quizRows ?? []).map((r) => r.score as number);
+    const { data: engineProgressRows } = await admin
+      .from('topic_progress')
+      .select('best_quiz_score')
+      .eq('student_id', studentId)
+      .not('completed_at', 'is', null);
+    const engineQuizScores = (engineProgressRows ?? []).map(
+      (r) => r.best_quiz_score as number,
+    );
 
     // 4. Assessment best scores, grouped by assessment_id (max per group)
     const { data: assessmentRows } = await admin
@@ -66,9 +76,14 @@ export async function evaluateBadges(studentId: string): Promise<BadgeDefinition
     const completedModulesCount = [...completionMap.values()].filter((v) => v.isComplete).length;
 
     // Badge condition evaluation
-    const allScores = [...quizScores, ...Array.from(assessmentBestScores.values())];
+    const allScores = [
+      ...quizScores,
+      ...engineQuizScores,
+      ...Array.from(assessmentBestScores.values()),
+    ];
     const highScoreCount =
       quizScores.filter((s) => s >= 90).length +
+      engineQuizScores.filter((s) => s >= 90).length +
       [...assessmentBestScores.values()].filter((s) => s >= 90).length;
 
     const conditions: Record<string, boolean> = {

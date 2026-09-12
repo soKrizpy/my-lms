@@ -285,6 +285,7 @@ function QuestMapInner({
         avatarId={avatarId}
         titleId={titleId}
         xpTotal={totalXP ?? engineXpTotal}
+        bestQuizScore={bestQuizScore ?? 0}
         streak={streak}
         maxStreak={maxStreak}
         completedTopics={completedEngineTopics}

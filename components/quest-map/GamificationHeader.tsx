@@ -15,6 +15,7 @@ interface GamificationHeaderProps {
   avatarId?: string | null;
   titleId?: string | null;
   xpTotal: number;
+  bestQuizScore: number;
   streak: number;
   maxStreak: number;
   completedTopics: number;
@@ -34,6 +35,7 @@ export function GamificationHeader({
   avatarId,
   titleId,
   xpTotal,
+  bestQuizScore,
   streak,
   maxStreak,
   completedTopics,
@@ -90,7 +92,7 @@ export function GamificationHeader({
 
       {/* ── Stats row ──────────────────────────────────────────────────── */}
       <div
-        className="grid grid-cols-4 divide-x divide-slate-200 dark:divide-white/10"
+        className="grid grid-cols-2 sm:grid-cols-5 divide-x divide-slate-200 dark:divide-white/10"
         style={{ borderColor: 'var(--glass-border)' }}
       >
         {/* XP */}
@@ -105,6 +107,17 @@ export function GamificationHeader({
           </span>
           <span className="text-[10px] uppercase tracking-wide font-bold text-slate-600 dark:text-slate-300">
             Total XP
+          </span>
+        </div>
+
+        {/* Highest score, retained from the student's two quiz attempts. */}
+        <div className="flex flex-col items-center justify-center px-2 py-4 gap-1">
+          <span className="text-lg leading-none" aria-hidden="true">🧠</span>
+          <span className="text-base font-extrabold tabular-nums text-slate-900 dark:text-white">
+            {bestQuizScore}%
+          </span>
+          <span className="text-[10px] uppercase tracking-wide font-bold text-center text-slate-600 dark:text-slate-300 leading-tight">
+            Skor<br />Terbaik
           </span>
         </div>
 

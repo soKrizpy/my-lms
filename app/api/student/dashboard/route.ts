@@ -353,11 +353,18 @@ export async function GET() {
       console.warn("Could not query avatar/title from students table:", studentErr);
     }
 
-    // 10. Best quiz score for achievement evaluation
-    const bestQuizScore = (quizAttempts || []).reduce((max: number, qa: any) => {
+    // 10. Best score across LMS quizzes and lesson-engine quizzes. Engine
+    // lessons can exist without a matching LMS quiz row, so topic_progress is
+    // also an authoritative source for the student's best of two attempts.
+    const bestLmsQuizScore = (quizAttempts || []).reduce((max: number, qa: any) => {
       const score = typeof qa?.score === "number" ? qa.score : 0;
       return score > max ? score : max;
     }, 0);
+    const bestEngineQuizScore = (topicProgress || []).reduce((max: number, tp: any) => {
+      const score = typeof tp?.best_quiz_score === "number" ? tp.best_quiz_score : 0;
+      return score > max ? score : max;
+    }, 0);
+    const bestQuizScore = Math.max(bestLmsQuizScore, bestEngineQuizScore);
 
     // Validate and sanitize response structure before returning
     const responsePayload = {
