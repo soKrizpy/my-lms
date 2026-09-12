@@ -1096,6 +1096,21 @@ export default function StudentDashboard() {
     fetchInvoices();
   }, [fetchData]);
 
+
+  // A lesson runs in a separate tab. Refresh its saved rewards when the
+  // student returns, rather than requiring them to reload the dashboard.
+  useEffect(() => {
+    const refreshOnReturn = () => {
+      if (document.visibilityState === 'visible') void fetchData();
+    };
+
+    document.addEventListener('visibilitychange', refreshOnReturn);
+    window.addEventListener('focus', refreshOnReturn);
+    return () => {
+      document.removeEventListener('visibilitychange', refreshOnReturn);
+      window.removeEventListener('focus', refreshOnReturn);
+    };
+  }, [fetchData]);
   const tabs = [
     { id: "jadwal" as const, label: t('tabs.schedule'), icon: Calendar },
     { id: "learning" as const, label: "Learning Path", icon: BookOpen },
