@@ -264,22 +264,7 @@ export default function StudentsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="flex flex-wrap gap-1 max-w-[250px]">
-                        {student.modules.length > 0 ? (
-                          student.modules.map((mod) => (
-                            <span
-                              key={mod.id}
-                              className="inline-flex items-center rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-600"
-                            >
-                              {mod.name}
-                            </span>
-                          ))
-                        ) : (
-                          <span className="text-xs text-slate-400 italic">
-                            Belum ada modul
-                          </span>
-                        )}
-                      </div>
+                      <ModuleCell modules={student.modules} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-500">
                       {new Date(student.created_at).toLocaleDateString(
@@ -366,6 +351,58 @@ export default function StudentsPage() {
             await handleDelete(id, name);
           }}
         />
+      )}
+    </div>
+  );
+}
+
+// ── ModuleCell ────────────────────────────────────────────────────────────────
+// Collapsible list of module badges in the Modul Aktif table column.
+// Collapsed: shows first badge + "+N lainnya" pill with down-arrow.
+// Expanded:  shows all badges + "Tutup" pill with up-arrow.
+
+function ModuleCell({ modules }: { modules: AssignedModule[] }) {
+  const [open, setOpen] = React.useState(false);
+
+  if (modules.length === 0) {
+    return <span className="text-xs text-slate-400 italic">Belum ada modul</span>;
+  }
+
+  const visible = open ? modules : modules.slice(0, 1);
+  const hidden  = modules.length - 1;
+
+  return (
+    <div className="flex flex-col gap-1 max-w-[220px]">
+      <div className="flex flex-wrap gap-1">
+        {visible.map((mod) => (
+          <span
+            key={mod.id}
+            className="inline-flex items-center rounded-md px-2 py-1 text-xs font-semibold
+              bg-[var(--accent)]/15 text-[var(--accent-dark)]
+              border border-[var(--accent)]/30
+              dark:bg-[var(--accent)]/20 dark:text-[var(--accent-light)]"
+          >
+            {mod.name}
+          </span>
+        ))}
+      </div>
+
+      {modules.length > 1 && (
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          className="inline-flex items-center gap-1 self-start text-[11px] font-semibold
+            text-[var(--accent)] hover:text-[var(--accent-dark)]
+            transition-colors px-1 py-0.5 rounded"
+        >
+          <svg
+            className={`w-3 h-3 transition-transform duration-200 ${open ? "rotate-180" : "rotate-0"}`}
+            fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+          {open ? "Tutup" : `+${hidden} lainnya`}
+        </button>
       )}
     </div>
   );
