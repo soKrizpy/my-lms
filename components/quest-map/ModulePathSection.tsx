@@ -5,7 +5,7 @@
 // Desktop: 3-column zigzag layout (matching gamifikasi3.html style).
 // Mobile: single vertical column.
 
-import React, { memo, useState } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { TopicNode, type TopicNodeTopic, type TopicProgress, type QuizAttempt } from './TopicNode';
 import { AssessmentNode } from './AssessmentNode';
 import { type AssessmentState } from '../../lib/lmsData';
@@ -81,7 +81,22 @@ function ModulePathSectionInner({
 }: ModulePathSectionProps) {
   const { topics, isModuleLocked, isModuleComplete } = module;
   const isPaused = module.moduleStatus === 'paused';
-  const [isExpanded, setIsExpanded] = useState(!isPaused);
+  // Paused modules remain part of a student's learning history. Keep one open
+  // when it contains a saved quiz or engine completion, so completed topics
+  // and their best scores never appear to have disappeared.
+  const hasSavedCompletion = topics.some((topic) => {
+    const engineCompleted =
+      topic.engine_topic_id !== null &&
+      topicProgress.some((progress) => progress.engine_topic_id === topic.engine_topic_id);
+    const quizCompleted =
+      topic.quiz !== null &&
+      quizAttempts.some((attempt) => attempt.quiz_id === topic.quiz!.id);
+    return engineCompleted || quizCompleted;
+  });
+  const [isExpanded, setIsExpanded] = useState(!isPaused || hasSavedCompletion);
+  useEffect(() => {
+    if (hasSavedCompletion) setIsExpanded(true);
+  }, [hasSavedCompletion]);
   // Active modules start expanded; paused modules start collapsed
   const unlockedCount = topics.filter((t) => t.isUnlocked).length;
   const progressPercent =
