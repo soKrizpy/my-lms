@@ -59,7 +59,11 @@ export default function LoginPage() {
           </div>
 
           {state?.error && (
-            <div className="p-3 bg-red-500/20 text-red-200 text-sm rounded-xl border border-red-500/30 backdrop-blur-md flex items-start gap-2">
+            <div
+              role="alert"
+              aria-live="polite"
+              className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800 shadow-sm dark:border-red-800/70 dark:bg-red-950/60 dark:text-red-100"
+            >
               <svg className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>

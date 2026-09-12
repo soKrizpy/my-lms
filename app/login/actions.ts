@@ -13,7 +13,13 @@ export async function login(prevState: any, formData: FormData) {
     return { error: 'Email/WhatsApp dan password wajib diisi.' }
   }
 
-  const supabase = await createClient()
+  let supabase
+  try {
+    supabase = await createClient()
+  } catch (error) {
+    console.error('[v0] Supabase login client unavailable:', error)
+    return { error: 'Layanan login sedang tidak tersedia. Silakan coba lagi nanti.' }
+  }
 
   // Convert phone number to email format
   const email = contactRaw.includes('@')
