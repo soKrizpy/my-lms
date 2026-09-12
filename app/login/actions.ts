@@ -6,14 +6,14 @@ import { createClient } from '../../lib/supabase/server'
 import { getSupabaseAdmin } from '../../lib/supabaseAdmin'
 
 export async function login(prevState: any, formData: FormData) {
-  const supabase = await createClient()
-
   const contactRaw = (formData.get('email') as string)?.trim()
   const password = formData.get('password') as string
 
   if (!contactRaw || !password) {
     return { error: 'Email/WhatsApp dan password wajib diisi.' }
   }
+
+  const supabase = await createClient()
 
   // Convert phone number to email format
   const email = contactRaw.includes('@')
