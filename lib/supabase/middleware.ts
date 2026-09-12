@@ -1,13 +1,20 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function updateSession(request: NextRequest) {
+export async function updateSession(
+  request: NextRequest,
+  supabaseUrl: string | undefined,
+  supabaseAnonKey: string | undefined,
+) {
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error('Supabase runtime configuration is missing.')
+  }
   let supabaseResponse = NextResponse.next({
     request,
   })
 
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    supabaseUrl,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
@@ -55,7 +62,7 @@ export async function updateSession(request: NextRequest) {
     if (serviceKey) {
       try {
         const adminClient = createServerClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          supabaseUrl,
           serviceKey,
           { cookies: { getAll: () => [], setAll: () => {} } }
         )
@@ -86,7 +93,7 @@ export async function updateSession(request: NextRequest) {
     if (serviceKey) {
       try {
         const adminClient = createServerClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          supabaseUrl,
           serviceKey,
           { cookies: { getAll: () => [], setAll: () => {} } }
         )
