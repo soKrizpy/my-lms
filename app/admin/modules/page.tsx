@@ -252,7 +252,7 @@ export default function ModulesPage() {
                     <div className="mt-3">
                       <div className="mb-3 flex justify-end">
                         <Link
-                          href={`/admin/modules/${mod.id}/topics`}
+                          href={`/admin/modules/${mod.id}/topics?tab=topics`}
                           className="text-xs font-semibold text-slate-900 underline hover:text-blue-600"
                         >
                           Kelola semua
