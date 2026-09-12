@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import type { TopicNodeTopic, TopicProgress, QuizAttempt } from './TopicNode';
+import { getTopicAttachmentUrl } from '../../lib/topicLink';
 
 export interface MateriSlide {
   id: string | number;
@@ -254,6 +255,7 @@ export function TopicLearningFlowModal({
     total: number;
     correct: number;
   } | null>(null);
+  const attachmentUrl = getTopicAttachmentUrl(topic?.topic_link);
 
   // Derive dynamic materi slides & mimo questions
   const materiSlides = useMemo(() => {
@@ -630,6 +632,29 @@ export function TopicLearningFlowModal({
                     className="py-2 px-3.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs border border-white/20 transition-all flex items-center gap-1.5 flex-shrink-0"
                   >
                     <span>Buka Proyek</span>
+                    <span>↗</span>
+                  </a>
+                </div>
+              )}
+
+              {attachmentUrl && (
+                <div className="p-4 rounded-2xl bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-400/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-violet-800 dark:text-violet-300">
+                      <span>📎</span>
+                      <span>Materi Terlampir</span>
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                      Buka materi yang dilampirkan guru di tab baru.
+                    </p>
+                  </div>
+                  <a
+                    href={attachmentUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-2 px-3.5 rounded-xl bg-violet-700 hover:bg-violet-800 text-white font-semibold text-xs border border-white/20 transition-all flex items-center gap-1.5 flex-shrink-0"
+                  >
+                    <span>Buka Materi</span>
                     <span>↗</span>
                   </a>
                 </div>

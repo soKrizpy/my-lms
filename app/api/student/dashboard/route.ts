@@ -145,7 +145,7 @@ export async function GET() {
       try {
         const { data, error } = await supabaseAdmin
           .from("topics")
-          .select("id, module_id, title, order_index, description, project_link, engine_topic_id, status, lesson_content")
+          .select("id, module_id, title, order_index, description, project_link, topic_link, engine_topic_id, status, lesson_content")
           .in("module_id", moduleIds)
           .order("order_index", { ascending: true });
 

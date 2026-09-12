@@ -34,6 +34,7 @@ interface Topic {
   order_index: number;
   description: string | null;
   project_link: string | null;
+  topic_link: string | null;
   engine_topic_id: string | null;
   status?: string | null;
   lesson_content?: unknown | null;

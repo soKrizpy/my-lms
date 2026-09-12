@@ -5,6 +5,7 @@
 // State drives the visual appearance: locked / unlocked / active / completed.
 
 import React, { memo } from 'react';
+import { getTopicAttachmentUrl } from '../../lib/topicLink';
 
 export type NodeState = 'locked' | 'unlocked' | 'active' | 'completed';
 
@@ -33,6 +34,7 @@ export interface TopicNodeTopic {
   isUnlocked: boolean;
   description?: string | null;
   project_link?: string | null;
+  topic_link?: string | null;
   status?: string | null;
   lesson_content?: unknown;
   quiz: { id: number; title: string } | null;
@@ -109,6 +111,7 @@ function TopicNodeInner({
   nodeIndex,
 }: TopicNodeProps) {
   const state = deriveNodeState(topic, isCurrentActive, topicProgress, quizAttempts);
+  const attachmentUrl = getTopicAttachmentUrl(topic.topic_link);
 
   // Can student access the engine lesson?
   // Always accessible when unlocked — even after completing quiz or being "completed"
@@ -251,6 +254,19 @@ function TopicNodeInner({
               📝 Kerjakan Quiz!
             </button>
           )
+        )}
+
+        {/* Teacher-attached material (direct URL or iframe embed source). */}
+        {attachmentUrl && state !== 'locked' && (
+          <a
+            href={attachmentUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(event) => event.stopPropagation()}
+            className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-violet-300 dark:border-violet-500/60 bg-violet-50 dark:bg-violet-950/40 text-violet-700 dark:text-violet-300 hover:bg-violet-100 dark:hover:bg-violet-900/50 transition-colors cursor-pointer"
+          >
+            📎 Materi
+          </a>
         )}
 
         {/* Coming soon badge — engine_topic_id linked but lesson not published yet */}

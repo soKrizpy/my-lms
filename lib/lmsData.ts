@@ -15,6 +15,7 @@ export type TopicRecord = {
   order_index: number;
   description?: string | null;
   project_link?: string | null;
+  topic_link?: string | null;
   engine_topic_id?: string | null;
   lesson_content?: unknown | null;
   status?: string | null;
