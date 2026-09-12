@@ -17,19 +17,19 @@
    ---------------------------------------------------------- */
 :root {
   /* Backgrounds */
-  --bg-from: #f0f6ff;
-  --bg-mid:  #e8f0fe;
-  --bg-to:   #dbeafe;
+  --bg-from: #e8edf5;
+  --bg-mid:  #dde4f0;
+  --bg-to:   #d0d9ec;
 
   /* Neon accent */
   --neon:       #3b82f6;
   --neon-hover: #60a5fa;
 
   /* Glass */
-  --glass-bg:           rgba(255,255,255,0.97);
-  --glass-bg-hover:     #ffffff;
-  --glass-border:       rgba(59,130,246,0.55);
-  --glass-border-hover: rgba(37,99,235,0.80);
+  --glass-bg:           rgba(240,244,252,0.92);
+  --glass-bg-hover:     rgba(245,248,255,0.98);
+  --glass-border:       rgba(59,130,246,0.40);
+  --glass-border-hover: rgba(37,99,235,0.65);
   --glass-shadow:
     0 2px 8px rgba(59,130,246,0.18),
     0 1px 3px rgba(0,0,0,0.10),
@@ -58,7 +58,7 @@
   --warning: #d97706;
 
   /* Legacy compat (used by existing layouts) */
-  --background:         #fdfcff;
+  --background:         #e2e8f4;
   --foreground:         #0f172a;
   --color-primary-glow: rgba(59,130,246,0.40);
 
@@ -627,9 +627,9 @@ input[type="time"]      { color-scheme: light; }
 /* Ensure glass-panel cards in light mode have a clear shadow */
 :root .glass-panel,
 html:not(.dark) .glass-panel {
-  border: 1.5px solid rgba(59,130,246,0.35);
+  border: 1.5px solid rgba(59,130,246,0.28);
   box-shadow:
-    0 2px 12px rgba(59,130,246,0.15),
+    0 2px 12px rgba(59,130,246,0.12),
     0 1px 4px rgba(0,0,0,0.08);
 }
 
@@ -638,36 +638,37 @@ html:not(.dark) .glass-panel {
   /* Handled via individual component classes */
 }
 
-/* Make bg-white cards (admin, meeting cards) have a visible border in light mode */
+/* Make bg-white cards slightly muted — no more blinding white */
 html:not(.dark) .bg-white {
-  border-color: #bfdbfe !important;
+  background-color: #edf1fa !important;
+  border-color: #c5d3ec !important;
 }
 html:not(.dark) .bg-slate-50 {
-  background-color: #f0f6ff !important;
+  background-color: #e8eef8 !important;
 }
 
 /* Make meeting card + module card borders visible in light mode */
 html:not(.dark) [class*="border-slate-100"],
 html:not(.dark) [class*="border-slate-200"] {
-  border-color: #bfdbfe !important;
+  border-color: #c5d3ec !important;
 }
 
-/* Dividers in light mode — use blue-tinted instead of near-invisible */
+/* Dividers in light mode */
 html:not(.dark) .divide-y > * + * {
-  border-color: #dbeafe !important;
+  border-color: #ccd6ea !important;
 }
 
 /* Tabs / pill nav in light mode — make active tab pop */
 html:not(.dark) .bg-slate-200 {
-  background-color: #dbeafe !important;
+  background-color: #d6dfef !important;
 }
 
-/* Input borders in light mode */
+/* Input borders and backgrounds in light mode — slightly off-white */
 html:not(.dark) input:not([type="checkbox"]):not([type="radio"]),
 html:not(.dark) textarea,
 html:not(.dark) select {
-  border-color: rgba(37,99,235,0.40) !important;
-  background-color: #ffffff !important;
+  border-color: rgba(37,99,235,0.35) !important;
+  background-color: #f0f4fc !important;
 }
 
 /* Scrollbar — lighter blue tint in light mode */
