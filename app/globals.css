@@ -16,24 +16,24 @@
        Tailwind @theme points to these; we swap them in .dark
    ---------------------------------------------------------- */
 :root {
-  /* Backgrounds */
-  --bg-from: #e8edf5;
-  --bg-mid:  #dde4f0;
-  --bg-to:   #d0d9ec;
+  /* Backgrounds — friendly, warm sky blue gradient */
+  --bg-from: #f0f7ff;
+  --bg-mid:  #e4effe;
+  --bg-to:   #d8e9fc;
 
-  /* Neon accent */
-  --neon:       #3b82f6;
-  --neon-hover: #60a5fa;
+  /* Neon / primary accent (friendly royal sky blue) */
+  --neon:       #2563eb;
+  --neon-hover: #3b82f6;
 
   /* Glass */
-  --glass-bg:           rgba(240,244,252,0.92);
-  --glass-bg-hover:     rgba(245,248,255,0.98);
-  --glass-border:       rgba(59,130,246,0.40);
-  --glass-border-hover: rgba(37,99,235,0.65);
+  --glass-bg:           rgba(255, 255, 255, 0.90);
+  --glass-bg-hover:     rgba(255, 255, 255, 0.98);
+  --glass-border:       rgba(37, 99, 235, 0.22);
+  --glass-border-hover: rgba(37, 99, 235, 0.45);
   --glass-shadow:
-    0 2px 8px rgba(59,130,246,0.18),
-    0 1px 3px rgba(0,0,0,0.10),
-    inset 0 0 0 1px rgba(59,130,246,0.12);
+    0 4px 16px rgba(37, 99, 235, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    inset 0 0 0 1px rgba(37, 99, 235, 0.06);
 
   /* Text */
   --text-primary:   #0f172a;
@@ -42,15 +42,15 @@
 
   /* Accent */
   --accent:       #2563eb;
-  --accent-rgb:   59, 130, 246;
-  --accent-light: #60a5fa;
+  --accent-rgb:   37, 99, 235;
+  --accent-light: #3b82f6;
   --accent-dark:  #1d4ed8;
-  --accent-glow:  rgba(59,130,246,0.28);
+  --accent-glow:  rgba(37, 99, 235, 0.25);
 
   /* Inputs */
-  --input-bg:     rgba(255,255,255,0.92);
-  --input-border: rgba(37,99,235,0.60);
-  --input-focus:  rgba(37,99,235,0.85);
+  --input-bg:     rgba(255, 255, 255, 0.95);
+  --input-border: rgba(37, 99, 235, 0.35);
+  --input-focus:  rgba(37, 99, 235, 0.75);
 
   /* Status */
   --success: #059669;
@@ -58,9 +58,9 @@
   --warning: #d97706;
 
   /* Legacy compat (used by existing layouts) */
-  --background:         #e2e8f4;
+  --background:         #f0f7ff;
   --foreground:         #0f172a;
-  --color-primary-glow: rgba(59,130,246,0.40);
+  --color-primary-glow: rgba(37, 99, 235, 0.25);
 
   /* ---- Palette bridge vars — swapped by .dark below ---- */
   /* slate scale */
@@ -129,43 +129,43 @@
 
 /* ----------------------------------------------------------
    3.  DARK MODE OVERRIDES
-       Purple/Violet neon on near-black
+       Cozy bedtime galaxy purple for kids
    ---------------------------------------------------------- */
 .dark {
-  /* Backgrounds */
-  --bg-from: #050510;
-  --bg-mid:  #0a0a1a;
-  --bg-to:   #110d21;
+  /* Backgrounds — cozy deep galaxy purple (soothing for kids' eyes) */
+  --bg-from: #120e24;
+  --bg-mid:  #181232;
+  --bg-to:   #221745;
 
-  /* Neon */
+  /* Neon (magical purple/violet) */
   --neon:       #a855f7;
   --neon-hover: #c084fc;
 
   /* Glass */
-  --glass-bg:           rgba(10,10,20,0.70);
-  --glass-bg-hover:     rgba(15,15,30,0.85);
-  --glass-border:       rgba(168,85,247,0.50);
-  --glass-border-hover: rgba(192,132,252,0.72);
+  --glass-bg:           rgba(24, 18, 50, 0.78);
+  --glass-bg-hover:     rgba(34, 24, 68, 0.90);
+  --glass-border:       rgba(168, 85, 247, 0.35);
+  --glass-border-hover: rgba(192, 132, 252, 0.55);
   --glass-shadow:
-    0 0 10px rgba(168,85,247,0.35),
-    inset 0 0 10px rgba(168,85,247,0.12);
+    0 4px 20px rgba(168, 85, 247, 0.18),
+    inset 0 0 10px rgba(168, 85, 247, 0.08);
 
-  /* Text */
-  --text-primary:   #ffffff;
+  /* Text — warm soft white and gentle lavender */
+  --text-primary:   #f8fafc;
   --text-secondary: #cbd5e1;
-  --text-muted:     #cbd5e1;
+  --text-muted:     #94a3b8;
 
   /* Accent */
   --accent:       #a855f7;
   --accent-rgb:   168, 85, 247;
   --accent-light: #c084fc;
   --accent-dark:  #9333ea;
-  --accent-glow:  rgba(168,85,247,0.42);
+  --accent-glow:  rgba(168, 85, 247, 0.35);
 
   /* Inputs */
-  --input-bg:     rgba(15,15,30,0.80);
-  --input-border: rgba(168,85,247,0.55);
-  --input-focus:  rgba(192,132,252,0.75);
+  --input-bg:     rgba(24, 18, 50, 0.85);
+  --input-border: rgba(168, 85, 247, 0.40);
+  --input-focus:  rgba(192, 132, 252, 0.70);
 
   /* Status */
   --success: #10b981;
@@ -173,33 +173,33 @@
   --warning: #f59e0b;
 
   /* Legacy compat */
-  --background:         #050510;
-  --foreground:         #ffffff;
-  --color-primary-glow: rgba(168,85,247,0.45);
+  --background:         #120e24;
+  --foreground:         #f8fafc;
+  --color-primary-glow: rgba(168, 85, 247, 0.35);
 
   /* ---- Dark palette bridge ---- */
-  --p-slate-50:  #18182a;   /* dark surface */
-  --p-slate-100: #1e1e30;
-  --p-slate-200: #26263a;
-  --p-slate-300: #aaaacc;
-  --p-slate-400: #8888aa;
-  --p-slate-500: #9090b0;
-  --p-slate-600: #b8b8d0;
-  --p-slate-700: #d0d0e8;
-  --p-slate-800: #1e1836;
-  --p-slate-900: #120e26;
-  --p-slate-950: #0a0818;
+  --p-slate-50:  #1d163a;   /* dark purple surface */
+  --p-slate-100: #241c46;
+  --p-slate-200: #2d2256;
+  --p-slate-300: #a78bfa;
+  --p-slate-400: #8b7ca8;
+  --p-slate-500: #a594c4;
+  --p-slate-600: #cbd5e1;
+  --p-slate-700: #e2e8f0;
+  --p-slate-800: #2c1d54;
+  --p-slate-900: #181033;
+  --p-slate-950: #120e24;
 
   /* blue → purple neon in dark */
-  --p-blue-50:  #1a0a2e;
-  --p-blue-100: #220d3a;
-  --p-blue-200: #3b1a5c;
-  --p-blue-300: #6b3aaa;
+  --p-blue-50:  #1d163a;
+  --p-blue-100: #251b4a;
+  --p-blue-200: #352668;
+  --p-blue-300: #6b46b8;
   --p-blue-400: #9333ea;
   --p-blue-500: #a855f7;
-  --p-blue-600: #9333ea;
-  --p-blue-700: #7c22ce;
-  --p-blue-800: #6b21a8;
+  --p-blue-600: #a855f7;
+  --p-blue-700: #9333ea;
+  --p-blue-800: #7c22ce;
   --p-blue-900: #581c87;
 
   --p-violet-300: #d8b4fe;
@@ -390,50 +390,48 @@ input[type="time"]      { color-scheme: light; }
    10. DARK MODE — Bright readable text on all surfaces
    ---------------------------------------------------------- */
 
-/* All slate text → bright in dark mode */
+/* All slate text → bright and cozy in dark mode */
 .dark .text-slate-900,
 .dark .text-slate-800,
-.dark .text-slate-700 { color: #f1f1ff !important; }
+.dark .text-slate-700 { color: #f8fafc !important; }
 
 .dark .text-slate-600,
-.dark .text-slate-500 { color: #b8b8d8 !important; }
+.dark .text-slate-500 { color: #cbd5e1 !important; }
 
-.dark .text-slate-400 { color: #9090b8 !important; }
+.dark .text-slate-400 { color: #a78bfa !important; }
 
-/* Surfaces — keep bg-white / bg-slate-* dark so text stays readable */
-.dark .bg-white        { background-color: #1a1a2e !important; }
-.dark .bg-slate-50     { background-color: #14142a !important; }
-.dark .bg-slate-100    { background-color: #1a1a2e !important; }
-.dark .bg-slate-200    { background-color: #22223a !important; }
+/* Surfaces — cozy bedtime galaxy purple for kids */
+.dark .bg-white        { background-color: #1d163a !important; }
+.dark .bg-slate-50     { background-color: #16112d !important; }
+.dark .bg-slate-100    { background-color: #1d163a !important; }
+.dark .bg-slate-200    { background-color: #261c4a !important; }
 
-/* ---- bg-slate-800/900 used as dark badge/countdown bg → stay dark in dark mode ---- */
-/* In light mode these are very dark surfaces with white text.
-   In dark mode they must STAY dark (not flip to near-white) so text-white remains readable. */
+/* ---- bg-slate-800/900 used as dark badge/countdown bg → stay dark purple in dark mode ---- */
 .dark .bg-slate-800,
-.dark [class*="bg-slate-800/"] { background-color: #2a0a4a !important; }  /* deep violet-dark */
+.dark [class*="bg-slate-800/"] { background-color: #2c1d54 !important; }
 .dark .bg-slate-900,
-.dark [class*="bg-slate-900/"] { background-color: #1e0838 !important; }  /* near-black violet */
-.dark .hover\:bg-slate-700:hover { background-color: #3a1060 !important; }
-.dark .hover\:bg-slate-800:hover { background-color: #2a0a4a !important; }
-.dark .hover\:bg-slate-900:hover { background-color: #3a0f5e !important; }
+.dark [class*="bg-slate-900/"] { background-color: #181033 !important; }
+.dark .hover\:bg-slate-700:hover { background-color: #3b2772 !important; }
+.dark .hover\:bg-slate-800:hover { background-color: #2c1d54 !important; }
+.dark .hover\:bg-slate-900:hover { background-color: #352166 !important; }
 
 /* Borders */
-.dark .border-slate-100 { border-color: #2a2a3e !important; }
-.dark .border-slate-200 { border-color: #32324a !important; }
-.dark .border-slate-300 { border-color: #3e3e5a !important; }
+.dark .border-slate-100 { border-color: #2c2052 !important; }
+.dark .border-slate-200 { border-color: #372866 !important; }
+.dark .border-slate-300 { border-color: #483482 !important; }
 
 /* Hover surfaces */
-.dark .hover\:bg-white:hover     { background-color: #22223a !important; }
-.dark .hover\:bg-slate-50:hover  { background-color: #22223a !important; }
-.dark .hover\:bg-slate-100:hover { background-color: #26263e !important; }
-.dark .hover\:bg-slate-200:hover { background-color: #2e2e4a !important; }
+.dark .hover\:bg-white:hover     { background-color: #261c4a !important; }
+.dark .hover\:bg-slate-50:hover  { background-color: #261c4a !important; }
+.dark .hover\:bg-slate-100:hover { background-color: #2d2158 !important; }
+.dark .hover\:bg-slate-200:hover { background-color: #352766 !important; }
 .dark .hover\:text-slate-600:hover { color: #c084fc !important; }
 
 /* Combo fix: bg-slate-100 with text-slate-600 (student name chip) */
-.dark .bg-slate-100.text-slate-600 { background-color: #26263e !important; color: #c084fc !important; }
+.dark .bg-slate-100.text-slate-600 { background-color: #2d2158 !important; color: #c084fc !important; }
 
 /* Tab bar container bg-slate-200 */
-.dark .bg-slate\[\#1e293b\] { background-color: #22223a !important; }
+.dark .bg-slate\[\#1e293b\] { background-color: #261c4a !important; }
 
 /* text-white on .bg-slate-800/.bg-slate-900 must remain white */
 .dark .bg-slate-800 .text-white,
@@ -443,15 +441,15 @@ input[type="time"]      { color-scheme: light; }
 .dark input:not([type="checkbox"]):not([type="radio"]),
 .dark textarea,
 .dark select {
-  background-color: rgba(15,15,30,0.85) !important;
-  color: #f1f1ff !important;
-  border-color: rgba(168,85,247,0.45) !important;
+  background-color: rgba(24, 18, 50, 0.85) !important;
+  color: #f8fafc !important;
+  border-color: rgba(168, 85, 247, 0.40) !important;
 }
 .dark input::placeholder,
-.dark textarea::placeholder { color: #7070a0 !important; }
+.dark textarea::placeholder { color: #8b7ca8 !important; }
 
 /* Label text in forms */
-.dark label { color: #b8b8d8; }
+.dark label { color: #cbd5e1; }
 
 /* border-slate-300 used in form borders */
 .dark .border-slate-300 { border-color: #3e3e5a !important; }
@@ -627,10 +625,10 @@ input[type="time"]      { color-scheme: light; }
 /* Ensure glass-panel cards in light mode have a clear shadow */
 :root .glass-panel,
 html:not(.dark) .glass-panel {
-  border: 1.5px solid rgba(59,130,246,0.28);
+  border: 1.5px solid rgba(37, 99, 235, 0.20);
   box-shadow:
-    0 2px 12px rgba(59,130,246,0.12),
-    0 1px 4px rgba(0,0,0,0.08);
+    0 4px 20px rgba(37, 99, 235, 0.08),
+    0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 /* Quest Map module containers — colorful left accent border in light mode */
@@ -638,37 +636,37 @@ html:not(.dark) .glass-panel {
   /* Handled via individual component classes */
 }
 
-/* Make bg-white cards slightly muted — no more blinding white */
+/* Clean, friendly bright cards for kids in light mode */
 html:not(.dark) .bg-white {
-  background-color: #edf1fa !important;
-  border-color: #c5d3ec !important;
+  background-color: #ffffff !important;
+  border-color: rgba(37, 99, 235, 0.18) !important;
 }
 html:not(.dark) .bg-slate-50 {
-  background-color: #e8eef8 !important;
+  background-color: #f0f7ff !important;
 }
 
-/* Make meeting card + module card borders visible in light mode */
+/* Make meeting card + module card borders clean sky-blue in light mode */
 html:not(.dark) [class*="border-slate-100"],
 html:not(.dark) [class*="border-slate-200"] {
-  border-color: #c5d3ec !important;
+  border-color: rgba(37, 99, 235, 0.18) !important;
 }
 
 /* Dividers in light mode */
 html:not(.dark) .divide-y > * + * {
-  border-color: #ccd6ea !important;
+  border-color: rgba(37, 99, 235, 0.12) !important;
 }
 
-/* Tabs / pill nav in light mode — make active tab pop */
+/* Tabs / pill nav in light mode — friendly sky blue active tab */
 html:not(.dark) .bg-slate-200 {
-  background-color: #d6dfef !important;
+  background-color: #e2eeff !important;
 }
 
-/* Input borders and backgrounds in light mode — slightly off-white */
+/* Input borders and backgrounds in light mode */
 html:not(.dark) input:not([type="checkbox"]):not([type="radio"]),
 html:not(.dark) textarea,
 html:not(.dark) select {
-  border-color: rgba(37,99,235,0.35) !important;
-  background-color: #f0f4fc !important;
+  border-color: rgba(37, 99, 235, 0.35) !important;
+  background-color: #ffffff !important;
 }
 
 /* Scrollbar — lighter blue tint in light mode */
