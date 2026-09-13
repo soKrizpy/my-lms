@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Calendar, BookOpen, Users, Sparkles, Trophy, CheckCircle2 } from "lucide-react";
+import { Calendar, BookOpen, Users, Sparkles, Trophy, CheckCircle2, Award, Star } from "lucide-react";
 import { MagicalParticles } from "@/components/MagicalParticles";
 import { MagicalCounter } from "@/components/MagicalCounter";
 import { useLmsEngineListener } from "@/lib/useLmsEngineListener";
@@ -1177,11 +1177,6 @@ export default function StudentDashboard() {
                     <Sparkles className="w-3 h-3 text-amber-300 dark:text-pink-400 animate-spin" style={{ animationDuration: '6s' }} />
                     <span className="tracking-wide">Student Quest Portal</span>
                   </div>
-                  {/* Equipped Title Badge */}
-                  <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-purple-500/30 border border-purple-400/60 text-purple-100 text-xs font-bold backdrop-blur-md shadow-sm">
-                    <span>🎖️</span>
-                    <span>{getTitleById(data.titleId).name}</span>
-                  </div>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)]">
                   {t('greeting', { name: data.studentName })} <span className="inline-block hover:scale-125 transition-transform cursor-default animate-bounce" style={{ animationDuration: '3s' }}>✨</span>
@@ -1192,51 +1187,62 @@ export default function StudentDashboard() {
               </div>
             </div>
 
-            {/* Live Stats Magical Badges */}
-            <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-              {/* Completed Classes */}
-              <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/15 dark:bg-black/60 border border-white/25 dark:border-purple-500/40 backdrop-blur-xl shadow-lg shadow-blue-950/20 dark:shadow-black/30 hover:border-emerald-300/60 dark:hover:border-emerald-400/50 transition-all">
-                <div className="p-2 rounded-lg bg-emerald-400/25 border border-emerald-300/40 text-emerald-200 dark:text-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.3)]">
+            {/* Live Stats Magical 2x2 Grid */}
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 shrink-0">
+              {/* Title / Gelar Card */}
+              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 rounded-xl bg-white/15 dark:bg-black/60 border border-white/25 dark:border-purple-500/40 backdrop-blur-xl shadow-lg shadow-purple-950/20 dark:shadow-purple-900/30 hover:border-purple-300/60 dark:hover:border-purple-400/50 transition-all min-w-[140px]">
+                <div className="p-2 rounded-lg bg-purple-500/25 border border-purple-400/40 text-purple-200 dark:text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.3)] shrink-0">
+                  <Award className="w-4 h-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase tracking-wider text-blue-100 dark:text-purple-300/80 font-bold truncate">TITLE</div>
+                  <div className="text-xs sm:text-sm font-black text-white truncate max-w-[100px] sm:max-w-[130px]" title={getTitleById(data.titleId).name}>
+                    {getTitleById(data.titleId).name}
+                  </div>
+                </div>
+              </div>
+
+              {/* Completed Classes Card */}
+              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 rounded-xl bg-white/15 dark:bg-black/60 border border-white/25 dark:border-purple-500/40 backdrop-blur-xl shadow-lg shadow-blue-950/20 dark:shadow-black/30 hover:border-emerald-300/60 dark:hover:border-emerald-400/50 transition-all min-w-[140px]">
+                <div className="p-2 rounded-lg bg-emerald-400/25 border border-emerald-300/40 text-emerald-200 dark:text-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.3)] shrink-0">
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-[11px] uppercase tracking-wider text-blue-100 dark:text-purple-300/80 font-bold">{t('stats.completed')}</div>
-                  <div className="text-base font-black text-white tabular-nums flex items-center gap-1">
+                  <div className="text-[10px] uppercase tracking-wider text-blue-100 dark:text-purple-300/80 font-bold">{t('stats.completed')}</div>
+                  <div className="text-xs sm:text-sm font-black text-white tabular-nums flex items-center gap-1">
                     <MagicalCounter value={data.pastMeetings?.filter((m: Meeting) => m.is_completed)?.length || 0} />
-                    <span className="text-xs font-medium text-blue-100/90 dark:text-slate-300">{t('stats.sessions')}</span>
+                    <span className="text-[11px] font-medium text-blue-100/90 dark:text-slate-300">{t('stats.sessions')}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Quizzes / Challenges */}
-              <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/15 dark:bg-black/60 border border-white/25 dark:border-purple-500/40 backdrop-blur-xl shadow-lg shadow-blue-950/20 dark:shadow-black/30 hover:border-amber-300/60 dark:hover:border-amber-400/50 transition-all">
-                <div className="p-2 rounded-lg bg-amber-400/25 border border-amber-300/40 text-amber-200 dark:text-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.3)]">
+              {/* Quizzes / Challenges Card */}
+              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 rounded-xl bg-white/15 dark:bg-black/60 border border-white/25 dark:border-purple-500/40 backdrop-blur-xl shadow-lg shadow-blue-950/20 dark:shadow-black/30 hover:border-amber-300/60 dark:hover:border-amber-400/50 transition-all min-w-[140px]">
+                <div className="p-2 rounded-lg bg-amber-400/25 border border-amber-300/40 text-amber-200 dark:text-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.3)] shrink-0">
                   <Trophy className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-[11px] uppercase tracking-wider text-blue-100 dark:text-purple-300/80 font-bold">{t('stats.quiz')}</div>
-                  <div className="text-base font-black text-white tabular-nums flex items-center gap-1">
+                  <div className="text-[10px] uppercase tracking-wider text-blue-100 dark:text-purple-300/80 font-bold">{t('stats.quiz')}</div>
+                  <div className="text-xs sm:text-sm font-black text-white tabular-nums flex items-center gap-1">
                     <MagicalCounter value={data.quizAttempts?.length || 0} />
-                    <span className="text-xs font-medium text-blue-100/90 dark:text-slate-300">{t('stats.completed')}</span>
+                    <span className="text-[11px] font-medium text-blue-100/90 dark:text-slate-300">{t('stats.completed')}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Engine XP Total — only shown when student has completed engine lessons */}
-              {(data.engineXpTotal ?? 0) > 0 && (
-                <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-white/15 dark:bg-black/60 border border-white/25 dark:border-purple-500/40 backdrop-blur-xl shadow-lg shadow-blue-950/20 dark:shadow-black/30 hover:border-yellow-300/60 dark:hover:border-yellow-400/50 transition-all">
-                  <div className="p-2 rounded-lg bg-yellow-400/25 border border-yellow-300/40 text-yellow-200 dark:text-yellow-400 shadow-[0_0_10px_rgba(251,191,36,0.3)]">
-                    <span className="text-sm" aria-hidden="true">⭐</span>
-                  </div>
-                  <div>
-                    <div className="text-[11px] uppercase tracking-wider text-blue-100 dark:text-purple-300/80 font-bold">XP</div>
-                    <div className="text-base font-black text-white tabular-nums flex items-center gap-1">
-                      <MagicalCounter value={data.engineXpTotal || 0} />
-                      <span className="text-xs font-medium text-blue-100/90 dark:text-slate-300">pts</span>
-                    </div>
+              {/* XP Total Card */}
+              <div className="flex items-center gap-2.5 sm:gap-3 px-3.5 sm:px-4 py-2.5 rounded-xl bg-white/15 dark:bg-black/60 border border-white/25 dark:border-purple-500/40 backdrop-blur-xl shadow-lg shadow-blue-950/20 dark:shadow-black/30 hover:border-yellow-300/60 dark:hover:border-yellow-400/50 transition-all min-w-[140px]">
+                <div className="p-2 rounded-lg bg-yellow-400/25 border border-yellow-300/40 text-yellow-200 dark:text-yellow-400 shadow-[0_0_10px_rgba(251,191,36,0.3)] shrink-0">
+                  <Star className="w-4 h-4 fill-yellow-400 text-yellow-300" />
+                </div>
+                <div>
+                  <div className="text-[10px] uppercase tracking-wider text-blue-100 dark:text-purple-300/80 font-bold">XP</div>
+                  <div className="text-xs sm:text-sm font-black text-white tabular-nums flex items-center gap-1">
+                    <MagicalCounter value={data.totalXP || data.engineXpTotal || 0} />
+                    <span className="text-[11px] font-medium text-blue-100/90 dark:text-slate-300">pts</span>
                   </div>
                 </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
