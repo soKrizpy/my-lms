@@ -17,7 +17,8 @@ export type UnlockCondition =
   | { type: 'free' }
   | { type: 'level'; minLevel: number }
   | { type: 'streak'; minStreak: number }
-  | { type: 'quiz_score'; minScore: number };
+  | { type: 'quiz_score'; minScore: number }
+  | { type: 'module_assigned'; category: PathCategory };
 
 export interface AvatarItem {
   id: string;
@@ -46,6 +47,7 @@ export interface StudentGamificationStats {
   streak: number;
   maxStreak: number;
   bestQuizScore: number;
+  assignedCategories?: PathCategory[];
 }
 
 export const DEFAULT_AVATAR_ID = 'pixel-bot';
@@ -78,7 +80,7 @@ export const AVATARS: AvatarItem[] = [
     glowColor: 'rgba(251, 146, 60, 0.4)',
   },
 
-  // Scratch Learning Path
+  // Scratch Learning Path (Unlocked via Admin assigned module)
   {
     id: 'scratch-cat',
     name: 'Turbo Cat',
@@ -86,7 +88,7 @@ export const AVATARS: AvatarItem[] = [
     rarity: 'common',
     description: 'Sprite kucing legendaris bercakar neon, maskot petualangan Scratch.',
     lore: 'Penguasa alam semesta Scratch yang penuh balok warna-warni. Turbo Cat dilahirkan dari baris animasi pertama dan memegang kunci rahasia untuk merangkai gerakan, efek suara, dan mekanik game interaktif.',
-    unlock: { type: 'level', minLevel: 1 },
+    unlock: { type: 'module_assigned', category: 'scratch' },
     accentColor: '#f59e0b',
     glowColor: 'rgba(245, 158, 11, 0.4)',
   },
@@ -97,7 +99,7 @@ export const AVATARS: AvatarItem[] = [
     rarity: 'rare',
     description: 'Golem raksasa kokoh yang disusun dari balok-balok logika kode warna-warni.',
     lore: 'Pelindung Benteng Kode yang bangkit ketika ratusan balok Scratch disusun secara presisi. Tubuhnya yang terbuat dari susunan batu basalt dan kristal emerald mampu menahan error paling rumit sekalipun.',
-    unlock: { type: 'level', minLevel: 3 },
+    unlock: { type: 'module_assigned', category: 'scratch' },
     accentColor: '#10b981',
     glowColor: 'rgba(16, 185, 129, 0.4)',
   },
@@ -110,7 +112,7 @@ export const AVATARS: AvatarItem[] = [
     rarity: 'common',
     description: 'Laba-laba siber mungil yang lihai menenun jaring DOM dan elemen HTML.',
     lore: 'Menghuni kedalaman jaringan World Wide Web, Web Weaver menjahit benang-benang HTML menjadi struktur website yang rapi dan kokoh. Jaring mukjizatnya menghubungkan elemen header, container, dan footer secara sempurna.',
-    unlock: { type: 'level', minLevel: 2 },
+    unlock: { type: 'module_assigned', category: 'web' },
     accentColor: '#06b6d4',
     glowColor: 'rgba(6, 182, 212, 0.4)',
   },
@@ -121,7 +123,7 @@ export const AVATARS: AvatarItem[] = [
     rarity: 'rare',
     description: 'Bunglon estetika digital yang menguasai warna, flexbox, dan tipografi CSS.',
     lore: 'Bunglon estetis yang kulitnya mampu berganti warna mengikuti gradasi CSS3 dan efek glassmorphism. Ia menguasai tata letak responsif sehingga tampilan website selalu memukau di layar mana pun.',
-    unlock: { type: 'level', minLevel: 4 },
+    unlock: { type: 'module_assigned', category: 'web' },
     accentColor: '#ec4899',
     glowColor: 'rgba(236, 72, 153, 0.4)',
   },
@@ -134,7 +136,7 @@ export const AVATARS: AvatarItem[] = [
     rarity: 'common',
     description: 'Ular siber berlistrik yang gesit mengeksekusi script dan kalkulasi data.',
     lore: 'Bergerak cepat melintasi memori Python, Cyber Viper mengeksekusi fungsi dan kalkulasi data dalam hitungan milidetik. Semburan petir birunya melambangkan kecepatan dan efisiensi penulisan kode.',
-    unlock: { type: 'level', minLevel: 3 },
+    unlock: { type: 'module_assigned', category: 'python' },
     accentColor: '#3b82f6',
     glowColor: 'rgba(59, 130, 246, 0.4)',
   },
@@ -145,7 +147,7 @@ export const AVATARS: AvatarItem[] = [
     rarity: 'rare',
     description: 'Pendekar bayangan bertudung hitam dengan kacamata matrix pemecah bug.',
     lore: 'Seorang master komando CLI yang beroperasi di balik kegelapan layar terminal. Dengan kacamata visor berkode hijau matrix, Terminal Ninja mampu menembus dan membasmi bug tersembunyi tanpa bekas.',
-    unlock: { type: 'level', minLevel: 5 },
+    unlock: { type: 'module_assigned', category: 'python' },
     accentColor: '#22c55e',
     glowColor: 'rgba(34, 197, 94, 0.4)',
   },
@@ -158,7 +160,7 @@ export const AVATARS: AvatarItem[] = [
     rarity: 'rare',
     description: 'Kesatria poligon geometris dengan perisai mesh kawat 3D berkilau.',
     lore: 'Pahlawan dari Dimensi Ketiga yang menempa baju zirah dan perisainya dari jaring poligon 3D. Ia menguasai rotasi sumbu X, Y, Z dan teknik pencahayaan untuk melindungi karya model 3D.',
-    unlock: { type: 'level', minLevel: 4 },
+    unlock: { type: 'module_assigned', category: '3d' },
     accentColor: '#8b5cf6',
     glowColor: 'rgba(139, 92, 246, 0.4)',
   },
@@ -169,7 +171,7 @@ export const AVATARS: AvatarItem[] = [
     rarity: 'epic',
     description: 'Naga holografik mecha berdimensi tiga yang dirender dengan shader kristal.',
     lore: 'Naga mistis yang tercipta dari jutaan titik vokal 3D dan pencahayaan ray-tracing. Semburan holografiknya sanggup merender sketsa 2D sederhana menjadi mahakarya bentuk 3D yang hidup.',
-    unlock: { type: 'level', minLevel: 7 },
+    unlock: { type: 'module_assigned', category: '3d' },
     accentColor: '#a855f7',
     glowColor: 'rgba(168, 85, 247, 0.5)',
   },
@@ -182,7 +184,7 @@ export const AVATARS: AvatarItem[] = [
     rarity: 'epic',
     description: 'Ksatria agung pelindung kode dengan zirah titanium bertenaga kuantum.',
     lore: 'Prajurit tertinggi Dunia Bits2Bytes yang telah menguasai seluruh disiplin ilmu koding. Zirah kuantum miliknya ditenagai oleh akumulasi XP dan pengalaman memecahkan masalah tingkat tinggi.',
-    unlock: { type: 'level', minLevel: 8 },
+    unlock: { type: 'level', minLevel: 10 },
     accentColor: '#6366f1',
     glowColor: 'rgba(99, 102, 241, 0.5)',
   },
@@ -212,7 +214,7 @@ export const AVATARS: AvatarItem[] = [
   },
 ];
 
-// ─── Titles Catalog ───────────────────────────────────────────────────────────
+// ─── Titles Catalog (Rebalanced Levels 1 to 12) ───────────────────────────────
 
 export const TITLES: TitleItem[] = [
   // Starter
@@ -240,7 +242,7 @@ export const TITLES: TitleItem[] = [
     category: 'scratch',
     rarity: 'rare',
     description: 'Merancang mekanik game seru dengan susunan balok Scratch.',
-    unlock: { type: 'level', minLevel: 3 },
+    unlock: { type: 'level', minLevel: 4 },
   },
 
   // Web Dev
@@ -250,7 +252,7 @@ export const TITLES: TitleItem[] = [
     category: 'web',
     rarity: 'common',
     description: 'Membangun halaman web dengan struktur rapi dan tautan interaktif.',
-    unlock: { type: 'level', minLevel: 2 },
+    unlock: { type: 'level', minLevel: 3 },
   },
   {
     id: 'frontend-artist',
@@ -258,7 +260,7 @@ export const TITLES: TitleItem[] = [
     category: 'web',
     rarity: 'rare',
     description: 'Piawai menyulap tampilan website menjadi responsif dan memukau.',
-    unlock: { type: 'level', minLevel: 4 },
+    unlock: { type: 'level', minLevel: 6 },
   },
 
   // Python
@@ -268,7 +270,7 @@ export const TITLES: TitleItem[] = [
     category: 'python',
     rarity: 'common',
     description: 'Menguasai sintaks Python yang bersih dan bertenaga.',
-    unlock: { type: 'level', minLevel: 3 },
+    unlock: { type: 'level', minLevel: 5 },
   },
   {
     id: 'algorithm-ninja',
@@ -276,7 +278,7 @@ export const TITLES: TitleItem[] = [
     category: 'python',
     rarity: 'rare',
     description: 'Memecahkan teka-teki logika dengan kecepatan tinggi.',
-    unlock: { type: 'level', minLevel: 5 },
+    unlock: { type: 'level', minLevel: 7 },
   },
 
   // 3D Modeling
@@ -286,7 +288,7 @@ export const TITLES: TitleItem[] = [
     category: '3d',
     rarity: 'rare',
     description: 'Membentuk model objek tiga dimensi dari poligon dasar.',
-    unlock: { type: 'level', minLevel: 4 },
+    unlock: { type: 'level', minLevel: 8 },
   },
   {
     id: 'dimension-shaper',
@@ -294,7 +296,7 @@ export const TITLES: TitleItem[] = [
     category: '3d',
     rarity: 'epic',
     description: 'Pencipta dunia visual 3D yang megah dan realistis.',
-    unlock: { type: 'level', minLevel: 7 },
+    unlock: { type: 'level', minLevel: 9 },
   },
 
   // Mastery
@@ -304,7 +306,7 @@ export const TITLES: TitleItem[] = [
     category: 'mastery',
     rarity: 'epic',
     description: 'Menguasai logika pemrograman tingkat lanjut di segala medan.',
-    unlock: { type: 'level', minLevel: 8 },
+    unlock: { type: 'level', minLevel: 10 },
   },
   {
     id: 'byte-overlord',
@@ -312,7 +314,7 @@ export const TITLES: TitleItem[] = [
     category: 'mastery',
     rarity: 'legendary',
     description: 'Penguasa tertinggi dunia Bits2Bytes! Legenda yang tak terkalahkan.',
-    unlock: { type: 'level', minLevel: 10 },
+    unlock: { type: 'level', minLevel: 12 },
   },
 
   // Achievements
@@ -361,6 +363,8 @@ export function isItemUnlocked(
       return Math.max(stats.streak ?? 0, stats.maxStreak ?? 0) >= unlock.minStreak;
     case 'quiz_score':
       return (stats.bestQuizScore ?? 0) >= unlock.minScore;
+    case 'module_assigned':
+      return (stats.assignedCategories ?? []).includes(unlock.category);
     default:
       return false;
   }
@@ -377,6 +381,8 @@ export function getUnlockDescription(item: AvatarItem | TitleItem): string {
       return `Raih Streak ${unlock.minStreak}× Kehadiran`;
     case 'quiz_score':
       return `Raih Skor ${unlock.minScore} pada Quiz`;
+    case 'module_assigned':
+      return `Ambil Modul ${CATEGORY_LABELS[unlock.category]?.label || unlock.category}`;
     default:
       return 'Terkunci';
   }

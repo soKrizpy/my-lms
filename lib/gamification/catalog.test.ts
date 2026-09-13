@@ -23,29 +23,43 @@ describe('Gamification Catalog & Unlock System', () => {
     expect(isItemUnlocked(defaultTitle, baseStats)).toBe(true);
   });
 
-  it('should unlock level-based learning path avatars at appropriate levels', () => {
-    const scratchCat = getAvatarById('scratch-cat'); // Level 1
-    const webSpider = getAvatarById('web-spider'); // Level 2
-    const blockGolem = getAvatarById('block-golem'); // Level 3
-    const pythonViper = getAvatarById('python-viper'); // Level 3
-    const voxelPaladin = getAvatarById('voxel-paladin'); // Level 4
-    const holoDragon = getAvatarById('holo-dragon'); // Level 7
+  it('should unlock module-assigned avatars when student is assigned matching categories', () => {
+    const scratchCat = getAvatarById('scratch-cat');
+    const webSpider = getAvatarById('web-spider');
+    const pythonViper = getAvatarById('python-viper');
+    const voxelPaladin = getAvatarById('voxel-paladin');
+
+    const unassignedStats = { level: 10, streak: 0, maxStreak: 0, bestQuizScore: 0, assignedCategories: [] };
+    expect(isItemUnlocked(scratchCat, unassignedStats)).toBe(false);
+    expect(isItemUnlocked(webSpider, unassignedStats)).toBe(false);
+    expect(isItemUnlocked(pythonViper, unassignedStats)).toBe(false);
+    expect(isItemUnlocked(voxelPaladin, unassignedStats)).toBe(false);
+
+    const scratchStats = { level: 1, streak: 0, maxStreak: 0, bestQuizScore: 0, assignedCategories: ['scratch' as const] };
+    expect(isItemUnlocked(scratchCat, scratchStats)).toBe(true);
+    expect(isItemUnlocked(webSpider, scratchStats)).toBe(false);
+
+    const multiStats = { level: 1, streak: 0, maxStreak: 0, bestQuizScore: 0, assignedCategories: ['scratch' as const, 'python' as const] };
+    expect(isItemUnlocked(scratchCat, multiStats)).toBe(true);
+    expect(isItemUnlocked(pythonViper, multiStats)).toBe(true);
+    expect(isItemUnlocked(webSpider, multiStats)).toBe(false);
+  });
+
+  it('should unlock titles based on rebalanced level curve', () => {
+    const lvl2Title = getTitleById('sprite-animator'); // Level 2
+    const lvl6Title = getTitleById('frontend-artist'); // Level 6
+    const lvl12Title = getTitleById('byte-overlord'); // Level 12
 
     const lvl1Stats = { level: 1, streak: 0, maxStreak: 0, bestQuizScore: 0 };
-    expect(isItemUnlocked(scratchCat, lvl1Stats)).toBe(true);
-    expect(isItemUnlocked(webSpider, lvl1Stats)).toBe(false);
-    expect(isItemUnlocked(blockGolem, lvl1Stats)).toBe(false);
-    expect(isItemUnlocked(voxelPaladin, lvl1Stats)).toBe(false);
+    expect(isItemUnlocked(lvl2Title, lvl1Stats)).toBe(false);
 
-    const lvl4Stats = { level: 4, streak: 0, maxStreak: 0, bestQuizScore: 0 };
-    expect(isItemUnlocked(webSpider, lvl4Stats)).toBe(true);
-    expect(isItemUnlocked(blockGolem, lvl4Stats)).toBe(true);
-    expect(isItemUnlocked(pythonViper, lvl4Stats)).toBe(true);
-    expect(isItemUnlocked(voxelPaladin, lvl4Stats)).toBe(true);
-    expect(isItemUnlocked(holoDragon, lvl4Stats)).toBe(false);
+    const lvl6Stats = { level: 6, streak: 0, maxStreak: 0, bestQuizScore: 0 };
+    expect(isItemUnlocked(lvl2Title, lvl6Stats)).toBe(true);
+    expect(isItemUnlocked(lvl6Title, lvl6Stats)).toBe(true);
+    expect(isItemUnlocked(lvl12Title, lvl6Stats)).toBe(false);
 
-    const lvl8Stats = { level: 8, streak: 0, maxStreak: 0, bestQuizScore: 0 };
-    expect(isItemUnlocked(holoDragon, lvl8Stats)).toBe(true);
+    const lvl12Stats = { level: 12, streak: 0, maxStreak: 0, bestQuizScore: 0 };
+    expect(isItemUnlocked(lvl12Title, lvl12Stats)).toBe(true);
   });
 
   it('should unlock streak achievements based on current or max streak', () => {
@@ -86,8 +100,8 @@ describe('Gamification Catalog & Unlock System', () => {
     const defaultAvatar = getAvatarById('pixel-bot');
     expect(getUnlockDescription(defaultAvatar)).toBe('Tersedia otomatis');
 
-    const lvl5Item = getAvatarById('code-ninja');
-    expect(getUnlockDescription(lvl5Item)).toContain('Level 5');
+    const scratchAvatar = getAvatarById('scratch-cat');
+    expect(getUnlockDescription(scratchAvatar)).toContain('Ambil Modul Scratch');
 
     const streakItem = getAvatarById('flame-striker');
     expect(getUnlockDescription(streakItem)).toContain('Streak 5');

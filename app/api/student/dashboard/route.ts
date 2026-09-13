@@ -315,7 +315,27 @@ export async function GET() {
       assessment_id: s.assessment_id,
       score: s.best_score,
     }));
-    const totalXP = computeTotalXP(engineXpTotal, assessmentXPRows);
+    const completedModulesCount = (modulesWithTopics || []).filter((m: any) => m?.isModuleComplete).length;
+    const totalXP = computeTotalXP(engineXpTotal, assessmentXPRows, { completedModulesCount });
+    const assignedCategories: string[] = [];
+    if (Array.isArray(studentModules)) {
+      for (const sm of studentModules as any[]) {
+        const title = (sm?.modules?.title || '').toLowerCase();
+        const desc = (sm?.modules?.description || '').toLowerCase();
+        if (title.includes('scratch') || desc.includes('scratch')) {
+          if (!assignedCategories.includes('scratch')) assignedCategories.push('scratch');
+        }
+        if (title.includes('web') || title.includes('html') || title.includes('css') || desc.includes('web')) {
+          if (!assignedCategories.includes('web')) assignedCategories.push('web');
+        }
+        if (title.includes('python') || desc.includes('python')) {
+          if (!assignedCategories.includes('python')) assignedCategories.push('python');
+        }
+        if (title.includes('3d') || title.includes('blender') || title.includes('tinkercad') || desc.includes('3d')) {
+          if (!assignedCategories.includes('3d')) assignedCategories.push('3d');
+        }
+      }
+    }
     const level = computeLevel(totalXP);
 
     // 10d. Fetch earned badges
@@ -386,6 +406,7 @@ export async function GET() {
       assessmentSummaries: Array.isArray(assessmentSummaries) ? assessmentSummaries : [],
       totalXP,
       level,
+      assignedCategories,
       earnedBadges: Array.isArray(earnedBadges) ? earnedBadges : [],
     };
 

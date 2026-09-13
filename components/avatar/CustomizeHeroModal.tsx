@@ -19,6 +19,7 @@ import {
   type StudentGamificationStats,
 } from '@/lib/gamification/catalog';
 import { AvatarDisplay } from './AvatarDisplay';
+import { getLevelProgress } from '@/lib/gamification/xpCalculator';
 
 interface CustomizeHeroModalProps {
   isOpen: boolean;
@@ -51,6 +52,7 @@ export function CustomizeHeroModal({
 
   const equippedAvatar = getAvatarById(selectedAvatarId);
   const equippedTitle = getTitleById(selectedTitleId);
+  const levelProgress = getLevelProgress(stats.xp || 0);
 
   // Filter avatars
   const filteredAvatars = AVATARS.filter((avatar) =>
@@ -154,18 +156,38 @@ export function CustomizeHeroModal({
                   {equippedAvatar.name}
                 </span>
               </div>
-              {/* Equipped Title Badge */}
-              <div className="mt-1 flex items-center gap-2 flex-wrap">
-                <span
-                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-semibold border bg-purple-50 text-purple-800 border-purple-200 dark:bg-purple-950/40 dark:border-purple-500/50 dark:text-purple-300"
-                >
-                  <span>🎖️</span>
-                  <span>{equippedTitle.name}</span>
-                </span>
-                <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">• Level {stats.level}</span>
-                {stats.streak > 0 && (
-                  <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold">• 🔥 {stats.streak}x streak</span>
-                )}
+              {/* Equipped Title & Level Progress */}
+              <div className="mt-1 flex flex-col gap-1.5">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-semibold border bg-purple-50 text-purple-800 border-purple-200 dark:bg-purple-950/40 dark:border-purple-500/50 dark:text-purple-300"
+                  >
+                    <span>🎖️</span>
+                    <span>{equippedTitle.name}</span>
+                  </span>
+                  <span className="text-xs text-slate-600 dark:text-slate-400 font-medium">• Level {levelProgress.currentLevel}</span>
+                  {stats.streak > 0 && (
+                    <span className="text-xs text-amber-600 dark:text-amber-400 font-semibold">• 🔥 {stats.streak}x streak</span>
+                  )}
+                </div>
+
+                {/* Level XP Progress Bar */}
+                <div className="w-full sm:w-64">
+                  <div className="flex justify-between items-center text-[10px] font-semibold text-slate-500 dark:text-slate-400 mb-0.5">
+                    <span>XP Level {levelProgress.currentLevel}</span>
+                    <span>{levelProgress.xpInCurrentLevel} / {levelProgress.xpNeededForNextLevel} XP</span>
+                  </div>
+                  <div className="w-full h-1.5 rounded-full bg-slate-200 dark:bg-white/10 overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{
+                        width: `${levelProgress.progressPercent}%`,
+                        background: 'linear-gradient(90deg, #a855f7 0%, #6366f1 100%)',
+                        boxShadow: '0 0 8px rgba(168, 85, 247, 0.6)',
+                      }}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </div>
