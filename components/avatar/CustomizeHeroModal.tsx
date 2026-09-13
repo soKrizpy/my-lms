@@ -43,6 +43,7 @@ export function CustomizeHeroModal({
   const [selectedCategory, setSelectedCategory] = useState<PathCategory | 'all'>('all');
   const [selectedAvatarId, setSelectedAvatarId] = useState<string>(currentAvatarId || 'pixel-bot');
   const [selectedTitleId, setSelectedTitleId] = useState<string>(currentTitleId || 'novice-coder');
+  const [loreModalAvatar, setLoreModalAvatar] = useState<AvatarItem | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
 
@@ -267,9 +268,21 @@ export function CustomizeHeroModal({
                             {catMeta.icon} {catMeta.label}
                           </span>
                         </div>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
-                          {avatar.description}
-                        </p>
+                        <div className="mt-1">
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                            {avatar.description}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setLoreModalAvatar(avatar);
+                            }}
+                            className="mt-1 inline-flex items-center gap-1 text-[10px] font-extrabold text-purple-600 hover:text-purple-700 dark:text-purple-400 dark:hover:text-purple-300 cursor-pointer hover:underline"
+                          >
+                            <span>📖 Baca Lore...</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
 
@@ -381,6 +394,115 @@ export function CustomizeHeroModal({
           )}
         </div>
       </div>
+
+      {/* ── Character Lore Modal Overlay ─────────────────────────────────── */}
+      {loreModalAvatar && (
+        <div className="fixed inset-0 z-60 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div
+            className="relative w-full max-w-md rounded-2xl border p-6 flex flex-col items-center text-center shadow-2xl"
+            style={{
+              background: 'var(--glass-bg, #0f172a)',
+              borderColor: loreModalAvatar.accentColor,
+              boxShadow: `0 0 40px ${loreModalAvatar.glowColor}, 0 0 80px rgba(0, 0, 0, 0.9)`,
+            }}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setLoreModalAvatar(null)}
+              className="absolute top-4 right-4 p-1.5 rounded-lg bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors cursor-pointer"
+              aria-label="Tutup lore"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Avatar Display */}
+            <div className="my-2 relative">
+              <AvatarDisplay avatarId={loreModalAvatar.id} size="xl" showAura />
+            </div>
+
+            {/* Badges */}
+            <div className="flex items-center gap-2 mt-2">
+              <span
+                className="px-2.5 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider border"
+                style={{
+                  backgroundColor: `${loreModalAvatar.accentColor}20`,
+                  borderColor: loreModalAvatar.accentColor,
+                  color: loreModalAvatar.accentColor,
+                }}
+              >
+                {loreModalAvatar.rarity}
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300">
+                {CATEGORY_LABELS[loreModalAvatar.category].icon} {CATEGORY_LABELS[loreModalAvatar.category].label}
+              </span>
+            </div>
+
+            {/* Character Title */}
+            <h3 className="text-xl font-extrabold text-slate-900 dark:text-white mt-3">
+              {loreModalAvatar.name}
+            </h3>
+
+            {/* Short Description */}
+            <p className="text-xs text-slate-600 dark:text-slate-300 italic mt-1 leading-relaxed">
+              "{loreModalAvatar.description}"
+            </p>
+
+            {/* Lore Section Box */}
+            <div className="w-full mt-4 p-4 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 text-left">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-purple-600 dark:text-purple-400 mb-1.5 uppercase tracking-wider">
+                <span>📖</span>
+                <span>Kisah & Lore Karakter</span>
+              </div>
+              <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
+                {loreModalAvatar.lore || loreModalAvatar.description}
+              </p>
+            </div>
+
+            {/* Unlock Requirement Info */}
+            <div className="mt-4 text-xs font-medium text-slate-500 dark:text-slate-400">
+              {isItemUnlocked(loreModalAvatar, stats) ? (
+                <span className="text-emerald-600 dark:text-emerald-400 font-semibold flex items-center justify-center gap-1">
+                  <span>✓</span> Karakter Terbuka & Siap Digunakan
+                </span>
+              ) : (
+                <span className="text-amber-600 dark:text-amber-400 font-semibold flex items-center justify-center gap-1">
+                  <span>🔒</span> Syarat Buka: {getUnlockDescription(loreModalAvatar)}
+                </span>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 w-full mt-5">
+              <button
+                type="button"
+                onClick={() => setLoreModalAvatar(null)}
+                className="flex-1 py-2 rounded-xl text-xs font-bold bg-slate-200 dark:bg-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-white/20 transition-all cursor-pointer"
+              >
+                Tutup
+              </button>
+
+              {isItemUnlocked(loreModalAvatar, stats) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleEquipAvatar(loreModalAvatar);
+                    setLoreModalAvatar(null);
+                  }}
+                  className="flex-1 py-2 rounded-xl text-xs font-bold text-white shadow-lg transition-all active:scale-95 cursor-pointer"
+                  style={{
+                    background: 'linear-gradient(135deg, #a855f7 0%, #6366f1 100%)',
+                    boxShadow: '0 0 15px rgba(168, 85, 247, 0.4)',
+                  }}
+                >
+                  {selectedAvatarId === loreModalAvatar.id ? '✓ Sedang Dipakai' : 'Pilih Karakter Ini'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
