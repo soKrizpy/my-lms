@@ -18,7 +18,11 @@ export type UnlockCondition =
   | { type: 'level'; minLevel: number }
   | { type: 'streak'; minStreak: number }
   | { type: 'quiz_score'; minScore: number }
-  | { type: 'module_assigned'; category: PathCategory };
+  | {
+      type: 'module_assigned';
+      category: PathCategory;
+      minModuleLevel?: 'beginner' | 'intermediate' | 'advanced' | 'master';
+    };
 
 export interface AvatarItem {
   id: string;
@@ -41,6 +45,11 @@ export interface TitleItem {
   unlock: UnlockCondition;
 }
 
+export interface AssignedModuleInfo {
+  category: PathCategory;
+  level?: string;
+}
+
 export interface StudentGamificationStats {
   level: number;
   xp?: number;
@@ -48,6 +57,7 @@ export interface StudentGamificationStats {
   maxStreak: number;
   bestQuizScore: number;
   assignedCategories?: PathCategory[];
+  assignedModules?: AssignedModuleInfo[];
 }
 
 export const DEFAULT_AVATAR_ID = 'pixel-bot';
@@ -80,7 +90,7 @@ export const AVATARS: AvatarItem[] = [
     glowColor: 'rgba(251, 146, 60, 0.4)',
   },
 
-  // Scratch Learning Path (Unlocked via Admin assigned module)
+  // Scratch Learning Path (Unlocked via Admin assigned module & level)
   {
     id: 'scratch-cat',
     name: 'Turbo Cat',
@@ -88,7 +98,7 @@ export const AVATARS: AvatarItem[] = [
     rarity: 'common',
     description: 'Sprite kucing legendaris bercakar neon, maskot petualangan Scratch.',
     lore: 'Penguasa alam semesta Scratch yang penuh balok warna-warni. Turbo Cat dilahirkan dari baris animasi pertama dan memegang kunci rahasia untuk merangkai gerakan, efek suara, dan mekanik game interaktif.',
-    unlock: { type: 'module_assigned', category: 'scratch' },
+    unlock: { type: 'module_assigned', category: 'scratch', minModuleLevel: 'beginner' },
     accentColor: '#f59e0b',
     glowColor: 'rgba(245, 158, 11, 0.4)',
   },
@@ -99,7 +109,7 @@ export const AVATARS: AvatarItem[] = [
     rarity: 'rare',
     description: 'Golem raksasa kokoh yang disusun dari balok-balok logika kode warna-warni.',
     lore: 'Pelindung Benteng Kode yang bangkit ketika ratusan balok Scratch disusun secara presisi. Tubuhnya yang terbuat dari susunan batu basalt dan kristal emerald mampu menahan error paling rumit sekalipun.',
-    unlock: { type: 'module_assigned', category: 'scratch' },
+    unlock: { type: 'module_assigned', category: 'scratch', minModuleLevel: 'intermediate' },
     accentColor: '#10b981',
     glowColor: 'rgba(16, 185, 129, 0.4)',
   },
@@ -112,7 +122,7 @@ export const AVATARS: AvatarItem[] = [
     rarity: 'common',
     description: 'Laba-laba siber mungil yang lihai menenun jaring DOM dan elemen HTML.',
     lore: 'Menghuni kedalaman jaringan World Wide Web, Web Weaver menjahit benang-benang HTML menjadi struktur website yang rapi dan kokoh. Jaring mukjizatnya menghubungkan elemen header, container, dan footer secara sempurna.',
-    unlock: { type: 'module_assigned', category: 'web' },
+    unlock: { type: 'module_assigned', category: 'web', minModuleLevel: 'beginner' },
     accentColor: '#06b6d4',
     glowColor: 'rgba(6, 182, 212, 0.4)',
   },
@@ -123,7 +133,7 @@ export const AVATARS: AvatarItem[] = [
     rarity: 'rare',
     description: 'Bunglon estetika digital yang menguasai warna, flexbox, dan tipografi CSS.',
     lore: 'Bunglon estetis yang kulitnya mampu berganti warna mengikuti gradasi CSS3 dan efek glassmorphism. Ia menguasai tata letak responsif sehingga tampilan website selalu memukau di layar mana pun.',
-    unlock: { type: 'module_assigned', category: 'web' },
+    unlock: { type: 'module_assigned', category: 'web', minModuleLevel: 'intermediate' },
     accentColor: '#ec4899',
     glowColor: 'rgba(236, 72, 153, 0.4)',
   },
@@ -136,7 +146,7 @@ export const AVATARS: AvatarItem[] = [
     rarity: 'common',
     description: 'Ular siber berlistrik yang gesit mengeksekusi script dan kalkulasi data.',
     lore: 'Bergerak cepat melintasi memori Python, Cyber Viper mengeksekusi fungsi dan kalkulasi data dalam hitungan milidetik. Semburan petir birunya melambangkan kecepatan dan efisiensi penulisan kode.',
-    unlock: { type: 'module_assigned', category: 'python' },
+    unlock: { type: 'module_assigned', category: 'python', minModuleLevel: 'beginner' },
     accentColor: '#3b82f6',
     glowColor: 'rgba(59, 130, 246, 0.4)',
   },
@@ -147,7 +157,7 @@ export const AVATARS: AvatarItem[] = [
     rarity: 'rare',
     description: 'Pendekar bayangan bertudung hitam dengan kacamata matrix pemecah bug.',
     lore: 'Seorang master komando CLI yang beroperasi di balik kegelapan layar terminal. Dengan kacamata visor berkode hijau matrix, Terminal Ninja mampu menembus dan membasmi bug tersembunyi tanpa bekas.',
-    unlock: { type: 'module_assigned', category: 'python' },
+    unlock: { type: 'module_assigned', category: 'python', minModuleLevel: 'intermediate' },
     accentColor: '#22c55e',
     glowColor: 'rgba(34, 197, 94, 0.4)',
   },
@@ -160,7 +170,7 @@ export const AVATARS: AvatarItem[] = [
     rarity: 'rare',
     description: 'Kesatria poligon geometris dengan perisai mesh kawat 3D berkilau.',
     lore: 'Pahlawan dari Dimensi Ketiga yang menempa baju zirah dan perisainya dari jaring poligon 3D. Ia menguasai rotasi sumbu X, Y, Z dan teknik pencahayaan untuk melindungi karya model 3D.',
-    unlock: { type: 'module_assigned', category: '3d' },
+    unlock: { type: 'module_assigned', category: '3d', minModuleLevel: 'beginner' },
     accentColor: '#8b5cf6',
     glowColor: 'rgba(139, 92, 246, 0.4)',
   },
@@ -171,7 +181,7 @@ export const AVATARS: AvatarItem[] = [
     rarity: 'epic',
     description: 'Naga holografik mecha berdimensi tiga yang dirender dengan shader kristal.',
     lore: 'Naga mistis yang tercipta dari jutaan titik vokal 3D dan pencahayaan ray-tracing. Semburan holografiknya sanggup merender sketsa 2D sederhana menjadi mahakarya bentuk 3D yang hidup.',
-    unlock: { type: 'module_assigned', category: '3d' },
+    unlock: { type: 'module_assigned', category: '3d', minModuleLevel: 'intermediate' },
     accentColor: '#a855f7',
     glowColor: 'rgba(168, 85, 247, 0.5)',
   },
@@ -363,8 +373,32 @@ export function isItemUnlocked(
       return Math.max(stats.streak ?? 0, stats.maxStreak ?? 0) >= unlock.minStreak;
     case 'quiz_score':
       return (stats.bestQuizScore ?? 0) >= unlock.minScore;
-    case 'module_assigned':
-      return (stats.assignedCategories ?? []).includes(unlock.category);
+    case 'module_assigned': {
+      if (!stats.assignedModules && stats.assignedCategories) {
+        return stats.assignedCategories.includes(unlock.category);
+      }
+      const matchingModules = (stats.assignedModules ?? []).filter(
+        (m) => m.category === unlock.category
+      );
+      if (matchingModules.length === 0) return false;
+      if (!unlock.minModuleLevel || unlock.minModuleLevel === 'beginner') {
+        return true;
+      }
+      const levelRank: Record<string, number> = {
+        basic: 1,
+        beginner: 1,
+        pemula: 1,
+        intermediate: 2,
+        menengah: 2,
+        advanced: 3,
+        lanjutan: 3,
+        master: 4,
+      };
+      const requiredRank = levelRank[unlock.minModuleLevel] || 2;
+      return matchingModules.some(
+        (m) => (levelRank[(m.level || '').toLowerCase()] || 1) >= requiredRank
+      );
+    }
     default:
       return false;
   }
@@ -381,8 +415,13 @@ export function getUnlockDescription(item: AvatarItem | TitleItem): string {
       return `Raih Streak ${unlock.minStreak}× Kehadiran`;
     case 'quiz_score':
       return `Raih Skor ${unlock.minScore} pada Quiz`;
-    case 'module_assigned':
-      return `Ambil Modul ${CATEGORY_LABELS[unlock.category]?.label || unlock.category}`;
+    case 'module_assigned': {
+      const catLabel = CATEGORY_LABELS[unlock.category]?.label || unlock.category;
+      if (unlock.minModuleLevel === 'intermediate' || unlock.minModuleLevel === 'advanced') {
+        return `Ambil Modul ${catLabel} (Tingkat Menengah/Lanjutan)`;
+      }
+      return `Ambil Modul ${catLabel}`;
+    }
     default:
       return 'Terkunci';
   }

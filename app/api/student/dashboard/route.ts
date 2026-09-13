@@ -318,21 +318,23 @@ export async function GET() {
     const completedModulesCount = (modulesWithTopics || []).filter((m: any) => m?.isModuleComplete).length;
     const totalXP = computeTotalXP(engineXpTotal, assessmentXPRows, { completedModulesCount });
     const assignedCategories: string[] = [];
+    const assignedModules: { category: string; level: string }[] = [];
+
     if (Array.isArray(studentModules)) {
       for (const sm of studentModules as any[]) {
-        const title = (sm?.modules?.title || '').toLowerCase();
+        const title = (sm?.modules?.title || sm?.modules?.name || '').toLowerCase();
         const desc = (sm?.modules?.description || '').toLowerCase();
-        if (title.includes('scratch') || desc.includes('scratch')) {
-          if (!assignedCategories.includes('scratch')) assignedCategories.push('scratch');
-        }
-        if (title.includes('web') || title.includes('html') || title.includes('css') || desc.includes('web')) {
-          if (!assignedCategories.includes('web')) assignedCategories.push('web');
-        }
-        if (title.includes('python') || desc.includes('python')) {
-          if (!assignedCategories.includes('python')) assignedCategories.push('python');
-        }
-        if (title.includes('3d') || title.includes('blender') || title.includes('tinkercad') || desc.includes('3d')) {
-          if (!assignedCategories.includes('3d')) assignedCategories.push('3d');
+        const modLevel = (sm?.modules?.level || 'beginner').toLowerCase();
+
+        let cat: string | null = null;
+        if (title.includes('scratch') || desc.includes('scratch')) cat = 'scratch';
+        else if (title.includes('web') || title.includes('html') || title.includes('css') || desc.includes('web')) cat = 'web';
+        else if (title.includes('python') || desc.includes('python')) cat = 'python';
+        else if (title.includes('3d') || title.includes('blender') || title.includes('tinkercad') || desc.includes('3d')) cat = '3d';
+
+        if (cat) {
+          if (!assignedCategories.includes(cat)) assignedCategories.push(cat);
+          assignedModules.push({ category: cat, level: modLevel });
         }
       }
     }
@@ -407,6 +409,7 @@ export async function GET() {
       totalXP,
       level,
       assignedCategories,
+      assignedModules,
       earnedBadges: Array.isArray(earnedBadges) ? earnedBadges : [],
     };
 
