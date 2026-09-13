@@ -842,15 +842,7 @@ function ParentHub({ pastMeetings, quizAttempts, modules, topicProgress }: { pas
         );
       })}
 
-      {/* Engine Lesson Progress */}
-      {topicProgress.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <span>⭐</span> Progress Lesson Engine
-          </h3>
-          <EngineProgressSection topicProgress={topicProgress} />
-        </div>
-      )}
+      {/* Engine Lesson Progress removed — scores now shown inside meeting cards via quiz_attempts */}
     </div>
   );
 }
