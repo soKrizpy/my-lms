@@ -45,9 +45,10 @@ describe('Gamification Catalog & Unlock System', () => {
     expect(isItemUnlocked(webSpider, multiStats)).toBe(false);
   });
 
-  it('should unlock tiered avatars based on module level (beginner vs intermediate/advanced)', () => {
+  it('should unlock tiered avatars based on module level (beginner vs intermediate vs advanced)', () => {
     const scratchCat = getAvatarById('scratch-cat');
     const blockGolem = getAvatarById('block-golem');
+    const quantumScratch = getAvatarById('quantum-scratch');
 
     const beginnerScratchStats = {
       level: 1,
@@ -58,6 +59,7 @@ describe('Gamification Catalog & Unlock System', () => {
     };
     expect(isItemUnlocked(scratchCat, beginnerScratchStats)).toBe(true);
     expect(isItemUnlocked(blockGolem, beginnerScratchStats)).toBe(false);
+    expect(isItemUnlocked(quantumScratch, beginnerScratchStats)).toBe(false);
 
     const intermediateScratchStats = {
       level: 1,
@@ -68,6 +70,16 @@ describe('Gamification Catalog & Unlock System', () => {
     };
     expect(isItemUnlocked(scratchCat, intermediateScratchStats)).toBe(true);
     expect(isItemUnlocked(blockGolem, intermediateScratchStats)).toBe(true);
+    expect(isItemUnlocked(quantumScratch, intermediateScratchStats)).toBe(false);
+
+    const advancedScratchStats = {
+      level: 1,
+      streak: 0,
+      maxStreak: 0,
+      bestQuizScore: 0,
+      assignedModules: [{ category: 'scratch' as const, level: 'advanced' }],
+    };
+    expect(isItemUnlocked(quantumScratch, advancedScratchStats)).toBe(true);
   });
 
   it('should unlock titles based on rebalanced level curve', () => {

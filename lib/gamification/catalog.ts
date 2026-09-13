@@ -113,6 +113,17 @@ export const AVATARS: AvatarItem[] = [
     accentColor: '#10b981',
     glowColor: 'rgba(16, 185, 129, 0.4)',
   },
+  {
+    id: 'quantum-scratch',
+    name: 'Quantum Scratch',
+    category: 'scratch',
+    rarity: 'epic',
+    description: 'Kucing kuantum berarmor neon yang menguasai algoritma game Scratch tingkat lanjut.',
+    lore: 'Berasal dari ruang kuantum Scratch, Quantum Scratch telah menguasai manipulasi variabel kompleks, matriks clone tak terbatas, dan mekanik fisika game kustom.',
+    unlock: { type: 'module_assigned', category: 'scratch', minModuleLevel: 'advanced' },
+    accentColor: '#eab308',
+    glowColor: 'rgba(234, 179, 8, 0.5)',
+  },
 
   // Website / Web Dev Learning Path (HTML / CSS / JS)
   {
@@ -136,6 +147,17 @@ export const AVATARS: AvatarItem[] = [
     unlock: { type: 'module_assigned', category: 'web', minModuleLevel: 'intermediate' },
     accentColor: '#ec4899',
     glowColor: 'rgba(236, 72, 153, 0.4)',
+  },
+  {
+    id: 'dom-overlord',
+    name: 'DOM Overlord',
+    category: 'web',
+    rarity: 'epic',
+    description: 'Penguasa siber bermahkota neon yang menguasai JavaScript async dan arsitektur web modern.',
+    lore: 'Raja dari alam Web Dev yang mampu memanipulasi Pohon DOM dalam sekejap mata. Dengan mahkota kode JavaScript dan tongkat petir async/await, ia dapat membangun web app interaktif berketinggian tinggi.',
+    unlock: { type: 'module_assigned', category: 'web', minModuleLevel: 'advanced' },
+    accentColor: '#f43f5e',
+    glowColor: 'rgba(244, 63, 94, 0.5)',
   },
 
   // Python Learning Path
@@ -161,6 +183,17 @@ export const AVATARS: AvatarItem[] = [
     accentColor: '#22c55e',
     glowColor: 'rgba(34, 197, 94, 0.4)',
   },
+  {
+    id: 'data-hydra',
+    name: 'Data Hydra',
+    category: 'python',
+    rarity: 'epic',
+    description: 'Hydra siber bermata tiga yang mengolah data analitik dan kecerdasan buatan Python.',
+    lore: 'Naga berkepala banyak dari dunia Python Data Science. Setiap kepalanya mengeksekusi algoritma Machine Learning, pengolahan data otomatis, dan kecerdasan buatan secara simultan.',
+    unlock: { type: 'module_assigned', category: 'python', minModuleLevel: 'advanced' },
+    accentColor: '#0284c7',
+    glowColor: 'rgba(2, 132, 199, 0.5)',
+  },
 
   // 3D Modeling & Design Learning Path
   {
@@ -184,6 +217,17 @@ export const AVATARS: AvatarItem[] = [
     unlock: { type: 'module_assigned', category: '3d', minModuleLevel: 'intermediate' },
     accentColor: '#a855f7',
     glowColor: 'rgba(168, 85, 247, 0.5)',
+  },
+  {
+    id: 'mesh-titan',
+    name: 'Mesh Titan',
+    category: '3d',
+    rarity: 'legendary',
+    description: 'Titan 3D raksasa bertenaga shader kristal yang menguasai animasi dan render kompleks.',
+    lore: 'Titan ciptaan teragung di studio 3D Modeling. Tubuhnya terbuat dari jutaan poligon yang dipahat secara presisi, dilapisi shader reflektif kristal dan rigged skeleton siap animasi.',
+    unlock: { type: 'module_assigned', category: '3d', minModuleLevel: 'advanced' },
+    accentColor: '#d946ef',
+    glowColor: 'rgba(217, 70, 239, 0.6)',
   },
 
   // Mastery

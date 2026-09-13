@@ -389,6 +389,86 @@ function AvatarSvgContent({ id, accentColor }: { id: string; accentColor: string
         </g>
       );
 
+    case 'quantum-scratch':
+      // Quantum armor Scratch Cat with golden crown & energy aura
+      return (
+        <g>
+          {/* Ears */}
+          <polygon points="14,24 16,8 30,20" fill="#f59e0b" stroke="#eab308" strokeWidth="2" />
+          <polygon points="50,24 48,8 34,20" fill="#f59e0b" stroke="#eab308" strokeWidth="2" />
+          {/* Quantum Crown */}
+          <polygon points="24,10 32,3 40,10 44,4 48,14 16,14 20,4" fill="#facc15" stroke="#ca8a04" strokeWidth="1.5" />
+          <circle cx="32" cy="7" r="1.5" fill="#38bdf8" />
+          {/* Head & Gold Visor */}
+          <ellipse cx="32" cy="35" rx="22" ry="18" fill="#1e293b" stroke="#eab308" strokeWidth="2.5" />
+          <rect x="20" y="26" width="24" height="10" rx="4" fill="#fef08a" stroke="#eab308" strokeWidth="1" />
+          <ellipse cx="26" cy="31" rx="3" fill="#0f172a" />
+          <ellipse cx="38" cy="31" rx="3" fill="#0f172a" />
+          {/* Smile */}
+          <path d="M28,40 Q32,44 36,40" stroke="#facc15" strokeWidth="2" strokeLinecap="round" fill="none" />
+          {/* Quantum Orbs */}
+          <circle cx="10" cy="34" r="2" fill="#38bdf8" />
+          <circle cx="54" cy="34" r="2" fill="#38bdf8" />
+        </g>
+      );
+
+    case 'dom-overlord':
+      // Sovereign cyber ruler with JS crown and lightning wand
+      return (
+        <g>
+          {/* Golden JS Crown */}
+          <path d="M14,18 L22,6 L32,16 L42,6 L50,18 Z" fill="#f43f5e" stroke="#fecdd3" strokeWidth="1.5" />
+          <circle cx="22" cy="7" r="2" fill="#facc15" />
+          <circle cx="32" cy="17" r="2" fill="#facc15" />
+          <circle cx="42" cy="7" r="2" fill="#facc15" />
+          {/* Cyber Helm / Mask */}
+          <path d="M16,20 Q32,12 48,20 L50,48 Q32,58 14,48 Z" fill="#0f172a" stroke="#f43f5e" strokeWidth="2.5" />
+          {/* Glowing Red Rose Visor */}
+          <polygon points="20,28 44,28 40,36 24,36" fill="#f43f5e" />
+          <line x1="22" y1="32" x2="42" y2="32" stroke="#fff" strokeWidth="2" />
+          {/* Wand Lightning Bolt */}
+          <path d="M52,36 L58,40 L54,44 L60,50" stroke="#facc15" strokeWidth="2" strokeLinecap="round" fill="none" />
+        </g>
+      );
+
+    case 'data-hydra':
+      // 3-headed cyber dragon from Python Data Science
+      return (
+        <g>
+          {/* Left Head */}
+          <polygon points="12,18 22,22 18,32 10,26" fill="#0284c7" stroke="#38bdf8" strokeWidth="1.5" />
+          <circle cx="16" cy="22" r="1.5" fill="#fde047" />
+          {/* Right Head */}
+          <polygon points="52,18 42,22 46,32 54,26" fill="#0284c7" stroke="#38bdf8" strokeWidth="1.5" />
+          <circle cx="48" cy="22" r="1.5" fill="#fde047" />
+          {/* Main Center Head & Body */}
+          <path d="M18,36 Q32,24 46,36 L48,54 Q32,60 16,54 Z" fill="#0369a1" stroke="#38bdf8" strokeWidth="2" />
+          <polygon points="26,20 38,20 34,30 30,30" fill="#0284c7" stroke="#7dd3fc" strokeWidth="1.5" />
+          <circle cx="30" cy="24" r="2" fill="#fde047" />
+          <circle cx="34" cy="24" r="2" fill="#fde047" />
+          {/* Python Circuit Lines */}
+          <line x1="32" y1="36" x2="32" y2="52" stroke="#38bdf8" strokeWidth="2" strokeDasharray="2 2" />
+        </g>
+      );
+
+    case 'mesh-titan':
+      // Legendary 3D Low-Poly Titan
+      return (
+        <g>
+          {/* Faceted Crown Horns */}
+          <polygon points="18,14 10,2 24,18" fill="#c084fc" stroke="#f5d0fe" strokeWidth="1" />
+          <polygon points="46,14 54,2 40,18" fill="#c084fc" stroke="#f5d0fe" strokeWidth="1" />
+          {/* Heavy Faceted Helm */}
+          <polygon points="32,8 16,22 32,32" fill="#a21caf" stroke="#f5d0fe" strokeWidth="1.5" />
+          <polygon points="32,8 48,22 32,32" fill="#86198f" stroke="#f5d0fe" strokeWidth="1.5" />
+          <polygon points="16,22 10,46 32,54" fill="#701a75" stroke="#f5d0fe" strokeWidth="1.5" />
+          <polygon points="48,22 54,46 32,54" fill="#4a044e" stroke="#f5d0fe" strokeWidth="1.5" />
+          {/* Magenta Crystal Core Eye Slit */}
+          <polygon points="22,30 42,30 36,36 28,36" fill="#f43f5e" />
+          <circle cx="32" cy="33" r="2" fill="#fef08a" />
+        </g>
+      );
+
     case 'code-prodigy':
       // Pulsing cosmic crystal core floating inside orbital ring
       return (
