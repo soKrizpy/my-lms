@@ -24,6 +24,7 @@ interface MeetingItem {
   meeting_date: string;
   has_joined: boolean;
   progress_report: string | null;
+  quiz_score: number | null;   // best score from topic_progress matched by title
 }
 
 interface InvoiceItem {
@@ -80,6 +81,20 @@ async function fetchParentData(token: string): Promise<ParentReportData | null> 
     .eq('student_id', studentId)
     .order('completed_at', { ascending: false });
 
+  // Build title → best_quiz_score lookup from topic_progress
+  // topic_progress joins topics(title) already fetched above
+  const scoreByTitle = new Map<string, number>();
+  for (const t of (topicProgress || []) as any[]) {
+    const title = (t.topics as any)?.title;
+    if (title && t.best_quiz_score != null) {
+      // Keep the highest score if same title appears multiple times
+      const existing = scoreByTitle.get(title);
+      if (existing == null || t.best_quiz_score > existing) {
+        scoreByTitle.set(title, t.best_quiz_score);
+      }
+    }
+  }
+
   // 4. Completed meetings with teacher report
   const { data: meetingRows } = await admin
     .from('meetings')
@@ -96,6 +111,7 @@ async function fetchParentData(token: string): Promise<ParentReportData | null> 
     meeting_date: m.meeting_date,
     has_joined: m.meeting_students?.[0]?.has_joined ?? false,
     progress_report: m.progress_report ?? null,
+    quiz_score: scoreByTitle.get(m.title) ?? null,
   }));
 
   // 5. Invoice if linked
@@ -236,7 +252,8 @@ export default async function ParentReportPage({
             </div>
             {meetings.map((m, idx) => (
               <div key={m.id} style={{ padding: '0.875rem 1.25rem', borderBottom: idx < meetings.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: m.progress_report ? '0.5rem' : 0 }}>
+                {/* Meeting title row */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', marginBottom: '0.625rem' }}>
                   <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: '#1e293b' }}>{m.title}</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
                     <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: '9999px', background: m.has_joined ? '#dcfce7' : '#fee2e2', color: m.has_joined ? '#15803d' : '#dc2626', border: `1px solid ${m.has_joined ? '#bbf7d0' : '#fecaca'}` }}>
@@ -247,11 +264,36 @@ export default async function ParentReportPage({
                     </span>
                   </div>
                 </div>
-                {m.progress_report && (
-                  <p style={{ margin: 0, fontSize: '0.8rem', color: '#475569', lineHeight: 1.6, background: '#f8fafc', borderRadius: '0.5rem', padding: '0.625rem 0.75rem', whiteSpace: 'pre-wrap' }}>
-                    {m.progress_report}
-                  </p>
-                )}
+
+                {/* Body: LAPORAN GURU left, NILAI QUIZ right */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: '0.75rem', alignItems: 'start' }}>
+                  {/* Left: laporan guru */}
+                  <div>
+                    {m.progress_report ? (
+                      <>
+                        <p style={{ margin: '0 0 0.3rem', fontSize: '0.65rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Laporan Guru</p>
+                        <p style={{ margin: 0, fontSize: '0.8rem', color: '#475569', lineHeight: 1.6, background: '#f8fafc', borderRadius: '0.5rem', padding: '0.5rem 0.625rem', whiteSpace: 'pre-wrap' }}>
+                          {m.progress_report}
+                        </p>
+                      </>
+                    ) : (
+                      <p style={{ margin: 0, fontSize: '0.75rem', color: '#94a3b8', fontStyle: 'italic' }}>Belum ada laporan.</p>
+                    )}
+                  </div>
+
+                  {/* Right: nilai quiz */}
+                  <div style={{ textAlign: 'center', minWidth: '80px', borderLeft: '1px solid #e2e8f0', paddingLeft: '0.75rem' }}>
+                    <p style={{ margin: '0 0 0.25rem', fontSize: '0.6rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Nilai Quiz</p>
+                    {m.quiz_score != null ? (
+                      <>
+                        <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: scoreColor(m.quiz_score), lineHeight: 1 }}>{m.quiz_score}%</p>
+                        <p style={{ margin: '0.15rem 0 0', fontSize: '0.6rem', color: scoreColor(m.quiz_score), fontWeight: 600 }}>{m.quiz_score >= 70 ? '● Lulus' : '● Belum Lulus'}</p>
+                      </>
+                    ) : (
+                      <p style={{ margin: 0, fontSize: '0.7rem', color: '#94a3b8', fontStyle: 'italic', lineHeight: 1.4 }}>Quiz belum dikerjakan.</p>
+                    )}
+                  </div>
+                </div>
               </div>
             ))}
           </div>
