@@ -24,7 +24,8 @@ interface MeetingItem {
   meeting_date: string;
   has_joined: boolean;
   progress_report: string | null;
-  quiz_score: number | null;   // best score from topic_progress matched by title
+  quiz_score: number | null;      // from topic_progress via globalIndex mapping
+  topic_title: string | null;     // resolved topic name for display
 }
 
 interface InvoiceItem {
@@ -81,21 +82,78 @@ async function fetchParentData(token: string): Promise<ParentReportData | null> 
     .eq('student_id', studentId)
     .order('completed_at', { ascending: false });
 
-  // Build title → best_quiz_score lookup from topic_progress
-  // topic_progress joins topics(title) already fetched above
-  const scoreByTitle = new Map<string, number>();
-  for (const t of (topicProgress || []) as any[]) {
-    const title = (t.topics as any)?.title;
-    if (title && t.best_quiz_score != null) {
-      // Keep the highest score if same title appears multiple times
-      const existing = scoreByTitle.get(title);
+  const tp = (topicProgress || []) as any[];
+
+  // Build engine_topic_id → best_quiz_score lookup
+  const scoreByEngineId = new Map<string, number>();
+  for (const t of tp) {
+    if (t.engine_topic_id && t.best_quiz_score != null) {
+      const existing = scoreByEngineId.get(t.engine_topic_id);
       if (existing == null || t.best_quiz_score > existing) {
-        scoreByTitle.set(title, t.best_quiz_score);
+        scoreByEngineId.set(t.engine_topic_id, t.best_quiz_score);
       }
     }
   }
 
-  // 4. Completed meetings with teacher report
+  // 4. Fetch ALL meetings for this student (chronological) to compute globalIndex
+  //    Same logic as /api/admin/meetings/[id]/topic
+  const { data: allMeetingRows } = await admin
+    .from('meeting_students')
+    .select('meeting_id, meetings(id, meeting_date)')
+    .eq('student_id', studentId);
+
+  // Sort by date ascending to get globalIndex
+  const sortedAllMeetings = ((allMeetingRows || []) as any[])
+    .map((r: any) => ({
+      id: r.meeting_id as number,
+      date: r.meetings?.meeting_date ? new Date(r.meetings.meeting_date).getTime() : 0,
+    }))
+    .sort((a, b) => a.date - b.date);
+
+  // 5. Fetch all student topics in order (same as the API route)
+  const { data: studentModules } = await admin
+    .from('student_modules')
+    .select('module_id')
+    .eq('student_id', studentId)
+    .order('module_id', { ascending: true });
+
+  const moduleIds = ((studentModules || []) as any[]).map((sm: any) => sm.module_id as number);
+
+  let flattenedTopics: any[] = [];
+  if (moduleIds.length > 0) {
+    const { data: topicsRows } = await admin
+      .from('topics')
+      .select('id, title, engine_topic_id, order_index, module_id')
+      .in('module_id', moduleIds)
+      .order('order_index', { ascending: true });
+
+    // Flatten in module_id order, then by order_index within each module
+    moduleIds.forEach((modId) => {
+      const modTopics = ((topicsRows || []) as any[])
+        .filter((t: any) => t.module_id === modId)
+        .sort((a: any, b: any) => a.order_index - b.order_index);
+      flattenedTopics.push(...modTopics);
+    });
+  }
+
+  // 6. Build a meetingId → { quiz_score, topic_title } map using globalIndex
+  const meetingScoreMap = new Map<number, { quiz_score: number | null; topic_title: string | null }>();
+  for (let i = 0; i < sortedAllMeetings.length; i++) {
+    const m = sortedAllMeetings[i];
+    if (flattenedTopics.length > 0) {
+      const topic = flattenedTopics[i % flattenedTopics.length];
+      const engineId = topic?.engine_topic_id as string | null;
+      const score = engineId ? (scoreByEngineId.get(engineId) ?? null) : null;
+      meetingScoreMap.set(m.id, {
+        quiz_score: score,
+        topic_title: topic?.title ?? null,
+      });
+    } else {
+      meetingScoreMap.set(m.id, { quiz_score: null, topic_title: null });
+    }
+  }
+
+  // 7. Completed meetings with teacher report
   const { data: meetingRows } = await admin
     .from('meetings')
     .select(
@@ -105,16 +163,20 @@ async function fetchParentData(token: string): Promise<ParentReportData | null> 
     .eq('is_completed', true)
     .order('meeting_date', { ascending: false });
 
-  const meetings: MeetingItem[] = ((meetingRows || []) as any[]).map((m: any) => ({
-    id: m.id,
-    title: m.title,
-    meeting_date: m.meeting_date,
-    has_joined: m.meeting_students?.[0]?.has_joined ?? false,
-    progress_report: m.progress_report ?? null,
-    quiz_score: scoreByTitle.get(m.title) ?? null,
-  }));
+  const meetings: MeetingItem[] = ((meetingRows || []) as any[]).map((m: any) => {
+    const scoreData = meetingScoreMap.get(m.id as number);
+    return {
+      id: m.id,
+      title: m.title,
+      meeting_date: m.meeting_date,
+      has_joined: m.meeting_students?.[0]?.has_joined ?? false,
+      progress_report: m.progress_report ?? null,
+      quiz_score: scoreData?.quiz_score ?? null,
+      topic_title: scoreData?.topic_title ?? null,
+    };
+  });
 
-  // 5. Invoice if linked
+  // 8. Invoice if linked
   let invoice: InvoiceItem | null = null;
   if (link.invoice_id) {
     const { data: inv } = await admin
@@ -125,8 +187,7 @@ async function fetchParentData(token: string): Promise<ParentReportData | null> 
     invoice = (inv as InvoiceItem) ?? null;
   }
 
-  // 6. Summary stats
-  const tp = (topicProgress || []) as any[];
+  // 9. Summary stats
   const totalAttended = meetings.filter((m) => m.has_joined).length;
   const totalMeetings = meetings.length;
   const avgScore = tp.length > 0
@@ -135,7 +196,12 @@ async function fetchParentData(token: string): Promise<ParentReportData | null> 
   const totalXp = tp.reduce((s: number, t: any) => s + (t.xp_earned || 0), 0);
 
   return {
-    student: { full_name: (student as any)?.full_name ?? null, grade: (student as any)?.grade ?? null },
+    student: {
+      full_name: (student as any)?.full_name ?? null,
+      grade: (student as any)?.grade ?? null,
+      avatar_id: (student as any)?.avatar_id ?? null,
+      title_id: (student as any)?.title_id ?? null,
+    },
     topicProgress: tp as TopicProgressItem[],
     meetings,
     invoice,
@@ -252,9 +318,15 @@ export default async function ParentReportPage({
             </div>
             {meetings.map((m, idx) => (
               <div key={m.id} style={{ padding: '0.875rem 1.25rem', borderBottom: idx < meetings.length - 1 ? '1px solid #f1f5f9' : 'none' }}>
-                {/* Meeting title row */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', marginBottom: '0.625rem' }}>
-                  <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: '#1e293b' }}>{m.title}</p>
+
+                {/* Meeting title + topic subtitle + date + attendance */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                  <div>
+                    <p style={{ margin: 0, fontWeight: 600, fontSize: '0.875rem', color: '#1e293b' }}>{m.title}</p>
+                    {m.topic_title && (
+                      <p style={{ margin: '0.1rem 0 0', fontSize: '0.7rem', color: '#7c3aed', fontWeight: 500 }}>{m.topic_title}</p>
+                    )}
+                  </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
                     <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: '9999px', background: m.has_joined ? '#dcfce7' : '#fee2e2', color: m.has_joined ? '#15803d' : '#dc2626', border: `1px solid ${m.has_joined ? '#bbf7d0' : '#fecaca'}` }}>
                       {m.has_joined ? '✓ Hadir' : '✗ Tidak Hadir'}
@@ -287,13 +359,16 @@ export default async function ParentReportPage({
                     {m.quiz_score != null ? (
                       <>
                         <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: scoreColor(m.quiz_score), lineHeight: 1 }}>{m.quiz_score}%</p>
-                        <p style={{ margin: '0.15rem 0 0', fontSize: '0.6rem', color: scoreColor(m.quiz_score), fontWeight: 600 }}>{m.quiz_score >= 70 ? '● Lulus' : '● Belum Lulus'}</p>
+                        <p style={{ margin: '0.15rem 0 0', fontSize: '0.6rem', color: scoreColor(m.quiz_score), fontWeight: 600 }}>
+                          {m.quiz_score >= 70 ? '● Lulus' : '● Belum Lulus'}
+                        </p>
                       </>
                     ) : (
                       <p style={{ margin: 0, fontSize: '0.7rem', color: '#94a3b8', fontStyle: 'italic', lineHeight: 1.4 }}>Quiz belum dikerjakan.</p>
                     )}
                   </div>
                 </div>
+
               </div>
             ))}
           </div>
