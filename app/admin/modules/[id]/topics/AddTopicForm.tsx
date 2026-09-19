@@ -128,7 +128,7 @@ export function AddTopicForm({ moduleId, usedEngineTopicIds = [] }: Props) {
           })}
         </select>
         <p className="mt-1 text-xs text-slate-500">
-          Pilih lesson bawaan engine yang akan dibuka siswa saat klik "Mulai Belajar". ID yang sudah dipakai topik lain dinonaktifkan.
+          Pilih lesson bawaan engine yang akan dibuka siswa saat klik &quot;Mulai Belajar&quot;. ID yang sudah dipakai topik lain dinonaktifkan.
         </p>
       </div>
 

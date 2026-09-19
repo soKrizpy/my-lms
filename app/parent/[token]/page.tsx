@@ -119,7 +119,7 @@ async function fetchParentData(token: string): Promise<ParentReportData | null> 
 
   const moduleIds = ((studentModules || []) as any[]).map((sm: any) => sm.module_id as number);
 
-  let flattenedTopics: any[] = [];
+  const flattenedTopics: any[] = [];
   if (moduleIds.length > 0) {
     const { data: topicsRows } = await admin
       .from('topics')

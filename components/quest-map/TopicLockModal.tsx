@@ -115,7 +115,7 @@ export function TopicLockModal({
             <span className="text-xl flex-shrink-0" aria-hidden="true">💡</span>
             <div className="text-xs leading-relaxed text-blue-800 dark:text-blue-200">
               <span className="font-bold text-blue-900 dark:text-blue-100 block mb-0.5">Cara Membuka Topik Ini:</span>
-              Ikuti sesi kelas belajarmu dan klik tombol <span className="font-bold text-blue-950 dark:text-white">"Bergabung Sekarang"</span> di tab Jadwal Belajar. Topik akan otomatis terbuka!
+              Ikuti sesi kelas belajarmu dan klik tombol <span className="font-bold text-blue-950 dark:text-white">&quot;Bergabung Sekarang&quot;</span> di tab Jadwal Belajar. Topik akan otomatis terbuka!
             </div>
           </div>
         </div>

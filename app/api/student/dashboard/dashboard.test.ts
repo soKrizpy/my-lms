@@ -752,11 +752,11 @@ describe('Dashboard API - Bug Condition Exploration', () => {
             expect(response.status).toBe(200);
             expect(json.modules.length).toBe(1);
 
-            const module = json.modules[0];
-            expect(module.topics.length).toBe(numTopics);
+            const dashboardModule = json.modules[0];
+            expect(dashboardModule.topics.length).toBe(numTopics);
 
             // Verify unlock logic: topics have isUnlocked property
-            module.topics.forEach((topic: any) => {
+            dashboardModule.topics.forEach((topic: any) => {
               expect(topic).toHaveProperty('isUnlocked');
               expect(typeof topic.isUnlocked).toBe('boolean');
             });

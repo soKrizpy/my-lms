@@ -111,7 +111,6 @@ export function AssessmentModal({
   }, [assessmentId]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     void fetchQuestions();
   }, [fetchQuestions]);
 

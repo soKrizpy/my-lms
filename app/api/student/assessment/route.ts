@@ -110,7 +110,6 @@ export async function GET(request: Request) {
 
   // 8. Strip correct_option before returning to the student
   const publicQuestions: AssessmentQuestionPublic[] = (questions ?? []).map(
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     ({ correct_option: _co, created_at: _ca, ...q }) => q
   );
 

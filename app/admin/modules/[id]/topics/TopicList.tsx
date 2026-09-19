@@ -285,7 +285,7 @@ export function TopicList({
                       ))}
                     </optgroup>
                   </select>
-                  <p className="mt-1 text-xs text-slate-500">Lesson bawaan yang dibuka siswa saat "Mulai Belajar".</p>
+                  <p className="mt-1 text-xs text-slate-500">Lesson bawaan yang dibuka siswa saat &quot;Mulai Belajar&quot;.</p>
                 </div>
 
                 <div>

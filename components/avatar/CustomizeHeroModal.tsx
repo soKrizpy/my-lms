@@ -468,7 +468,7 @@ export function CustomizeHeroModal({
 
             {/* Short Description */}
             <p className="text-xs text-slate-600 dark:text-slate-300 italic mt-1 leading-relaxed">
-              "{loreModalAvatar.description}"
+              &quot;{loreModalAvatar.description}&quot;
             </p>
 
             {/* Lore Section Box */}

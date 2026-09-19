@@ -1034,14 +1034,13 @@ function ParentHub({ pastMeetings, quizAttempts, modules, topicProgress }: { pas
     );
   }
 
-  let globalIndexCounter = 0;
-
   return (
     <div className="space-y-4">
-      {modules.map((mod) => {
-        const startIndex = globalIndexCounter;
+      {modules.map((mod, moduleIndex) => {
+        const startIndex = modules
+          .slice(0, moduleIndex)
+          .reduce((total, previousModule) => total + previousModule.topics.length, 0);
         const endIndex = startIndex + mod.topics.length;
-        globalIndexCounter = endIndex;
 
         const moduleMeetings = completedMeetings.filter(m => m.globalIndex >= startIndex && m.globalIndex < endIndex);
         if (moduleMeetings.length === 0) return null;

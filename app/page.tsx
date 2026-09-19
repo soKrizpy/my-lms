@@ -795,7 +795,7 @@ function TestimonialsSection() {
       </div>
       <div className="testimonial-stars">{"★".repeat(t.stars)}</div>
       <p style={{ fontSize: "0.85rem", color: "#334155", lineHeight: 1.65, marginTop: "0.5rem" }}>
-        "{t.text}"
+        &quot;{t.text}&quot;
       </p>
     </div>
   );
