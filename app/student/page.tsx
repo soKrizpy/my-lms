@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Calendar, BookOpen, Users, Sparkles, Trophy, CheckCircle2, Award, Star } from "lucide-react";
+import { Calendar, BookOpen, Users, Sparkles, Trophy, CheckCircle2, Award, Star, AlertTriangle, Zap, FileQuestion, ClipboardList } from "lucide-react";
 import { MagicalParticles } from "@/components/MagicalParticles";
 import { MagicalCounter } from "@/components/MagicalCounter";
 import { useLmsEngineListener } from "@/lib/useLmsEngineListener";
@@ -151,6 +151,262 @@ function SynopsisPanel({ topic, onClose }: { topic: Topic; onClose: () => void }
             </a>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// --- Pending Tasks Section (Incomplete Quizzes & Assessments) ---
+interface PendingQuizItem {
+  quizId: number;
+  quizTitle: string;
+  topicTitle: string;
+  moduleTitle: string;
+  score?: number; // if attempted but not passed/maxed
+  attemptsUsed: number;
+  origin: 'engine' | 'csv' | 'manual';
+  originLabel: string;
+  engineTopicId?: string | null;
+}
+
+interface PendingAssessmentItem {
+  assessmentId: number;
+  moduleTitle: string;
+  attemptCount: number; // 0 = not started, 1 = can retry
+  bestScore?: number;
+}
+
+function PendingTasksSection({
+  modules,
+  quizAttempts,
+  assessmentSummaries,
+  onStartLesson,
+  onGoToLearning,
+}: {
+  modules: any[];
+  quizAttempts: any[];
+  assessmentSummaries: any[];
+  onStartLesson: (engineTopicId: string) => void;
+  onGoToLearning: () => void;
+}) {
+  // Build pending quizzes list
+  const pendingQuizzes: PendingQuizItem[] = [];
+  for (const mod of modules) {
+    if (mod.isModuleLocked) continue;
+    for (const topic of (mod.topics || [])) {
+      const topicQuiz = topic.quiz || (topic.engine_topic_id ? { id: topic.id, title: `Quiz — ${topic.title}` } : null);
+      if (!topic.isUnlocked || !topicQuiz) continue;
+      const attempt = quizAttempts.find((qa: any) => qa.quiz_id === topicQuiz.id || qa.quizzes?.topic_id === topic.id);
+      const attemptsUsed = attempt ? (attempt?.attempts_count ?? 1) : 0;
+      const score = attempt?.score ?? undefined;
+      // Quiz is "pending" if not yet maxed (2 attempts) and not yet passed (≥70)
+      const isMaxed = attemptsUsed >= 2;
+      const isPassed = typeof score === 'number' && score >= 70;
+      if (!isMaxed && !isPassed) {
+        // Detect quiz origin: Engine Lesson vs Bulk CSV vs Admin Manual
+        let origin: 'engine' | 'csv' | 'manual' = 'manual';
+        let originLabel = 'Admin Manual';
+
+        if (topic.engine_topic_id) {
+          const engIdLower = String(topic.engine_topic_id).toLowerCase();
+          const contentStr = typeof topic.lesson_content === 'string'
+            ? topic.lesson_content
+            : JSON.stringify(topic.lesson_content || '');
+          if (engIdLower.includes('csv') || contentStr.includes('isCsvImport') || contentStr.includes('csv')) {
+            origin = 'csv';
+            originLabel = 'Bulk CSV';
+          } else {
+            origin = 'engine';
+            originLabel = 'Engine Lesson';
+          }
+        }
+
+        pendingQuizzes.push({
+          quizId: topicQuiz.id,
+          quizTitle: topicQuiz.title,
+          topicTitle: topic.title,
+          moduleTitle: mod.title,
+          score,
+          attemptsUsed,
+          origin,
+          originLabel,
+          engineTopicId: topic.engine_topic_id ?? null,
+        });
+      }
+    }
+  }
+
+  // Build pending assessments list
+  const pendingAssessments: PendingAssessmentItem[] = [];
+  for (const mod of modules) {
+    if (mod.isModuleLocked || !mod.assessmentId) continue;
+    // Only show if the module is complete (all topics unlocked) — assessment is unlocked
+    if (!mod.isModuleComplete) continue;
+    const summary = assessmentSummaries.find((s: any) => s.assessment_id === mod.assessmentId);
+    const attemptCount = summary?.attempt_count ?? 0;
+    const bestScore = summary?.best_score ?? 0;
+    // Pending if 0 attempts OR (1 attempt and score < 80 and attempts < 2)
+    const isComplete = attemptCount >= 2 || (attemptCount >= 1 && bestScore >= 80);
+    if (!isComplete) {
+      pendingAssessments.push({
+        assessmentId: mod.assessmentId,
+        moduleTitle: mod.title,
+        attemptCount,
+        bestScore: attemptCount > 0 ? bestScore : undefined,
+      });
+    }
+  }
+
+  if (pendingQuizzes.length === 0 && pendingAssessments.length === 0) return null;
+
+  const totalPending = pendingQuizzes.length + pendingAssessments.length;
+
+  return (
+    <div className="relative">
+      {/* Outer glow aura */}
+      <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-amber-500/40 via-rose-500/40 to-orange-500/40 blur-lg animate-pulse pointer-events-none" style={{ animationDuration: '3s' }} />
+      <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-amber-400/20 via-red-400/20 to-orange-400/20 blur-md pointer-events-none" />
+
+      <div className="relative rounded-2xl border border-amber-500/60 dark:border-amber-400/50 overflow-hidden shadow-[0_0_25px_rgba(245,158,11,0.3)] dark:shadow-[0_0_30px_rgba(251,191,36,0.25)] bg-white/90 dark:bg-black/70 backdrop-blur-xl">
+        {/* Header */}
+        <div className="px-5 py-4 flex items-center justify-between bg-gradient-to-r from-amber-500/15 via-rose-500/10 to-orange-500/15 dark:from-amber-900/40 dark:via-rose-900/30 dark:to-orange-900/40 border-b border-amber-400/30 dark:border-amber-500/30">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-amber-500/20 dark:bg-amber-400/15 border border-amber-400/40 shadow-[0_0_12px_rgba(245,158,11,0.4)] dark:shadow-[0_0_12px_rgba(251,191,36,0.3)]">
+              <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 animate-pulse" style={{ animationDuration: '2s' }} />
+            </div>
+            <div>
+              <h2 className="font-black text-base text-amber-900 dark:text-amber-200 tracking-tight">⚡ Tugas Belum Selesai!</h2>
+              <p className="text-xs text-amber-700/80 dark:text-amber-300/70 font-medium mt-0.5">
+                {totalPending} item menunggu — selesaikan sekarang untuk XP!
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-500 dark:bg-rose-600 shadow-[0_0_12px_rgba(239,68,68,0.5)] border border-rose-400">
+            <span className="text-white text-xs font-black tabular-nums">{totalPending}</span>
+          </div>
+        </div>
+
+        {/* Cards grid */}
+        <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* Quiz cards */}
+          {pendingQuizzes.map((item) => (
+            <button
+              key={`quiz-${item.quizId}`}
+              onClick={() => {
+                if (item.engineTopicId) {
+                  onStartLesson(item.engineTopicId);
+                } else {
+                  window.open(`/student/quiz/${item.quizId}`, '_blank');
+                }
+              }}
+              className="group text-left relative rounded-xl border border-amber-400/50 dark:border-amber-500/40 bg-gradient-to-br from-amber-50/80 to-orange-50/60 dark:from-amber-950/50 dark:to-orange-950/40 p-4 hover:border-amber-500/80 dark:hover:border-amber-400/70 hover:shadow-[0_0_18px_rgba(245,158,11,0.35)] dark:hover:shadow-[0_0_18px_rgba(251,191,36,0.25)] transition-all duration-200 hover:-translate-y-0.5 backdrop-blur-sm overflow-hidden"
+            >
+              {/* Shimmer line */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-200/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none" />
+
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/20 dark:bg-amber-400/15 border border-amber-400/40 flex-shrink-0 shadow-[0_0_8px_rgba(245,158,11,0.3)]">
+                  <FileQuestion className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 rounded-full border border-amber-300/60 dark:border-amber-500/40">Quiz</span>
+
+                    {/* Quiz ID Badge */}
+                    <span className="text-[10px] font-mono font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 px-1.5 py-0.5 rounded border border-slate-300/60 dark:border-slate-700">
+                      #Q{item.quizId}
+                    </span>
+
+                    {/* Origin Badge */}
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                      item.origin === 'engine'
+                        ? 'text-indigo-700 dark:text-indigo-300 bg-indigo-100 dark:bg-indigo-950/60 border-indigo-300/60 dark:border-indigo-700/60'
+                        : item.origin === 'csv'
+                        ? 'text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/60 border-emerald-300/60 dark:border-emerald-700/60'
+                        : 'text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-950/60 border-purple-300/60 dark:border-purple-700/60'
+                    }`}>
+                      {item.origin === 'engine' ? '⚙️ Engine Lesson' : item.origin === 'csv' ? '📊 Bulk CSV' : '✏️ Admin Manual'}
+                    </span>
+
+                    {item.attemptsUsed > 0 && (
+                      <span className="text-[10px] font-semibold text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/40 px-2 py-0.5 rounded-full border border-orange-200 dark:border-orange-500/40">
+                        Percobaan {item.attemptsUsed}/2
+                      </span>
+                    )}
+                    {item.attemptsUsed === 0 && (
+                      <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-500/40 animate-pulse">
+                        Belum dimulai
+                      </span>
+                    )}
+                  </div>
+                  <p className="font-bold text-sm text-slate-900 dark:text-white mt-1.5 leading-snug truncate">{item.topicTitle}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">{item.moduleTitle}</p>
+                  {typeof item.score === 'number' && (
+                    <p className="text-xs font-semibold text-orange-600 dark:text-orange-400 mt-1">Skor terbaik: {item.score} — perlu ≥70</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between">
+                <span className="flex items-center gap-1 text-xs font-bold text-amber-700 dark:text-amber-300">
+                  <Zap className="w-3 h-3" />
+                  +25 XP jika sempurna
+                </span>
+                <span className="text-xs font-bold text-amber-700 dark:text-amber-300 group-hover:text-amber-900 dark:group-hover:text-amber-100 transition-colors flex items-center gap-1">
+                  {item.attemptsUsed === 0 ? 'Mulai Quiz (Tab Baru) ↗' : 'Ulangi Quiz (Tab Baru) ↗'}
+                </span>
+              </div>
+            </button>
+          ))}
+
+          {/* Assessment / Tryout cards */}
+          {pendingAssessments.map((item) => (
+            <button
+              key={`assessment-${item.assessmentId}`}
+              onClick={onGoToLearning}
+              className="group text-left relative rounded-xl border border-rose-400/50 dark:border-rose-500/40 bg-gradient-to-br from-rose-50/80 to-pink-50/60 dark:from-rose-950/50 dark:to-pink-950/40 p-4 hover:border-rose-500/80 dark:hover:border-rose-400/70 hover:shadow-[0_0_18px_rgba(239,68,68,0.35)] dark:hover:shadow-[0_0_18px_rgba(248,113,113,0.25)] transition-all duration-200 hover:-translate-y-0.5 backdrop-blur-sm overflow-hidden"
+            >
+              {/* Shimmer line */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-rose-200/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700 pointer-events-none" />
+
+              <div className="flex items-start gap-3">
+                <div className="p-2 rounded-lg bg-rose-500/20 dark:bg-rose-400/15 border border-rose-400/40 flex-shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.3)]">
+                  <ClipboardList className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700 dark:text-rose-400 bg-rose-100 dark:bg-rose-900/60 px-2 py-0.5 rounded-full border border-rose-300/60 dark:border-rose-500/40">Tryout</span>
+                    {item.attemptCount === 0 && (
+                      <span className="text-[10px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-500/40 animate-pulse">
+                        Belum dimulai
+                      </span>
+                    )}
+                    {item.attemptCount === 1 && (
+                      <span className="text-[10px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-950/40 px-2 py-0.5 rounded-full border border-purple-200 dark:border-purple-500/40">
+                        Percobaan 1/2
+                      </span>
+                    )}
+                  </div>
+                  <p className="font-bold text-sm text-slate-900 dark:text-white mt-1.5 leading-snug truncate">Tryout Module</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">{item.moduleTitle}</p>
+                  {typeof item.bestScore === 'number' && (
+                    <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 mt-1">Skor terbaik: {item.bestScore} — perlu ≥80 untuk lulus</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between">
+                <span className="flex items-center gap-1 text-xs font-bold text-rose-700 dark:text-rose-300">
+                  <Zap className="w-3 h-3" />
+                  +150 XP jika berhasil
+                </span>
+                <span className="text-xs font-bold text-rose-700 dark:text-rose-300 group-hover:text-rose-900 dark:group-hover:text-rose-100 transition-colors">
+                  {item.attemptCount === 0 ? 'Mulai Tryout →' : 'Ulangi Tryout →'}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -343,8 +599,22 @@ function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose
 
   useEffect(() => {
     fetch(`/api/student/quiz?quizId=${quiz!.id}`)
-      .then(r => r.json())
-      .then(data => { setQuestions(data); setLoading(false); });
+      .then((response) => {
+        if (!response.ok) throw new Error("Failed to load quiz questions");
+        return response.json();
+      })
+      // The endpoint now supplies quiz metadata alongside questions. Keep
+      // accepting the former array payload while all quiz entry points move
+      // to the response envelope.
+      .then((data) => {
+        setQuestions(Array.isArray(data) ? data : (Array.isArray(data?.questions) ? data.questions : []));
+      })
+      .catch(() => {
+        setQuestions([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, [quiz]);
 
   const handleSubmit = async () => {
@@ -1088,6 +1358,27 @@ export default function StudentDashboard() {
     fetchInvoices();
   }, [fetchData]);
 
+  // Auto-open quiz modal if quizId parameter is present in URL (when opened from Pending Tasks card)
+  useEffect(() => {
+    if (!data || activeQuiz) return;
+    if (typeof window === 'undefined') return;
+    const searchParams = new URLSearchParams(window.location.search);
+    const quizIdParam = searchParams.get('quizId') || searchParams.get('quiz');
+    if (quizIdParam) {
+      const qId = parseInt(quizIdParam, 10);
+      if (!isNaN(qId)) {
+        for (const mod of (data.modules || [])) {
+          for (const topic of (mod.topics || [])) {
+            if (topic.quiz && topic.quiz.id === qId) {
+              setActiveQuiz({ id: topic.quiz.id, title: topic.quiz.title });
+              break;
+            }
+          }
+        }
+      }
+    }
+  }, [data, activeQuiz]);
+
 
   // A lesson runs in a separate tab. Refresh its saved rewards when the
   // student returns, rather than requiring them to reload the dashboard.
@@ -1320,6 +1611,15 @@ export default function StudentDashboard() {
         <>
           {activeTab === "jadwal" && (
             <div className="space-y-4">
+              {/* Pending Tasks Section (shows only on Schedule / Jadwal tab) */}
+              <PendingTasksSection
+                modules={data.modules || []}
+                quizAttempts={data.quizAttempts || []}
+                assessmentSummaries={data.assessmentSummaries || []}
+                onStartLesson={(eid) => handleStartLesson(eid)}
+                onGoToLearning={() => setActiveTab('learning')}
+              />
+
               <div className="flex items-center justify-between">
                 <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>{t('schedule.heading')}</h2>
                 <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{data.upcomingMeetings.length} jadwal</span>
@@ -1373,13 +1673,6 @@ export default function StudentDashboard() {
                   void fetchData();
                 }}
               />
-              {activeQuiz && (
-                <QuizModal
-                  quiz={activeQuiz}
-                  onClose={() => setActiveQuiz(null)}
-                  onComplete={() => { setActiveQuiz(null); void fetchData(); }}
-                />
-              )}
             </div>
           )}
 
@@ -1390,6 +1683,13 @@ export default function StudentDashboard() {
             </div>
           )}
         </>
+      )}
+      {activeQuiz && (
+        <QuizModal
+          quiz={activeQuiz}
+          onClose={() => setActiveQuiz(null)}
+          onComplete={() => { setActiveQuiz(null); void fetchData(); }}
+        />
       )}
       <BadgeCelebrationModal queue={badgeQueue} onDismiss={handleBadgeDismiss} />
     </div>

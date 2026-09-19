@@ -153,7 +153,23 @@ function TopicNodeInner({
   };
 
   return (
-    <div className="flex flex-col items-center gap-1.5 group">
+    <div
+      className={[
+        'flex flex-col items-center gap-1.5 group',
+        // Idle: ghost-transparent. Hover: visible + grow + glow.
+        'opacity-[0.15] hover:opacity-[0.75]',
+        'scale-100 hover:scale-110',
+        'transition-all duration-300 ease-out',
+        // Drop-shadow glow — colour shifts with node state via CSS filter
+        state === 'completed'
+          ? 'hover:[filter:drop-shadow(0_0_18px_rgba(16,185,129,0.85))]'
+          : state === 'active'
+          ? 'hover:[filter:drop-shadow(0_0_18px_rgba(99,102,241,0.9))]'
+          : state === 'unlocked'
+          ? 'hover:[filter:drop-shadow(0_0_18px_rgba(14,165,233,0.85))]'
+          : 'hover:[filter:drop-shadow(0_0_12px_rgba(148,163,184,0.5))]',
+      ].join(' ')}
+    >
       {/* ── Node button ─────────────────────────────────────────────────── */}
       <button
         type="button"

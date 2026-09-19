@@ -77,7 +77,7 @@ export async function POST(request: Request) {
   return NextResponse.json({ score, bestScore, total: questions.length, correct, correctAnswers, attemptsCount: newAttemptsCount });
 }
 
-// GET /api/student/quiz?quizId=xxx - get quiz questions
+// GET /api/student/quiz?quizId=xxx - get quiz questions & metadata
 export async function GET(request: Request) {
   const supabase = await createClient();
   const { data: { user }, error: authError } = await supabase.auth.getUser();
@@ -92,6 +92,23 @@ export async function GET(request: Request) {
   if (!quizId) return NextResponse.json({ error: "Missing quizId" }, { status: 400 });
 
   const supabaseAdmin = getSupabaseAdmin();
+
+  // Fetch quiz metadata with topic and module title
+  const { data: quizData } = await supabaseAdmin
+    .from("quizzes")
+    .select("id, title, topic_id, topics(title, engine_topic_id, modules(title))")
+    .eq("id", quizId)
+    .maybeSingle();
+
+  // Fetch attempt history for student
+  const { data: existingAttempt } = await supabaseAdmin
+    .from("quiz_attempts")
+    .select("score, attempts_count")
+    .eq("student_id", user.id)
+    .eq("quiz_id", quizId)
+    .maybeSingle();
+
+  // Fetch questions
   const { data: questions, error } = await supabaseAdmin
     .from("quiz_questions")
     .select("id, question_text, option_a, option_b, option_c, option_d")
@@ -100,5 +117,18 @@ export async function GET(request: Request) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json(questions || []);
+  return NextResponse.json({
+    quiz: quizData ? {
+      id: quizData.id,
+      title: quizData.title,
+      topicTitle: (quizData as any).topics?.title ?? "Topik Quiz",
+      moduleTitle: (quizData as any).topics?.modules?.title ?? "Modul",
+      engineTopicId: (quizData as any).topics?.engine_topic_id ?? null,
+    } : null,
+    attempt: existingAttempt ? {
+      attemptsCount: existingAttempt.attempts_count ?? 1,
+      score: existingAttempt.score ?? 0,
+    } : { attemptsCount: 0, score: 0 },
+    questions: questions || [],
+  });
 }

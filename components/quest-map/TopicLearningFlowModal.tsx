@@ -327,8 +327,13 @@ export function TopicLearningFlowModal({
           return res.json();
         })
         .then((data) => {
-          if (Array.isArray(data) && data.length > 0) {
-            setQuizQuestions(data);
+          // Support the current metadata envelope as well as the legacy
+          // question-array response used by older quiz callers.
+          const questions = Array.isArray(data)
+            ? data
+            : (Array.isArray(data?.questions) ? data.questions : []);
+          if (questions.length > 0) {
+            setQuizQuestions(questions);
           } else {
             setQuizQuestions(generateDefault5Quizzes(topic.title));
           }
