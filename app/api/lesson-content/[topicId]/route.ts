@@ -17,6 +17,7 @@
 
 import { NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '../../../../lib/supabaseAdmin';
+import { getSessionRole } from '../../../../lib/auth';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -38,14 +39,21 @@ export async function GET(
     return NextResponse.json({ error: 'Invalid topicId' }, { status: 400, headers: CORS_HEADERS });
   }
 
+  const role = await getSessionRole();
+  const isAdmin = role === 'admin';
+
   const admin = getSupabaseAdmin();
 
-  const { data, error } = await admin
+  let query = admin
     .from('topics')
     .select('lesson_content, status, engine_topic_id')
-    .eq('engine_topic_id', topicId)
-    .eq('status', 'published')
-    .maybeSingle();
+    .eq('engine_topic_id', topicId);
+    
+  if (!isAdmin) {
+    query = query.eq('status', 'published');
+  }
+
+  const { data, error } = await query.maybeSingle();
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500, headers: CORS_HEADERS });
@@ -53,7 +61,7 @@ export async function GET(
 
   if (!data || !data.lesson_content) {
     return NextResponse.json(
-      { error: `No published lesson content found for topic "${topicId}"` },
+      { error: `No ${!isAdmin ? 'published ' : ''}lesson content found for topic "${topicId}"` },
       { status: 404, headers: CORS_HEADERS }
     );
   }
