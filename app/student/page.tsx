@@ -9,7 +9,6 @@ import { getQuizQuestions } from "@/lib/quizResponse";
 import { QuestMap } from "@/components/quest-map/QuestMap";
 import { AvatarDisplay } from "@/components/avatar/AvatarDisplay";
 import { getTitleById } from "@/lib/gamification/catalog";
-import { supabase } from "@/lib/supabaseClient";
 import { useTranslations } from "next-intl";
 import type { BadgeDefinition, EarnedBadgeRow } from '@/lib/gamification/badgeCatalog';
 import { BadgeCelebrationModal } from '@/components/gamification/BadgeCelebrationModal';
@@ -1275,6 +1274,9 @@ export default function StudentDashboard() {
         modules: Array.isArray(json.modules) ? json.modules : [],
         quizAttempts: Array.isArray(json.quizAttempts) ? json.quizAttempts : [],
         announcement: json.announcement ?? null,
+        // The server has already authenticated this request. Keep its user ID
+        // so engine links keep progress associated with the signed-in student.
+        studentId: typeof json.studentId === 'string' ? json.studentId : '',
         studentName: json.studentName || "Siswa",
         avatarId: json.avatarId || "pixel-bot",
         titleId: json.titleId || "novice-coder",
@@ -1291,6 +1293,7 @@ export default function StudentDashboard() {
       };
       
       setData(validatedData);
+      if (validatedData.studentId) setStudentId(validatedData.studentId);
       setTotalXP(validatedData.totalXP);
       setLevel(validatedData.level);
       setEarnedBadges(validatedData.earnedBadges);
@@ -1343,12 +1346,9 @@ export default function StudentDashboard() {
     },
   });
 
-  // Resolve studentId from Supabase auth (client-side)
+  // The dashboard API provides the authenticated user ID. Locale remains
+  // client-side because it is stored in the browser cookie.
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: authData }) => {
-      setStudentId(authData.user?.id ?? '');
-    });
-    // Read locale from cookie
     const cookieLocale = document.cookie
       .split('; ')
       .find(row => row.startsWith('locale='))
@@ -1405,15 +1405,12 @@ export default function StudentDashboard() {
 
   // Handler: open lesson in a new tab
   const handleStartLesson = useCallback(async (engineTopicId: string) => {
-    // Get student ID — try state first, then fetch from auth
-    let resolvedStudentId = studentId;
-    if (!resolvedStudentId) {
-      const { data: authData } = await supabase.auth.getUser();
-      resolvedStudentId = authData.user?.id ?? '';
-    }
+    // Do not launch an engine lesson until the authenticated dashboard API has
+    // provided the student ID; an empty ID cannot be synced back to the LMS.
+    if (!studentId) return;
 
     const lmsOrigin = encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : '');
-    const params = `?studentId=${encodeURIComponent(resolvedStudentId)}&theme=dark&lang=${locale}&lmsOrigin=${lmsOrigin}`;
+    const params = `?studentId=${encodeURIComponent(studentId)}&theme=dark&lang=${locale}&lmsOrigin=${lmsOrigin}`;
 
     // Use proxy URL (same-origin, avoids CORS)
     const proxyUrl = `/learning/lesson/${encodeURIComponent(engineTopicId)}${params}`;

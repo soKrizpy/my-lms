@@ -453,6 +453,7 @@ describe('Dashboard API - Bug Condition Exploration', () => {
           expect(json).toHaveProperty('modules');
           expect(json).toHaveProperty('quizAttempts');
           expect(json).toHaveProperty('announcement');
+          expect(json.studentId).toBe(student.studentId);
           expect(json).toHaveProperty('studentName');
           expect(json).toHaveProperty('engineXpTotal');
           expect(json).toHaveProperty('completedEngineTopics');
