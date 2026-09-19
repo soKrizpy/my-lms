@@ -1549,8 +1549,11 @@ export default function StudentDashboard() {
         </div>
       )}
 
-      {/* Desktop / Tablet Top Tabs */}
-      <div className="flex gap-2 p-1.5 glass-panel rounded-2xl border border-[var(--glass-border)]">
+      {/* Desktop / Tablet navigation. Mobile uses the fixed bottom navigation below. */}
+      <nav
+        aria-label="Navigasi dashboard siswa"
+        className="hidden md:flex gap-2 p-1.5 glass-panel rounded-2xl border border-[var(--glass-border)]"
+      >
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
@@ -1569,10 +1572,13 @@ export default function StudentDashboard() {
             </button>
           );
         })}
-      </div>
+      </nav>
 
-      {/* Mobile Floating Bottom Dock (Jadwal Belajar, Learning Path, Parent Hub) */}
-      <nav className="md:hidden fixed bottom-3 left-3 right-3 z-50 glass-panel rounded-2xl p-1.5 flex items-center justify-around shadow-2xl border border-[var(--glass-border)] bg-slate-900/85 backdrop-blur-xl">
+      {/* Mobile-only primary navigation — fixed at the screen bottom. */}
+      <nav
+        aria-label="Navigasi dashboard siswa"
+        className="md:hidden fixed inset-x-0 bottom-0 z-50 flex items-center justify-around border-t border-[var(--glass-border)] bg-slate-950/95 px-2 pt-1.5 pb-[calc(0.375rem+env(safe-area-inset-bottom))] shadow-[0_-8px_24px_rgba(0,0,0,0.22)] backdrop-blur-xl"
+      >
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
@@ -1580,7 +1586,8 @@ export default function StudentDashboard() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`relative flex flex-col items-center justify-center py-2 px-3 rounded-xl transition-all cursor-pointer ${
+              aria-current={active ? 'page' : undefined}
+              className={`relative flex min-w-20 flex-1 flex-col items-center justify-center py-2 px-2 rounded-xl transition-all cursor-pointer ${
                 active
                   ? "text-brand-secondary font-bold scale-105"
                   : "text-slate-400 hover:text-slate-200"
