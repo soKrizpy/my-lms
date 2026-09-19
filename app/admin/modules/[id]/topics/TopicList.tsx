@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 import { deleteTopicAction, updateTopicAction, publishTopicAction, unpublishTopicAction } from "./actions";
 import { BUILT_IN_LESSONS } from "../../../../../lib/builtInLessons";
+import { EngineModal } from "../../../../../components/EngineModal";
 
 type Topic = {
   id: number;
@@ -27,6 +28,7 @@ export function TopicList({
 }) {
   const [isPending, startTransition] = useTransition();
   const [openSynopsis, setOpenSynopsis] = useState<Record<number, boolean>>({});
+  const [previewTopicId, setPreviewTopicId] = useState<string | null>(null);
 
   const toggleSynopsis = (topicId: number) =>
     setOpenSynopsis((prev) => ({ ...prev, [topicId]: !prev[topicId] }));
@@ -131,6 +133,15 @@ export function TopicList({
               </div>
 
               <div className="flex shrink-0 items-center gap-2">
+                {topic.engine_topic_id && (
+                  <button
+                    type="button"
+                    onClick={() => setPreviewTopicId(topic.engine_topic_id!)}
+                    className="text-sm font-medium text-blue-600 hover:text-blue-800 underline"
+                  >
+                    Preview
+                  </button>
+                )}
                 <Link
                   href={`/admin/modules/${moduleId}/topics/${topic.id}/quiz`}
                   className="text-sm font-medium text-slate-900 underline"
@@ -311,6 +322,16 @@ export function TopicList({
           </li>
         );
       })}
+
+      {previewTopicId && (
+        <EngineModal
+          topicId={previewTopicId}
+          studentId="admin-preview"
+          lang="id"
+          onClose={() => setPreviewTopicId(null)}
+          onComplete={() => {}}
+        />
+      )}
     </ol>
   );
 }
