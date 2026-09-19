@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { getQuizQuestions } from '../../lib/quizResponse';
 import type { TopicNodeTopic, TopicProgress, QuizAttempt } from './TopicNode';
 import { getTopicAttachmentUrl } from '../../lib/topicLink';
 
@@ -329,9 +330,7 @@ export function TopicLearningFlowModal({
         .then((data) => {
           // Support the current metadata envelope as well as the legacy
           // question-array response used by older quiz callers.
-          const questions = Array.isArray(data)
-            ? data
-            : (Array.isArray(data?.questions) ? data.questions : []);
+          const questions = getQuizQuestions<QuizQuestion>(data);
           if (questions.length > 0) {
             setQuizQuestions(questions);
           } else {

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2, AlertTriangle, FileQuestion, Sparkles, Trophy, Zap, HelpCircle, XCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { getQuizQuestions } from "@/lib/quizResponse";
 
 interface QuestionItem {
   id: number;
@@ -62,7 +63,7 @@ export default function StudentQuizPage() {
         } else {
           setQuizInfo(data.quiz || null);
           setAttemptInfo(data.attempt || { attemptsCount: 0, score: 0 });
-          setQuestions(Array.isArray(data.questions) ? data.questions : []);
+          setQuestions(getQuizQuestions<QuestionItem>(data));
         }
       })
       .catch((err) => {

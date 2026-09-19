@@ -3,7 +3,7 @@ import { createClient } from "../../../../lib/supabase/server";
 import { getSupabaseAdmin } from "../../../../lib/supabaseAdmin";
 import { resolveTopicUnlockMap } from "../../../../lib/topicUnlock";
 import { calculateStreak, type MeetingRecord } from "../../../../lib/streakCalculator";
-import { getAssessmentSummariesForStudent, getOrCreateQuiz, type AssessmentSummary } from "../../../../lib/lmsData";
+import { getAssessmentSummariesForStudent, type AssessmentSummary } from "../../../../lib/lmsData";
 import { computeTotalXP, computeLevel, type AssessmentXPRow } from '../../../../lib/gamification/xpCalculator';
 import type { EarnedBadgeRow } from '../../../../lib/gamification/badgeCatalog';
 
@@ -196,10 +196,10 @@ export async function GET() {
             .map((t: any) => {
               if (!t) return null;
 
-              let quiz = ((quizzes || []) as any[]).find((q: any) => q && q.topic_id === t.id);
-              if (!quiz && t.engine_topic_id) {
-                quiz = { id: t.id, topic_id: t.id, title: `Quiz — ${t.title}` };
-              }
+              // A topic ID is not a quiz ID. Only expose an existing quiz row;
+              // creating one here would make this read-only dashboard request
+              // mutate data and can create empty quizzes.
+              const quiz = ((quizzes || []) as any[]).find((q: any) => q && q.topic_id === t.id);
               // Use centralised unlock map (covers join + engine completion)
               const isUnlocked = unlockMap.get(t.id)?.isUnlocked ?? false;
               return { ...t, quiz: quiz ?? null, isUnlocked };

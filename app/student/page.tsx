@@ -5,6 +5,7 @@ import { Calendar, BookOpen, Users, Sparkles, Trophy, CheckCircle2, Award, Star,
 import { MagicalParticles } from "@/components/MagicalParticles";
 import { MagicalCounter } from "@/components/MagicalCounter";
 import { useLmsEngineListener } from "@/lib/useLmsEngineListener";
+import { getQuizQuestions } from "@/lib/quizResponse";
 import { QuestMap } from "@/components/quest-map/QuestMap";
 import { AvatarDisplay } from "@/components/avatar/AvatarDisplay";
 import { getTitleById } from "@/lib/gamification/catalog";
@@ -194,7 +195,9 @@ function PendingTasksSection({
   for (const mod of modules) {
     if (mod.isModuleLocked) continue;
     for (const topic of (mod.topics || [])) {
-      const topicQuiz = topic.quiz || (topic.engine_topic_id ? { id: topic.id, title: `Quiz — ${topic.title}` } : null);
+      // Only real quiz records can be opened or matched to an attempt. A topic
+      // ID may happen to equal a quiz ID, which would show the wrong quiz.
+      const topicQuiz = topic.quiz;
       if (!topic.isUnlocked || !topicQuiz) continue;
       const attempt = quizAttempts.find((qa: any) => qa.quiz_id === topicQuiz.id || qa.quizzes?.topic_id === topic.id);
       const attemptsUsed = attempt ? (attempt?.attempts_count ?? 1) : 0;
@@ -607,7 +610,7 @@ function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose
       // accepting the former array payload while all quiz entry points move
       // to the response envelope.
       .then((data) => {
-        setQuestions(Array.isArray(data) ? data : (Array.isArray(data?.questions) ? data.questions : []));
+        setQuestions(getQuizQuestions<Record<string, unknown>>(data));
       })
       .catch(() => {
         setQuestions([]);

@@ -1198,6 +1198,7 @@ describe('Dashboard API - Bug Condition Exploration', () => {
       expect(response.status).toBe(200);
       expect(json.modules[0].topics.length).toBe(2);
       expect(json.modules[0].topics[0].engine_topic_id).toBe('engine-abc123');
+      expect(json.modules[0].topics[0].quiz).toBeNull();
       expect(json.modules[0].topics[1].engine_topic_id).toBeNull();
     });
   });
