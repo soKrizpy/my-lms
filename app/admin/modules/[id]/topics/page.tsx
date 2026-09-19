@@ -151,8 +151,8 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
           <div>
             <h2 className="text-sm font-bold text-[var(--text-primary)]">Bulk Upload via CSV</h2>
             <p className="text-xs text-[var(--text-muted)]">
-              Upload banyak konten lesson sekaligus. Setiap lesson harus sudah punya topik
-              (dibuat via Input Manual). Setelah upload, klik Publish di daftar topik.
+              Upload banyak lesson sekaligus. Topik baru akan dibuat otomatis (status draft) jika
+              belum ada. Setelah upload, publish topik secara manual di daftar topik.
             </p>
           </div>
         </div>

@@ -117,13 +117,16 @@ export function CsvImportForm({ moduleId }: { moduleId: string }) {
 
       {/* Instructions */}
       <p className="text-xs text-[var(--text-muted)] mb-3 leading-relaxed">
-        Download template, isi konten lesson (baris LESSON + NODE + QUIZ), lalu upload.
-        Topic harus sudah dibuat. Kolom{" "}
-        <code className="bg-[var(--input-bg)] border border-[var(--glass-border)] px-1 rounded text-[var(--text-primary)] font-mono">lessonId</code>{" "}
-        di CSV harus cocok dengan{" "}
-        <code className="bg-[var(--input-bg)] border border-[var(--glass-border)] px-1 rounded text-[var(--text-primary)] font-mono">engine_topic_id</code>{" "}
-        atau urutan topik.
+        Download template, isi konten lesson (baris LESSON + NODE + QUIZ), lalu upload.{" "}
+        <strong className="text-[var(--text-secondary)]">Topik baru akan dibuat otomatis (status draft)</strong>{" "}
+        jika belum ada di modul ini — tidak perlu membuat topik dulu. Setelah upload, publish
+        topik secara manual di daftar topik.
       </p>
+      <p className="text-xs text-[var(--warning)] bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800/50 rounded px-3 py-2 mb-3">
+        ⚠ Hapus semua baris komentar (<code className="font-mono">#</code>) dari file CSV sebelum
+        upload. Baris komentar menyebabkan error "Unrecognised row".
+      </p>
+
 
       {/* Upload form */}
       <form onSubmit={handleSubmit}>

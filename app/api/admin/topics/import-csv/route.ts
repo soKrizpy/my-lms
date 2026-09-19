@@ -253,7 +253,7 @@ export async function POST(req: NextRequest) {
     const nodeRows = nodes.get(lessonId) ?? [];
     const quizRows = quizzes.get(lessonId) ?? [];
 
-    // Build JSON
+    // Build lesson JSON
     const { json, error: buildError } = buildLessonJson(lesson, nodeRows, quizRows);
     if (buildError || !json) {
       results.push({ lessonId, topicId: null, ok: false, error: buildError ?? 'Build failed' });
@@ -263,21 +263,51 @@ export async function POST(req: NextRequest) {
     // Find matching topic:
     // 1. Match by engine_topic_id === lessonId
     // 2. Fallback: match by order_index === topicNumber
-    const topics = existingTopics ?? [];
-    let matchedTopic = topics.find(t => t.engine_topic_id === lessonId);
+    const existingList = existingTopics ?? [];
+    let matchedTopic = existingList.find(t => t.engine_topic_id === lessonId);
     if (!matchedTopic) {
-      matchedTopic = topics.find(t => t.order_index === lesson.topicNumber);
+      matchedTopic = existingList.find(t => t.order_index === lesson.topicNumber);
+    }
+
+    // ── Auto-create topic if none found ──────────────────────────────────────
+    let topicAction: 'created' | 'updated' = 'updated';
+    if (!matchedTopic) {
+      const { data: newTopic, error: insertError } = await admin
+        .from('topics')
+        .insert({
+          module_id: moduleId,
+          title: lesson.title,
+          order_index: lesson.topicNumber,
+          description: lesson.description || null,
+          engine_topic_id: lessonId,
+          status: 'draft',
+        })
+        .select('id, title, order_index, engine_topic_id')
+        .single();
+
+      if (insertError) {
+        // 23505 = unique constraint on engine_topic_id (already used in another module)
+        const hint = insertError.code === '23505'
+          ? ` (engine_topic_id "${lessonId}" is already linked to a topic in a different module)`
+          : '';
+        results.push({ lessonId, topicId: null, ok: false, error: insertError.message + hint });
+        continue;
+      }
+
+      // Add newly created topic to local list so subsequent lookups can find it
+      if (newTopic) {
+        existingTopics?.push(newTopic);
+        matchedTopic = newTopic;
+        topicAction = 'created';
+      }
     }
 
     if (!matchedTopic) {
-      results.push({
-        lessonId, topicId: null, ok: false,
-        error: `No topic found in module ${moduleId} with engine_topic_id="${lessonId}" or order_index=${lesson.topicNumber}. Create the topic first.`,
-      });
+      results.push({ lessonId, topicId: null, ok: false, error: 'Failed to create or find topic.' });
       continue;
     }
 
-    // Upsert lesson_content + engine_topic_id + status stays draft
+    // Write lesson_content + ensure engine_topic_id is set
     const { error: updateError } = await admin
       .from('topics')
       .update({
@@ -291,7 +321,9 @@ export async function POST(req: NextRequest) {
     } else {
       results.push({
         lessonId, topicId: matchedTopic.id, ok: true,
-        action: `lesson_content written to topic "${matchedTopic.title}" (id=${matchedTopic.id})`,
+        action: topicAction === 'created'
+          ? `Topik baru dibuat (draft): "${matchedTopic.title}" (id=${matchedTopic.id}) — lesson_content tersimpan`
+          : `lesson_content diperbarui di topik "${matchedTopic.title}" (id=${matchedTopic.id})`,
       });
     }
   }
