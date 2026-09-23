@@ -12,7 +12,7 @@ export async function GET() {
   const supabaseAdmin = auth.adminClient;
   const { data, error } = await supabaseAdmin
     .from("modules")
-    .select("id, title, description, level")
+    .select("id, title, description, level, gamification_type")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -26,6 +26,7 @@ export async function GET() {
       name?: string | null;
       description?: string | null;
       level?: string | null;
+      gamification_type?: string | null;
     };
 
     return {
@@ -33,6 +34,7 @@ export async function GET() {
       name: record.title ?? record.name ?? "",
       description: record.description ?? null,
       level: record.level ?? "beginner",
+      gamification_type: record.gamification_type ?? "mimo",
     };
   });
 
@@ -49,6 +51,10 @@ export async function POST(request: Request) {
     const description =
       typeof body?.description === "string" ? body.description : "";
     const level = typeof body?.level === "string" ? body.level : "beginner";
+    const gamification_type =
+      typeof body?.gamification_type === "string" && body.gamification_type
+        ? body.gamification_type
+        : "mimo";
 
     if (!name) {
       return NextResponse.json(
@@ -59,8 +65,8 @@ export async function POST(request: Request) {
 
     const { data, error } = await supabaseAdmin
       .from("modules")
-      .insert([{ title: name, description, level }])
-      .select("id, title, description, level")
+      .insert([{ title: name, description, level, gamification_type }])
+      .select("id, title, description, level, gamification_type")
       .single();
 
     if (error) {
@@ -72,6 +78,7 @@ export async function POST(request: Request) {
       title?: string | null;
       description?: string | null;
       level?: string | null;
+      gamification_type?: string | null;
     };
 
     return NextResponse.json(
@@ -80,6 +87,7 @@ export async function POST(request: Request) {
         name: record.title ?? name,
         description: record.description ?? description,
         level: record.level ?? level,
+        gamification_type: record.gamification_type ?? gamification_type,
       },
       { status: 201 },
     );
@@ -102,6 +110,10 @@ export async function PUT(request: Request) {
     const description =
       typeof body?.description === "string" ? body.description : "";
     const level = typeof body?.level === "string" ? body.level : "beginner";
+    const gamification_type =
+      typeof body?.gamification_type === "string" && body.gamification_type
+        ? body.gamification_type
+        : "mimo";
 
     if (!id || !name) {
       return NextResponse.json(
@@ -112,7 +124,7 @@ export async function PUT(request: Request) {
 
     const { data, error } = await supabaseAdmin
       .from("modules")
-      .update({ title: name, description, level })
+      .update({ title: name, description, level, gamification_type })
       .eq("id", id)
       .select("id")
       .maybeSingle();

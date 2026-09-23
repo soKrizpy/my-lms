@@ -89,7 +89,7 @@ export async function GET() {
     try {
       const { data, error } = await supabaseAdmin
         .from("student_modules")
-        .select(`module_id, status, modules(id, title, description, level)`)
+        .select(`module_id, status, modules(id, title, description, level, gamification_type)`)
         .eq("student_id", studentId)
         .order("module_id", { ascending: true });
 

@@ -4,6 +4,8 @@ export type ModuleRecord = {
   id: number;
   title: string | null;
   description: string | null;
+  level?: string | null;
+  gamification_type?: string | null;
   created_at?: string | null;
   is_active?: boolean | null;
 };
@@ -46,7 +48,7 @@ export async function getModules() {
   const supabase = getSupabaseAdmin();
   return supabase
     .from("modules")
-    .select("id, title, description, created_at, is_active")
+    .select("id, title, description, level, gamification_type, created_at, is_active")
     .order("created_at", { ascending: false });
 }
 
@@ -54,7 +56,7 @@ export async function getModuleById(moduleId: string) {
   const supabase = getSupabaseAdmin();
   return supabase
     .from("modules")
-    .select("id, title, description")
+    .select("id, title, description, level, gamification_type")
     .eq("id", Number(moduleId))
     .maybeSingle();
 }

@@ -31,6 +31,7 @@ export function CsvImportForm({ moduleId }: { moduleId: string }) {
   const [loading, setLoading] = useState(false);
   const [response, setResponse] = useState<ImportResponse | null>(null);
   const [fatalError, setFatalError] = useState<string | null>(null);
+  const [engineStyle, setEngineStyle] = useState<string>("mimo");
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -57,6 +58,7 @@ export function CsvImportForm({ moduleId }: { moduleId: string }) {
     const formData = new FormData();
     formData.append("csv", file);
     formData.append("moduleId", moduleId);
+    formData.append("engineStyle", engineStyle);
 
     try {
       setLoading(true);
@@ -146,6 +148,20 @@ export function CsvImportForm({ moduleId }: { moduleId: string }) {
           >
             📂 Pilih File CSV
           </label>
+
+          <select
+            value={engineStyle}
+            onChange={(e) => setEngineStyle(e.target.value)}
+            className="px-3 py-1.5 rounded-md border border-[var(--glass-border)] bg-[var(--input-bg)] text-[var(--text-primary)] text-xs focus:outline-none focus:border-[var(--accent)] transition-colors"
+          >
+            <option value="mimo">Mimo-Style (Micro-learning)</option>
+            <option value="quest">Quest-Style (Narrative Journey)</option>
+            <option value="slide">Slide-Style (Presentation)</option>
+            <option value="boardgame">Boardgame-Style (Progression)</option>
+            <option value="flashcard">Flashcard-Style (Swipe Cards)</option>
+            <option value="story">Story-Style (Visual Novel)</option>
+            <option value="arcade">Arcade-Style (Retro Challenge)</option>
+          </select>
 
           {/* Selected filename display */}
           <span className="text-xs text-[var(--text-muted)] truncate max-w-[180px]">

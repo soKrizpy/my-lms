@@ -19,6 +19,7 @@ interface Module {
   name: string;
   description: string | null;
   level: string;
+  gamification_type?: string;
 }
 
 export default function ModulesPage() {
@@ -58,6 +59,7 @@ export default function ModulesPage() {
     name: string;
     description: string;
     level: string;
+    gamification_type?: string;
   }) {
     const res = await fetch("/api/modules", {
       method: "POST",
@@ -108,6 +110,22 @@ export default function ModulesPage() {
     }
   }
 
+  const getEngineBadge = (type?: string) => {
+    switch (type) {
+      case "duolingo":
+        return { label: "💚 Duolingo", cls: "bg-emerald-50 text-emerald-700 ring-emerald-600/20" };
+      case "boardgame":
+        return { label: "🎲 Boardgame", cls: "bg-amber-50 text-amber-700 ring-amber-600/20" };
+      case "quest":
+        return { label: "⚔️ Quest", cls: "bg-indigo-50 text-indigo-700 ring-indigo-600/20" };
+      case "flashcard":
+        return { label: "📇 Flashcard", cls: "bg-sky-50 text-sky-700 ring-sky-600/20" };
+      case "mimo":
+      default:
+        return { label: "🎯 Mimo", cls: "bg-purple-50 text-purple-700 ring-purple-600/20" };
+    }
+  };
+
   useEffect(() => {
     loadModules();
   }, []);
@@ -141,33 +159,41 @@ export default function ModulesPage() {
           <p className="text-sm text-slate-500">Belum ada modul.</p>
         ) : (
           <ul className="divide-y divide-slate-200">
-            {modules.map((mod) => (
-              <li
-                key={mod.id}
-                className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="text-sm font-medium text-slate-900">
-                      {mod.name}
-                    </p>
-                    {mod.level && (
+            {modules.map((mod) => {
+              const engineBadge = getEngineBadge(mod.gamification_type);
+              return (
+                <li
+                  key={mod.id}
+                  className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <p className="text-sm font-medium text-slate-900">
+                        {mod.name}
+                      </p>
+                      {mod.level && (
+                        <span
+                          className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset capitalize ${
+                            mod.level === "beginner"
+                              ? "bg-green-50 text-green-700 ring-green-600/20"
+                              : mod.level === "intermediate"
+                                ? "bg-orange-50 text-orange-700 ring-orange-600/20"
+                                : mod.level === "advance"
+                                  ? "bg-red-50 text-red-700 ring-red-600/20"
+                                  : mod.level === "master"
+                                    ? "bg-purple-50 text-purple-700 ring-purple-600/20"
+                                    : "bg-blue-50 text-blue-700 ring-blue-700/10"
+                          }`}
+                        >
+                          {mod.level}
+                        </span>
+                      )}
                       <span
-                        className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset capitalize ${
-                          mod.level === "beginner"
-                            ? "bg-green-50 text-green-700 ring-green-600/20"
-                            : mod.level === "intermediate"
-                              ? "bg-orange-50 text-orange-700 ring-orange-600/20"
-                              : mod.level === "advance"
-                                ? "bg-red-50 text-red-700 ring-red-600/20"
-                                : mod.level === "master"
-                                  ? "bg-purple-50 text-purple-700 ring-purple-600/20"
-                                  : "bg-blue-50 text-blue-700 ring-blue-700/10"
-                        }`}
+                        className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${engineBadge.cls}`}
                       >
-                        {mod.level}
+                        {engineBadge.label}
                       </span>
-                    )}
+                    </div>
                     <button
                       onClick={() => setEditingModule(mod)}
                       className="ml-2 text-slate-400 hover:text-blue-600 p-1"
@@ -284,9 +310,9 @@ export default function ModulesPage() {
                       )}
                     </div>
                   </details>
-                </div>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

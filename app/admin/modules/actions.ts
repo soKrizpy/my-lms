@@ -16,6 +16,7 @@ export async function createModuleAction(formData: FormData) {
   const name = readString(formData, "name");
   const description = readString(formData, "description");
   const level = readString(formData, "level") || "beginner";
+  const gamification_type = readString(formData, "gamification_type") || "mimo";
 
   if (!name) {
     throw new Error("Nama modul wajib diisi.");
@@ -26,6 +27,7 @@ export async function createModuleAction(formData: FormData) {
     title: name,
     description,
     level,
+    gamification_type,
   });
 
   if (error) throw error;
@@ -38,6 +40,7 @@ export async function updateModuleAction(formData: FormData) {
   const name = readString(formData, "name");
   const description = readString(formData, "description");
   const level = readString(formData, "level") || "beginner";
+  const gamification_type = readString(formData, "gamification_type") || "mimo";
 
   if (!id || !name) {
     throw new Error("ID dan Nama modul wajib diisi.");
@@ -46,7 +49,7 @@ export async function updateModuleAction(formData: FormData) {
   const supabaseAdmin = getSupabaseAdmin();
   const { data, error } = await supabaseAdmin
     .from("modules")
-    .update({ title: name, description, level })
+    .update({ title: name, description, level, gamification_type })
     .eq("id", id)
     .select("id")
     .maybeSingle();

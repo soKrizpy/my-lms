@@ -1,19 +1,19 @@
 // app/api/admin/topics/import-csv/route.ts
 // POST /api/admin/topics/import-csv
 // Accepts a multipart/form-data CSV file + moduleId.
-// Parses LESSON / NODE / QUIZ rows, validates structure,
-// then writes lesson_content JSONB to the matching topic row.
 //
-// The topic must already exist (created via normal topic form).
-// The CSV lessonId must match an existing topic.engine_topic_id,
-// OR if the topic has no engine_topic_id yet, it is matched by
-// (module_id + order_index == topicNumber).
+// Parses LESSON / NODE / QUIZ rows from the CSV, builds a LessonContract
+// per lesson, then delegates all DB writes to ingestLessonContent() — which
+// atomically upserts the topics, quizzes, and quiz_questions rows.
 //
-// On success each processed lesson returns { lessonId, topicId, ok: true }.
-// On failure the whole request returns { error, details }.
+// Previously this route wrote only lesson_content JSONB to topics and never
+// created quizzes or quiz_questions, causing the student quiz modal to break.
+// The adapter now guarantees all three tables are always in sync.
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin } from '../../../../../lib/auth';
+import { ingestLessonContent } from '../../../../../lib/ingestLesson';
+import type { LessonContract, LearningNode, EngineQuizQuestion } from '../../../../../lib/lessonContract';
 
 // ─── CSV parser (ported from lesson-engine/src/engine/csvImport.ts) ───────────
 
@@ -94,26 +94,6 @@ function parseRow(cols: string[]): CsvRow | null {
   return null;
 }
 
-function buildNode(row: CsvNodeRow): Record<string, unknown> {
-  const base = { id: row.nodeId, type: row.nodeType, title: row.title, xp: row.xp };
-  switch (row.nodeType) {
-    case 'lesson': return { ...base, explanation: row.content };
-    case 'code': return {
-      ...base, explanation: row.content || undefined,
-      code: { language: row.language ?? 'html', content: row.codeContent ?? '' },
-    };
-    case 'practice': {
-      const opts = row.options ? row.options.split('|').map(o => o.trim()) : [];
-      return {
-        ...base, instructions: row.content, interactionType: 'multiple-choice',
-        options: opts, correctOption: row.correctOption ?? '',
-      };
-    }
-    case 'challenge': return { ...base, instructions: row.content };
-    default: return base;
-  }
-}
-
 function parseCsv(text: string): {
   lessons: Map<string, CsvLessonRow>;
   nodes: Map<string, CsvNodeRow[]>;
@@ -146,32 +126,80 @@ function parseCsv(text: string): {
   return { lessons, nodes, quizzes, parseErrors };
 }
 
-function buildLessonJson(
+// ─── CSV → LessonContract builder ─────────────────────────────────────────────
+
+function buildLearningNode(row: CsvNodeRow): LearningNode {
+  const base: LearningNode = {
+    id: row.nodeId,
+    type: row.nodeType,
+    title: row.title,
+    xp: row.xp || undefined,
+  };
+  switch (row.nodeType) {
+    case 'lesson':
+      return { ...base, explanation: row.content };
+    case 'code':
+      return {
+        ...base,
+        explanation: row.content || undefined,
+        code: { language: row.language ?? 'html', content: row.codeContent ?? '' },
+      };
+    case 'practice': {
+      const opts = row.options ? row.options.split('|').map((o) => o.trim()) : [];
+      return {
+        ...base,
+        instructions: row.content,
+        interactionType: 'multiple-choice',
+        options: opts,
+        correctOption: row.correctOption ?? '',
+      };
+    }
+    case 'challenge':
+      return { ...base, instructions: row.content };
+    default:
+      return base;
+  }
+}
+
+function buildLessonContract(
   lesson: CsvLessonRow,
   nodeRows: CsvNodeRow[],
   quizRows: CsvQuizRow[],
-): { json: Record<string, unknown> | null; error?: string } {
-  if (nodeRows.length < 5) return { json: null, error: `Min 5 nodes required (got ${nodeRows.length})` };
-  if (nodeRows.length > 50) return { json: null, error: `Max 50 nodes allowed (got ${nodeRows.length})` };
-  if (quizRows.length < 3) return { json: null, error: `Min 3 quiz questions required (got ${quizRows.length})` };
-  if (quizRows.length > 20) return { json: null, error: `Max 20 quiz questions allowed (got ${quizRows.length})` };
+  engineStyle: string,
+): { contract: LessonContract | null; error?: string } {
+  if (nodeRows.length < 5) return { contract: null, error: `Min 5 nodes required (got ${nodeRows.length})` };
+  if (nodeRows.length > 50) return { contract: null, error: `Max 50 nodes allowed (got ${nodeRows.length})` };
+  if (quizRows.length < 3) return { contract: null, error: `Min 3 quiz questions required (got ${quizRows.length})` };
+  if (quizRows.length > 20) return { contract: null, error: `Max 20 quiz questions allowed (got ${quizRows.length})` };
 
-  const json: Record<string, unknown> = {
+  const learningPath: LearningNode[] = nodeRows.map(buildLearningNode);
+
+  const questions: EngineQuizQuestion[] = quizRows.map((q) => ({
+    id: q.questionId,
+    type: 'multiple-choice' as const,
+    question: q.question,
+    options: [q.optionA, q.optionB, q.optionC, q.optionD] as [string, string, string, string],
+    correctAnswer: q.correctAnswer,
+    explanation: q.explanation,
+    points: q.points,
+  }));
+
+  const contract: LessonContract = {
     schemaVersion: '1.0',
     metadata: {
-      id: lesson.lessonId, title: lesson.title, description: lesson.description,
-      level: lesson.level, category: lesson.category,
-      topicNumber: lesson.topicNumber, estimatedTime: lesson.estimatedTime, xp: lesson.xp,
+      id: lesson.lessonId,
+      title: lesson.title,
+      description: lesson.description,
+      level: lesson.level,
+      category: lesson.category,
+      topicNumber: lesson.topicNumber,
+      estimatedTime: lesson.estimatedTime,
+      xp: lesson.xp,
+      engineStyle: (engineStyle || 'mimo') as LessonContract['metadata']['engineStyle'],
     },
     objectives: [`Memahami ${lesson.title}`],
-    learningPath: nodeRows.map(buildNode),
-    quiz: {
-      questions: quizRows.map(q => ({
-        id: q.questionId, question: q.question,
-        options: [q.optionA, q.optionB, q.optionC, q.optionD],
-        correctAnswer: q.correctAnswer, explanation: q.explanation, points: q.points,
-      })),
-    },
+    learningPath,
+    quiz: { questions },
     completion: {
       title: 'Selesai!',
       message: `Kamu telah menyelesaikan topik ${lesson.title}. Kerja bagus!`,
@@ -179,7 +207,8 @@ function buildLessonJson(
       achievementIcon: '🎯',
     },
   };
-  return { json };
+
+  return { contract };
 }
 
 // ─── API Handler ──────────────────────────────────────────────────────────────
@@ -200,6 +229,8 @@ export async function POST(req: NextRequest) {
 
   const file = formData.get('csv');
   const moduleIdRaw = formData.get('moduleId');
+  const engineStyleRaw = formData.get('engineStyle');
+  const engineStyle = (typeof engineStyleRaw === 'string') ? engineStyleRaw : 'mimo';
 
   if (!file || typeof file === 'string' || !(file instanceof Blob)) {
     return NextResponse.json({ error: 'No CSV file provided (field name: csv)' }, { status: 400 });
@@ -232,107 +263,64 @@ export async function POST(req: NextRequest) {
     }, { status: 400 });
   }
 
-  // Load existing topics for this module (to match by engine_topic_id or order_index)
-  const admin = supabaseAdmin;
-  const { data: existingTopics, error: topicsError } = await admin
-    .from('topics')
-    .select('id, title, order_index, engine_topic_id')
-    .eq('module_id', moduleId)
-    .order('order_index', { ascending: true });
-
-  if (topicsError) {
-    return NextResponse.json({ error: `DB error: ${topicsError.message}` }, { status: 500 });
-  }
-
   const results: Array<{
-    lessonId: string; topicId: number | null;
-    ok: boolean; action?: string; error?: string;
+    lessonId: string;
+    topicId: number | null;
+    quizId: number | null;
+    questionsWritten: number;
+    skippedQuestions: number;
+    ok: boolean;
+    action?: string;
+    error?: string;
   }> = [];
 
   for (const [lessonId, lesson] of Array.from(lessons.entries()) as [string, CsvLessonRow][]) {
     const nodeRows = nodes.get(lessonId) ?? [];
     const quizRows = quizzes.get(lessonId) ?? [];
 
-    // Build lesson JSON
-    const { json, error: buildError } = buildLessonJson(lesson, nodeRows, quizRows);
-    if (buildError || !json) {
-      results.push({ lessonId, topicId: null, ok: false, error: buildError ?? 'Build failed' });
+    // Build LessonContract
+    const { contract, error: buildError } = buildLessonContract(lesson, nodeRows, quizRows, engineStyle);
+    if (buildError || !contract) {
+      results.push({ lessonId, topicId: null, quizId: null, questionsWritten: 0, skippedQuestions: 0, ok: false, error: buildError ?? 'Build failed' });
       continue;
     }
 
-    // Find matching topic:
-    // 1. Match by engine_topic_id === lessonId
-    // 2. Fallback: match by order_index === topicNumber
-    const existingList = existingTopics ?? [];
-    let matchedTopic = existingList.find(t => t.engine_topic_id === lessonId);
-    if (!matchedTopic) {
-      matchedTopic = existingList.find(t => t.order_index === lesson.topicNumber);
-    }
+    // Delegate all DB writes to the ingestion service
+    const outcome = await ingestLessonContent({
+      supabaseAdmin,
+      moduleId,
+      lessonId,
+      topicNumber: lesson.topicNumber,
+      title: lesson.title,
+      description: lesson.description,
+      status: 'draft', // CSV imports stay as draft — admin publishes manually
+      source: 'csv',
+      lessonJson: contract,
+    });
 
-    // ── Auto-create topic if none found ──────────────────────────────────────
-    let topicAction: 'created' | 'updated' = 'updated';
-    if (!matchedTopic) {
-      const { data: newTopic, error: insertError } = await admin
-        .from('topics')
-        .insert({
-          module_id: moduleId,
-          title: lesson.title,
-          order_index: lesson.topicNumber,
-          description: lesson.description || null,
-          engine_topic_id: lessonId,
-          status: 'draft',
-        })
-        .select('id, title, order_index, engine_topic_id')
-        .single();
-
-      if (insertError) {
-        // 23505 = unique constraint on engine_topic_id (already used in another module)
-        const hint = insertError.code === '23505'
-          ? ` (engine_topic_id "${lessonId}" is already linked to a topic in a different module)`
-          : '';
-        results.push({ lessonId, topicId: null, ok: false, error: insertError.message + hint });
-        continue;
-      }
-
-      // Add newly created topic to local list so subsequent lookups can find it
-      if (newTopic) {
-        existingTopics?.push(newTopic);
-        matchedTopic = newTopic;
-        topicAction = 'created';
-      }
-    }
-
-    if (!matchedTopic) {
-      results.push({ lessonId, topicId: null, ok: false, error: 'Failed to create or find topic.' });
-      continue;
-    }
-
-    // Write lesson_content + ensure engine_topic_id is set
-    const { error: updateError } = await admin
-      .from('topics')
-      .update({
-        lesson_content: json,
-        engine_topic_id: lessonId,   // auto-link if not already set
-      })
-      .eq('id', matchedTopic.id);
-
-    if (updateError) {
-      results.push({ lessonId, topicId: matchedTopic.id, ok: false, error: updateError.message });
-    } else {
+    if (!outcome.ok) {
       results.push({
-        lessonId, topicId: matchedTopic.id, ok: true,
-        action: topicAction === 'created'
-          ? `Topik baru dibuat (draft): "${matchedTopic.title}" (id=${matchedTopic.id}) — lesson_content tersimpan`
-          : `lesson_content diperbarui di topik "${matchedTopic.title}" (id=${matchedTopic.id})`,
+        lessonId, topicId: null, quizId: null, questionsWritten: 0, skippedQuestions: 0,
+        ok: false,
+        error: `[${outcome.error.step}] ${outcome.error.message}${outcome.error.details ? ': ' + outcome.error.details : ''}`,
+      });
+    } else {
+      const { topicId, quizId, questionsWritten, skippedQuestions, topicAction, quizAction } = outcome.result;
+      const actionMsg = topicAction === 'created'
+        ? `Topik baru dibuat (draft): "${lesson.title}" (id=${topicId})`
+        : `lesson_content diperbarui di topik "${lesson.title}" (id=${topicId})`;
+      results.push({
+        lessonId, topicId, quizId, questionsWritten, skippedQuestions, ok: true,
+        action: `${actionMsg} — quiz ${quizAction} (id=${quizId}), ${questionsWritten} pertanyaan tersimpan${skippedQuestions > 0 ? `, ${skippedQuestions} dilewati` : ''}`,
       });
     }
   }
 
-  const allOk = results.every(r => r.ok);
-  const anyOk = results.some(r => r.ok);
+  const allOk = results.every((r) => r.ok);
+  const anyOk = results.some((r) => r.ok);
 
   return NextResponse.json(
-    { results, parseErrors, summary: { total: results.length, ok: results.filter(r => r.ok).length } },
+    { results, parseErrors, summary: { total: results.length, ok: results.filter((r) => r.ok).length } },
     { status: allOk ? 200 : anyOk ? 207 : 400 },
   );
 }

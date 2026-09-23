@@ -14,6 +14,9 @@ export default function EditModuleModal({
   const [name, setName] = useState(module.name || "");
   const [description, setDescription] = useState(module.description || "");
   const [level, setLevel] = useState(module.level || "beginner");
+  const [gamificationType, setGamificationType] = useState(
+    module.gamification_type || "mimo",
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,7 +29,13 @@ export default function EditModuleModal({
       const res = await fetch("/api/modules", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: module.id, name, description, level }),
+        body: JSON.stringify({
+          id: module.id,
+          name,
+          description,
+          level,
+          gamification_type: gamificationType,
+        }),
       });
       const payload = await res.json().catch(() => null);
 
@@ -94,6 +103,22 @@ export default function EditModuleModal({
               </option>
               <option value="advance">Advance (SMA / Mahir)</option>
               <option value="master">Master (Expert)</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700">
+              Gamification Engine
+            </label>
+            <select
+              value={gamificationType}
+              onChange={(e) => setGamificationType(e.target.value)}
+              className="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            >
+              <option value="mimo">🎯 Mimo (Bite-sized Lesson Path)</option>
+              <option value="duolingo">💚 Duolingo (Hearts & Streak Skill Path)</option>
+              <option value="boardgame">🎲 Boardgame (Tile Map Progression)</option>
+              <option value="quest">⚔️ Quest (Mission & Boss Challenges)</option>
+              <option value="flashcard">📇 Flashcard (Flip & Active Recall)</option>
             </select>
           </div>
           <div>

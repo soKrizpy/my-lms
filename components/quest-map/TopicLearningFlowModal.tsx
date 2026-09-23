@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { getQuizQuestions } from '../../lib/quizResponse';
+import { normalizeLessonContentNodes, normalizeLessonContentQuiz } from '../../lib/lessonContract';
 import type { TopicNodeTopic, TopicProgress, QuizAttempt } from './TopicNode';
 import { getTopicAttachmentUrl } from '../../lib/topicLink';
 
@@ -59,20 +60,19 @@ function extractMateriSlides(
   const slides: MateriSlide[] = [];
 
   if (lessonContent && typeof lessonContent === 'object') {
-    const rawNodes = Array.isArray(lessonContent.nodes)
-      ? lessonContent.nodes
-      : Array.isArray(lessonContent)
-        ? lessonContent
-        : [];
+    // normalizeLessonContentNodes handles both legacy `nodes[]` and engine `learningPath[]`
+    const rawNodes = normalizeLessonContentNodes(lessonContent);
 
     rawNodes.forEach((node: any, idx: number) => {
-      if (node && (node.nodeType === 'lesson' || node.nodeType === 'code' || node.content)) {
+      const nodeType = node.type || node.nodeType;
+      const hasContent = node.explanation || node.content;
+      if (node && (nodeType === 'lesson' || nodeType === 'code' || hasContent)) {
         slides.push({
-          id: node.nodeId || node.id || idx + 1,
+          id: node.id || node.nodeId || idx + 1,
           title: node.title || `Materi Bagian ${idx + 1}`,
-          content: node.content || '',
-          codeSnippet: node.codeContent || node.codeSnippet || undefined,
-          language: node.language || undefined,
+          content: node.explanation || node.content || '',
+          codeSnippet: (node.code?.content) || node.codeContent || node.codeSnippet || undefined,
+          language: node.code?.language || node.language || undefined,
         });
       }
     });
@@ -118,23 +118,33 @@ function extractMimoQuestions(
 ): MimoQuestion[] {
   const questions: MimoQuestion[] = [];
 
-  // Check if teacher included practice / challenge nodes in lesson_content
+  // Check if teacher included practice / challenge nodes in lesson_content.
+  // normalizeLessonContentNodes handles both legacy `nodes[]` and engine `learningPath[]`.
   if (lessonContent && typeof lessonContent === 'object') {
-    const rawNodes = Array.isArray(lessonContent.nodes) ? lessonContent.nodes : [];
+    const rawNodes = normalizeLessonContentNodes(lessonContent);
     rawNodes.forEach((node: any, idx: number) => {
-      if (node && (node.nodeType === 'practice' || node.nodeType === 'challenge' || node.options)) {
+      const nodeType = node.type || node.nodeType;
+      if (node && (nodeType === 'practice' || nodeType === 'challenge' || node.options)) {
         let opts: string[] = [];
         if (Array.isArray(node.options)) opts = node.options;
         else if (typeof node.options === 'string') {
           opts = node.options.split('|').map((o: string) => o.trim());
         }
         if (opts.length >= 2) {
+          // correctIndex: engine format uses correctOption (string), legacy uses numeric index
+          let correctIndex = 0;
+          if (typeof node.correctOption === 'number') {
+            correctIndex = node.correctOption;
+          } else if (typeof node.correctOption === 'string' && opts.length > 0) {
+            const found = opts.findIndex((o) => o === node.correctOption);
+            correctIndex = found >= 0 ? found : 0;
+          }
           questions.push({
             id: idx + 1,
-            question: node.title || node.content || `Latihan Interaktif ${idx + 1}`,
-            codeSnippet: node.codeContent || undefined,
+            question: node.title || node.instructions || node.content || `Latihan Interaktif ${idx + 1}`,
+            codeSnippet: node.code?.content || node.codeContent || undefined,
             options: opts,
-            correctIndex: typeof node.correctOption === 'number' ? node.correctOption : 0,
+            correctIndex,
             explanation: node.explanation || 'Bagus sekali! Logika yang kamu gunakan sudah tepat.',
           });
         }
@@ -316,7 +326,12 @@ export function TopicLearningFlowModal({
     return () => window.removeEventListener('keydown', onKey);
   }, [isOpen, onClose]);
 
-  // Fetch quiz questions when entering quiz stage or topic opens
+  // Fetch quiz questions when entering quiz stage or topic opens.
+  // Behaviour:
+  //  • topic.quiz === null  →  no quiz row in DB yet → use 5 fallback questions
+  //  • topic.quiz.id exists, API returns 0 questions → quiz stub exists but not
+  //    yet synced → show empty state, NOT fallback (prevents fake completions)
+  //  • topic.quiz.id exists, API returns >0 questions → use real questions
   useEffect(() => {
     if (!isOpen || !topic) return;
 
@@ -331,19 +346,21 @@ export function TopicLearningFlowModal({
           // Support the current metadata envelope as well as the legacy
           // question-array response used by older quiz callers.
           const questions = getQuizQuestions<QuizQuestion>(data);
-          if (questions.length > 0) {
-            setQuizQuestions(questions);
-          } else {
-            setQuizQuestions(generateDefault5Quizzes(topic.title));
-          }
+          // Always use what the API returned — even if empty.
+          // An empty real quiz means the quiz hasn't been synced yet;
+          // do NOT substitute 5 fake questions in that case.
+          setQuizQuestions(questions);
         })
         .catch(() => {
+          // Network / server error — fall back gracefully
           setQuizQuestions(generateDefault5Quizzes(topic.title));
         })
         .finally(() => {
           setQuizLoading(false);
         });
     } else {
+      // No quiz row exists at all — use fallback questions so the student
+      // can still experience the quiz flow (legacy / non-engine topics).
       setQuizQuestions(generateDefault5Quizzes(topic.title));
     }
   }, [isOpen, topic]);
@@ -761,6 +778,22 @@ export function TopicLearningFlowModal({
                   <div className="w-8 h-8 mx-auto border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                   <p>Memuat soal kuis...</p>
                 </div>
+              ) : quizQuestions.length === 0 && topic.quiz?.id ? (
+                /* Quiz row exists in DB but questions haven't been synced yet.
+                   Show an informative placeholder — never fake questions. */
+                <div className="py-12 text-center space-y-3 animate-in fade-in duration-200">
+                  <div className="w-14 h-14 mx-auto rounded-2xl bg-amber-100 dark:bg-amber-500/15 border border-amber-300 dark:border-amber-500/30 flex items-center justify-center text-2xl">
+                    🔒
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-slate-800 dark:text-white">
+                      Kuis Belum Tersedia
+                    </p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+                      Guru sedang mempersiapkan soal untuk topik ini. Kembali lagi nanti!
+                    </p>
+                  </div>
+                </div>
               ) : (
                 <div className="space-y-5">
                   {quizQuestions.map((q, qIndex) => {
@@ -921,7 +954,7 @@ export function TopicLearningFlowModal({
               <button
                 type="button"
                 onClick={handleSubmitQuiz}
-                disabled={quizSubmitting || quizLoading}
+                disabled={quizSubmitting || quizLoading || quizQuestions.length === 0}
                 className="flex-1 sm:flex-initial py-2.5 px-6 rounded-xl bg-brand-primary hover:brightness-110 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-brand-primary/30 transition-all cursor-pointer disabled:opacity-50"
               >
                 {quizSubmitting ? (
