@@ -65,7 +65,7 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
   ] = await Promise.all([
     supabaseAdmin
       .from("modules")
-      .select("id, title, description")
+      .select("id, title, description, level, gamification_type")
       .eq("id", Number(moduleIdParam))
       .maybeSingle(),
     supabaseAdmin
@@ -289,11 +289,18 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
     </div>
   );
 
+  const firstTopicEngineId =
+    (topics ?? []).find((t) => t.engine_topic_id)?.engine_topic_id ?? null;
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <ModuleTabShell
+      moduleId={moduleIdParam}
       moduleTitle={moduleData?.title ?? "—"}
       moduleDescription={moduleData?.description}
+      moduleLevel={moduleData?.level}
+      gamificationType={moduleData?.gamification_type}
+      firstTopicEngineId={firstTopicEngineId}
       activeTab={activeTab}
       tabs={{
         topics: topicsTabContent,

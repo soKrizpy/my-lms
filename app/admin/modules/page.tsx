@@ -4,14 +4,30 @@
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import AdminToast, { type AdminNotice } from "../components/AdminToast";
-import AddModuleForm from "./AddModuleForm";
 import EditModuleModal from "./EditModuleModal";
 import AssignModuleModal from "./AssignModuleModal";
+import { CreateModuleModal } from "./CreateModuleModal";
+import { EngineModal } from "@/components/EngineModal";
+import {
+  Plus,
+  Search,
+  BookOpen,
+  Edit3,
+  Trash2,
+  UserCheck,
+  Eye,
+  ChevronRight,
+  Layers,
+  Sparkles,
+  Filter,
+} from "lucide-react";
 
 interface TopicSummary {
   id: number;
   title: string;
   order_index: number;
+  engine_topic_id?: string | null;
+  status?: string | null;
 }
 
 interface Module {
@@ -22,12 +38,20 @@ interface Module {
   gamification_type?: string;
 }
 
+type FilterTab = "all" | "published" | "drafts";
+
 export default function ModulesPage() {
   const [modules, setModules] = useState<Module[]>([]);
   const [topicMap, setTopicMap] = useState<Record<string, TopicSummary[]>>({});
   const [loading, setLoading] = useState(true);
+  
+  // UI Controls
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterTab, setFilterTab] = useState<FilterTab>("all");
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
   const [assigningModule, setAssigningModule] = useState<Module | null>(null);
+  const [previewTopicId, setPreviewTopicId] = useState<string | null>(null);
   const [notice, setNotice] = useState<AdminNotice | null>(null);
 
   async function handleDeleteModule(id: string) {
@@ -53,27 +77,6 @@ export default function ModulesPage() {
         text: err instanceof Error ? err.message : "Terjadi kesalahan sistem.",
       });
     }
-  }
-
-  async function createModule(data: {
-    name: string;
-    description: string;
-    level: string;
-    gamification_type?: string;
-  }) {
-    const res = await fetch("/api/modules", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    });
-    const payload = await res.json().catch(() => null);
-
-    if (!res.ok) {
-      throw new Error(payload?.error || "Gagal menambahkan modul.");
-    }
-
-    await loadModules();
-    setNotice({ type: "success", text: "Modul berhasil ditambahkan." });
   }
 
   async function loadModules() {
@@ -113,16 +116,16 @@ export default function ModulesPage() {
   const getEngineBadge = (type?: string) => {
     switch (type) {
       case "duolingo":
-        return { label: "💚 Duolingo", cls: "bg-emerald-50 text-emerald-700 ring-emerald-600/20" };
+        return { label: "💚 Duolingo", cls: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800" };
       case "boardgame":
-        return { label: "🎲 Boardgame", cls: "bg-amber-50 text-amber-700 ring-amber-600/20" };
+        return { label: "🎲 Boardgame", cls: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-200 dark:border-amber-800" };
       case "quest":
-        return { label: "⚔️ Quest", cls: "bg-indigo-50 text-indigo-700 ring-indigo-600/20" };
+        return { label: "⚔️ Quest", cls: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800" };
       case "flashcard":
-        return { label: "📇 Flashcard", cls: "bg-sky-50 text-sky-700 ring-sky-600/20" };
+        return { label: "📇 Flashcard", cls: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400 border-sky-200 dark:border-sky-800" };
       case "mimo":
       default:
-        return { label: "🎯 Mimo", cls: "bg-purple-50 text-purple-700 ring-purple-600/20" };
+        return { label: "🎯 Mimo", cls: "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 border-purple-200 dark:border-purple-800" };
     }
   };
 
@@ -130,192 +133,250 @@ export default function ModulesPage() {
     loadModules();
   }, []);
 
+  // Filter & Search Logic
+  const filteredModules = modules.filter((mod) => {
+    const matchesSearch =
+      mod.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (mod.description ?? "").toLowerCase().includes(searchQuery.toLowerCase());
+
+    const topics = topicMap[mod.id] ?? [];
+    const hasPublished = topics.some((t) => t.status === "published");
+
+    if (filterTab === "published") return matchesSearch && hasPublished;
+    if (filterTab === "drafts") return matchesSearch && !hasPublished;
+    return matchesSearch;
+  });
+
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-xl font-semibold text-slate-900">Modul</h1>
-        <p className="text-sm text-slate-600">
-          Tambah dan kelola modul pembelajaran untuk LMS ini.
-        </p>
-      </header>
+      {/* ── STICKY HEADER & BREADCRUMBS ─────────────────────────────────── */}
+      <div className="sticky top-0 z-20 backdrop-blur-md bg-white/80 dark:bg-slate-900/80 border-b border-[var(--glass-border,#e2e8f0)] -mx-4 px-4 py-3 sm:-mx-6 sm:px-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <nav className="flex items-center gap-1.5 text-xs text-[var(--text-muted,#64748b)] mb-1">
+              <Link href="/admin" className="hover:text-[var(--accent,#3b82f6)] transition-colors">
+                Dashboard
+              </Link>
+              <span>/</span>
+              <span className="font-semibold text-[var(--text-primary,#0f172a)]">Modules</span>
+            </nav>
+            <h1 className="text-xl font-bold text-[var(--text-primary,#0f172a)] flex items-center gap-2">
+              <Layers className="w-5 h-5 text-[var(--accent,#3b82f6)]" /> Kelola Modul Pembelajaran
+            </h1>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowCreateModal(true)}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs shadow-md hover:opacity-90 transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>+ Create New Module</span>
+          </button>
+        </div>
+      </div>
 
       <AdminToast notice={notice} onDismiss={() => setNotice(null)} />
 
-      <section className="bg-slate-50 border border-slate-200 rounded-lg p-4">
-        <h2 className="text-sm font-medium text-slate-900 mb-3">
-          Tambah Modul Baru
-        </h2>
-        <AddModuleForm onSubmit={createModule} />
-      </section>
+      {/* ── SEARCH & FILTER TABS ─────────────────────────────────────────── */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 glass-panel p-3 rounded-2xl">
+        {/* Filter Tabs */}
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={() => setFilterTab("all")}
+            className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              filterTab === "all"
+                ? "bg-white dark:bg-slate-900 text-[var(--text-primary,#0f172a)] shadow-sm"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+            }`}
+          >
+            All ({modules.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterTab("published")}
+            className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              filterTab === "published"
+                ? "bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+            }`}
+          >
+            Published
+          </button>
+          <button
+            type="button"
+            onClick={() => setFilterTab("drafts")}
+            className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
+              filterTab === "drafts"
+                ? "bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-sm"
+                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+            }`}
+          >
+            Drafts
+          </button>
+        </div>
 
-      <section className="glass-panel border border-[var(--glass-border)] rounded-xl p-4 shadow-sm">
-        <h2 className="text-sm font-medium text-slate-900 mb-3">
-          Daftar Modul
-        </h2>
+        {/* Search Bar */}
+        <div className="relative w-full sm:w-72">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Cari modul atau materi..."
+            className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-[var(--glass-border,#e2e8f0)] bg-white dark:bg-slate-900 text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          />
+        </div>
+      </div>
 
+      {/* ── MODULE CARDS LIST ────────────────────────────────────────────── */}
+      <section>
         {loading ? (
-          <p className="text-sm text-slate-500">Memuat modul...</p>
-        ) : modules.length === 0 ? (
-          <p className="text-sm text-slate-500">Belum ada modul.</p>
+          <div className="py-12 text-center text-sm text-slate-500">
+            <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+            Memuat modul pembelajaran...
+          </div>
+        ) : filteredModules.length === 0 ? (
+          <div className="py-12 text-center glass-panel rounded-2xl space-y-3 p-8">
+            <BookOpen className="w-10 h-10 text-slate-400 mx-auto opacity-60" />
+            <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
+              {searchQuery ? "Modul tidak ditemukan" : "Belum ada modul terdaftar"}
+            </h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              {searchQuery
+                ? "Coba gunakan kata kunci pencarian yang lain."
+                : "Klik tombol '+ Create New Module' untuk memulai modul baru atau mengimpor template siap pakai."}
+            </p>
+            {!searchQuery && (
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(true)}
+                className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="w-4 h-4" /> Buat Modul Pertama
+              </button>
+            )}
+          </div>
         ) : (
-          <ul className="divide-y divide-slate-200">
-            {modules.map((mod) => {
+          <div className="grid grid-cols-1 gap-4">
+            {filteredModules.map((mod) => {
               const engineBadge = getEngineBadge(mod.gamification_type);
+              const topics = topicMap[mod.id] ?? [];
+              const publishedCount = topics.filter((t) => t.status === "published").length;
+              const firstEngineTopicId = topics.find((t) => t.engine_topic_id)?.engine_topic_id ?? null;
+
               return (
-                <li
+                <div
                   key={mod.id}
-                  className="flex flex-col gap-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+                  className="glass-panel p-5 rounded-2xl border border-[var(--glass-border,#e2e8f0)] hover:border-[var(--accent,#3b82f6)]/50 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <p className="text-sm font-medium text-slate-900">
-                        {mod.name}
-                      </p>
+                  <div className="space-y-2 flex-1">
+                    {/* Header Badges */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${engineBadge.cls}`}>
+                        {engineBadge.label}
+                      </span>
+
                       {mod.level && (
-                        <span
-                          className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset capitalize ${
-                            mod.level === "beginner"
-                              ? "bg-green-50 text-green-700 ring-green-600/20"
-                              : mod.level === "intermediate"
-                                ? "bg-orange-50 text-orange-700 ring-orange-600/20"
-                                : mod.level === "advance"
-                                  ? "bg-red-50 text-red-700 ring-red-600/20"
-                                  : mod.level === "master"
-                                    ? "bg-purple-50 text-purple-700 ring-purple-600/20"
-                                    : "bg-blue-50 text-blue-700 ring-blue-700/10"
-                          }`}
-                        >
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                           {mod.level}
                         </span>
                       )}
-                      <span
-                        className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${engineBadge.cls}`}
-                      >
-                        {engineBadge.label}
+
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
+                        <Layers className="w-3 h-3" /> {topics.length} Topik ({publishedCount} Published)
                       </span>
                     </div>
-                    <button
-                      onClick={() => setEditingModule(mod)}
-                      className="ml-2 text-slate-400 hover:text-blue-600 p-1"
-                      title="Edit Modul"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => setAssigningModule(mod)}
-                      className="text-slate-400 hover:text-green-600 p-1"
-                      title="Assign Modul ke Siswa"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"
-                        />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteModule(mod.id)}
-                      className="text-slate-400 hover:text-red-600 p-1"
-                      title="Hapus Modul"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                  {mod.description && (
-                    <p className="text-xs text-slate-600">{mod.description}</p>
-                  )}
 
-                  <details className="mt-3 group rounded-md border border-slate-200 bg-slate-50 p-3">
-                    <summary className="flex cursor-pointer items-center justify-between list-none outline-none">
-                      <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                        <svg
-                          className="h-4 w-4 transition-transform group-open:rotate-180"
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        Lihat Topik
-                      </p>
-                    </summary>
-
-                    <div className="mt-3">
-                      <div className="mb-3 flex justify-end">
-                        <Link
-                          href={`/admin/modules/${mod.id}/topics?tab=topics`}
-                          className="text-xs font-semibold text-slate-900 underline hover:text-blue-600"
-                        >
-                          Kelola semua
-                        </Link>
-                      </div>
-                      {(topicMap[mod.id] ?? []).length === 0 ? (
-                        <p className="text-sm text-slate-500">
-                          Belum ada topik.
+                    {/* Title & Description */}
+                    <div>
+                      <h3 className="text-base font-bold text-[var(--text-primary,#0f172a)] group-hover:text-blue-600 transition-colors">
+                        {mod.name}
+                      </h3>
+                      {mod.description && (
+                        <p className="text-xs text-[var(--text-muted,#64748b)] mt-0.5 line-clamp-2 leading-relaxed">
+                          {mod.description}
                         </p>
-                      ) : (
-                        <ul className="space-y-2">
-                          {(topicMap[mod.id] ?? []).map((topic) => (
-                            <li
-                              key={topic.id}
-                              className="flex items-center justify-between gap-2 rounded-md border border-[var(--glass-border)] bg-black/20 px-2.5 py-2 hover:bg-black/30 transition-colors"
-                            >
-                              <span className="text-sm text-slate-700">
-                                {topic.order_index}. {topic.title}
-                              </span>
-                              <Link
-                                href={`/admin/modules/${mod.id}/topics/${topic.id}/quiz`}
-                                className="rounded-md bg-slate-900 px-2.5 py-1 text-xs font-semibold text-white hover:bg-slate-800"
-                              >
-                                Open quiz
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
                       )}
                     </div>
-                  </details>
-                </li>
+                  </div>
+
+                  {/* Actions Bar */}
+                  <div className="flex items-center gap-2 flex-shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200 dark:border-slate-800">
+                    {/* Preview as Student */}
+                    {firstEngineTopicId && (
+                      <button
+                        type="button"
+                        onClick={() => setPreviewTopicId(firstEngineTopicId)}
+                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:text-blue-600 transition-colors"
+                        title="Pratinjau tampilan siswa"
+                      >
+                        <Eye className="w-3.5 h-3.5 text-blue-500" />
+                        <span className="hidden md:inline">Preview</span>
+                      </button>
+                    )}
+
+                    {/* Assign to Student */}
+                    <button
+                      type="button"
+                      onClick={() => setAssigningModule(mod)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-emerald-300 dark:border-emerald-800/60 bg-emerald-50/50 dark:bg-emerald-950/30 text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-100 transition-colors"
+                      title="Assign ke siswa"
+                    >
+                      <UserCheck className="w-3.5 h-3.5" />
+                      <span className="hidden md:inline">Assign</span>
+                    </button>
+
+                    {/* Edit Metadata */}
+                    <button
+                      type="button"
+                      onClick={() => setEditingModule(mod)}
+                      className="p-2 rounded-xl text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-colors"
+                      title="Edit metadata modul"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+
+                    {/* Delete */}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteModule(mod.id)}
+                      className="p-2 rounded-xl text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/50 transition-colors"
+                      title="Hapus modul"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+
+                    {/* Open Builder / Editor */}
+                    <Link
+                      href={`/admin/modules/${mod.id}/topics?tab=topics`}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-xs hover:opacity-90 transition-opacity ml-1 shadow-sm"
+                    >
+                      <span>Edit & Build</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                </div>
               );
             })}
-          </ul>
+          </div>
         )}
       </section>
+
+      {/* ── CREATION CHOICE MODAL ──────────────────────────────────────── */}
+      {showCreateModal && (
+        <CreateModuleModal
+          onClose={() => setShowCreateModal(false)}
+          onSuccess={() => {
+            setShowCreateModal(false);
+            loadModules();
+            setNotice({ type: "success", text: "Modul baru berhasil dibuat!" });
+          }}
+        />
+      )}
+
+      {/* ── EDIT METADATA MODAL ────────────────────────────────────────── */}
       {editingModule && (
         <EditModuleModal
           module={editingModule}
@@ -327,6 +388,8 @@ export default function ModulesPage() {
           }}
         />
       )}
+
+      {/* ── ASSIGN MODULE MODAL ────────────────────────────────────────── */}
       {assigningModule && (
         <AssignModuleModal
           module={assigningModule}
@@ -335,6 +398,17 @@ export default function ModulesPage() {
             setAssigningModule(null);
             setNotice({ type: "success", text: "Modul berhasil di-assign ke siswa." });
           }}
+        />
+      )}
+
+      {/* ── STUDENT PREVIEW ENGINE MODAL ──────────────────────────────── */}
+      {previewTopicId && (
+        <EngineModal
+          topicId={previewTopicId}
+          studentId="teacher-preview-admin"
+          lang="id"
+          onClose={() => setPreviewTopicId(null)}
+          onComplete={() => {}}
         />
       )}
     </div>
