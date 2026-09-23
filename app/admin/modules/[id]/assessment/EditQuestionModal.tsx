@@ -35,20 +35,20 @@ export function EditQuestionModal({ question, moduleId, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Edit soal assessment"
     >
-      <div className="w-full max-w-2xl rounded-lg bg-[var(--glass-bg)] shadow-xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="w-full max-w-2xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Modal header */}
-        <div className="flex items-center justify-between border-b border-[var(--glass-border)] bg-[var(--input-bg)] px-4 py-3">
-          <h2 className="text-base font-semibold text-[var(--text-primary)]">Edit Soal</h2>
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 px-5 py-4">
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Edit Soal</h2>
           <button
             type="button"
             onClick={onClose}
             aria-label="Tutup modal"
-            className="rounded-md p-1 text-[var(--text-muted)] hover:bg-[var(--accent)]/10 hover:text-[var(--accent)]"
+            className="rounded-lg p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
           >
             <svg
               className="h-5 w-5"
@@ -79,7 +79,7 @@ export function EditQuestionModal({ question, moduleId, onClose }: Props) {
             <div>
               <label
                 htmlFor="edit-question-text"
-                className="mb-1 block text-sm font-medium text-slate-700"
+                className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-300"
               >
                 Teks Soal <span className="text-red-500">*</span>
               </label>
@@ -90,7 +90,7 @@ export function EditQuestionModal({ question, moduleId, onClose }: Props) {
                 rows={3}
                 maxLength={500}
                 defaultValue={question.question_text}
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
               {state?.fieldErrors?.question_text && (
                 <p className="mt-1 text-xs text-red-600">{state.fieldErrors.question_text}</p>
@@ -106,7 +106,7 @@ export function EditQuestionModal({ question, moduleId, onClose }: Props) {
                   <div key={letter}>
                     <label
                       htmlFor={`edit-option-${letter}`}
-                      className="mb-1 block text-sm font-medium text-slate-700"
+                      className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-300"
                     >
                       Pilihan {letter.toUpperCase()} <span className="text-red-500">*</span>
                     </label>
@@ -117,7 +117,7 @@ export function EditQuestionModal({ question, moduleId, onClose }: Props) {
                       required
                       maxLength={200}
                       defaultValue={defaultValue}
-                      className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                      className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                     />
                     {state?.fieldErrors?.[fieldName] && (
                       <p className="mt-1 text-xs text-red-600">{state.fieldErrors[fieldName]}</p>
@@ -129,14 +129,14 @@ export function EditQuestionModal({ question, moduleId, onClose }: Props) {
 
             {/* Correct option radio group */}
             <fieldset>
-              <legend className="mb-2 text-sm font-medium text-slate-700">
+              <legend className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
                 Jawaban Benar <span className="text-red-500">*</span>
               </legend>
               <div className="flex flex-wrap gap-3">
                 {CORRECT_OPTIONS.map((opt) => (
                   <label
                     key={opt}
-                    className="flex cursor-pointer items-center gap-1.5 rounded-md border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 has-[:checked]:border-slate-900 has-[:checked]:bg-slate-900 has-[:checked]:text-white"
+                    className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-600 has-[:checked]:text-white transition-colors"
                   >
                     <input
                       type="radio"
@@ -150,23 +150,23 @@ export function EditQuestionModal({ question, moduleId, onClose }: Props) {
                 ))}
               </div>
               {state?.fieldErrors?.correct_option && (
-                <p className="mt-1 text-xs text-red-600">{state.fieldErrors.correct_option}</p>
+                <p className="mt-1 text-xs text-red-600 dark:text-red-400">{state.fieldErrors.correct_option}</p>
               )}
             </fieldset>
 
             {/* Footer actions */}
-            <div className="flex justify-end gap-2 border-t border-[var(--glass-border)] pt-4">
+            <div className="flex justify-end gap-2 border-t border-slate-200 dark:border-slate-800 pt-4 mt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="rounded-md border border-[var(--glass-border)] px-3 py-2 text-sm font-medium text-[var(--text-secondary)] hover:bg-[var(--accent)]/10"
+                className="rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
               >
                 Tutup
               </button>
               <button
                 type="submit"
                 disabled={isPending}
-                className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--accent-dark)] disabled:opacity-60"
+                className="rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:opacity-60"
               >
                 {isPending ? "Menyimpan..." : "Simpan Perubahan"}
               </button>

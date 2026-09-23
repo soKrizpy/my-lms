@@ -40,9 +40,9 @@ export function AddAssessmentQuestionForm({ assessmentId, moduleId, disabled }: 
 
   if (disabled) {
     return (
-      <div className="rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] p-4">
-        <h2 className="mb-2 text-sm font-semibold text-[var(--text-primary)]">Tambah Soal</h2>
-        <p className="text-sm text-amber-700 font-medium">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm">
+        <h2 className="mb-2 text-base font-bold text-slate-900 dark:text-white">Tambah Soal</h2>
+        <p className="text-sm text-amber-700 dark:text-amber-400 font-medium">
           ⚠️ Batas 20 soal tercapai. Hapus soal yang ada untuk menambah soal baru.
         </p>
       </div>
@@ -53,12 +53,12 @@ export function AddAssessmentQuestionForm({ assessmentId, moduleId, disabled }: 
     <form
       ref={formRef}
       action={formAction}
-      className="space-y-4 rounded-lg border border-[var(--glass-border)] bg-[var(--glass-bg)] p-4 shadow-sm"
+      className="space-y-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm"
     >
       <input type="hidden" name="assessmentId" value={assessmentId} />
       <input type="hidden" name="moduleId" value={moduleId} />
 
-      <h2 className="text-sm font-semibold text-[var(--text-primary)]">Tambah Soal Baru</h2>
+      <h2 className="text-base font-bold text-slate-900 dark:text-white">Tambah Soal Baru</h2>
 
       {state?.error && (
         <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -75,7 +75,7 @@ export function AddAssessmentQuestionForm({ assessmentId, moduleId, disabled }: 
       <div>
         <label
           htmlFor="add-question-text"
-          className="mb-1 block text-sm font-medium text-slate-700"
+          className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-300"
         >
           Teks Soal <span className="text-red-500">*</span>
         </label>
@@ -85,7 +85,7 @@ export function AddAssessmentQuestionForm({ assessmentId, moduleId, disabled }: 
           required
           rows={3}
           maxLength={500}
-          className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+          className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400 dark:placeholder:text-slate-500"
           placeholder="Tuliskan pertanyaan di sini... (maks. 500 karakter)"
         />
         {state?.fieldErrors?.question_text && (
@@ -99,7 +99,7 @@ export function AddAssessmentQuestionForm({ assessmentId, moduleId, disabled }: 
           <div key={letter}>
             <label
               htmlFor={`add-option-${letter}`}
-              className="mb-1 block text-sm font-medium text-slate-700"
+              className="mb-1 block text-sm font-semibold text-slate-700 dark:text-slate-300"
             >
               Pilihan {letter.toUpperCase()} <span className="text-red-500">*</span>
             </label>
@@ -109,7 +109,7 @@ export function AddAssessmentQuestionForm({ assessmentId, moduleId, disabled }: 
               type="text"
               required
               maxLength={200}
-              className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+              className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400 dark:placeholder:text-slate-500"
               placeholder={`Pilihan ${letter.toUpperCase()}`}
             />
             {state?.fieldErrors?.[`option_${letter}`] && (
@@ -121,14 +121,14 @@ export function AddAssessmentQuestionForm({ assessmentId, moduleId, disabled }: 
 
       {/* Correct option radio group */}
       <fieldset>
-        <legend className="mb-2 text-sm font-medium text-slate-700">
+        <legend className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-300">
           Jawaban Benar <span className="text-red-500">*</span>
         </legend>
         <div className="flex flex-wrap gap-3">
           {CORRECT_OPTIONS.map((opt) => (
             <label
               key={opt}
-              className="flex cursor-pointer items-center gap-1.5 rounded-md border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 has-[:checked]:border-slate-900 has-[:checked]:bg-slate-900 has-[:checked]:text-white"
+              className="flex cursor-pointer items-center gap-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3.5 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 has-[:checked]:border-blue-600 has-[:checked]:bg-blue-600 has-[:checked]:text-white transition-colors"
             >
               <input
                 type="radio"
@@ -142,14 +142,14 @@ export function AddAssessmentQuestionForm({ assessmentId, moduleId, disabled }: 
           ))}
         </div>
         {state?.fieldErrors?.correct_option && (
-          <p className="mt-1 text-xs text-red-600">{state.fieldErrors.correct_option}</p>
+          <p className="mt-1 text-xs text-red-600 dark:text-red-400">{state.fieldErrors.correct_option}</p>
         )}
       </fieldset>
 
       <button
         type="submit"
         disabled={isPending}
-        className="rounded-md bg-[var(--accent)] px-3 py-2 text-sm font-semibold text-white transition-colors hover:bg-[var(--accent-dark)] disabled:cursor-not-allowed disabled:opacity-60"
+        className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isPending ? "Menyimpan..." : "Simpan Soal"}
       </button>

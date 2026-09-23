@@ -30,7 +30,7 @@ export function AssessmentQuestionList({ questions, assessmentId: _assessmentId,
   const questionCount = questions.length;
 
   if (questions.length === 0) {
-    return <p className="text-sm text-slate-500">Belum ada soal.</p>;
+    return <p className="text-sm text-slate-500 dark:text-slate-400">Belum ada soal.</p>;
   }
 
   return (
@@ -40,14 +40,14 @@ export function AssessmentQuestionList({ questions, assessmentId: _assessmentId,
         <span
           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
             questionCount >= 10
-              ? "bg-green-100 text-green-800"
-              : "bg-amber-100 text-amber-800"
+              ? "bg-green-100 text-green-800 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border dark:border-emerald-800"
+              : "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 dark:border dark:border-amber-800"
           }`}
         >
           {questionCount} / 20 soal
         </span>
         {questionCount < 10 && (
-          <span className="text-xs text-amber-700">
+          <span className="text-xs text-amber-700 dark:text-amber-400">
             (Minimal 10 soal diperlukan)
           </span>
         )}
@@ -57,11 +57,11 @@ export function AssessmentQuestionList({ questions, assessmentId: _assessmentId,
         {questions.map((q, idx) => (
           <li
             key={q.id}
-            className="rounded-md border border-slate-200 bg-white p-4"
+            className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm"
           >
             <div className="flex items-start justify-between gap-3">
               {/* Question number + text */}
-              <p className="text-sm font-semibold text-slate-900 flex-1 min-w-0">
+              <p className="text-sm font-bold text-slate-900 dark:text-white flex-1 min-w-0">
                 {idx + 1}. {q.question_text}
               </p>
 
@@ -70,7 +70,7 @@ export function AssessmentQuestionList({ questions, assessmentId: _assessmentId,
                 <button
                   type="button"
                   onClick={() => setEditingQuestion(q)}
-                  className="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                  className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-1 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                 >
                   Edit
                 </button>
@@ -91,7 +91,7 @@ export function AssessmentQuestionList({ questions, assessmentId: _assessmentId,
                   <button
                     type="submit"
                     disabled={isPending}
-                    className="rounded-md border border-red-200 px-2.5 py-1 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                    className="rounded-lg border border-red-200 dark:border-red-900/50 bg-white dark:bg-slate-800 px-3 py-1 text-xs font-semibold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 disabled:opacity-50 transition-colors"
                   >
                     Hapus
                   </button>
@@ -106,24 +106,24 @@ export function AssessmentQuestionList({ questions, assessmentId: _assessmentId,
                 return (
                   <li
                     key={letter}
-                    className={`flex items-start gap-2 rounded-md px-2.5 py-1.5 text-sm ${
+                    className={`flex items-start gap-2 rounded-lg px-2.5 py-1.5 text-sm ${
                       isCorrect
-                        ? "bg-green-50 text-green-800"
-                        : "text-slate-700"
+                        ? "bg-emerald-50 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200 border border-emerald-200/60 dark:border-emerald-800/60"
+                        : "text-slate-700 dark:text-slate-300"
                     }`}
                   >
                     <span
                       className={`shrink-0 rounded-full px-1.5 py-0.5 text-xs font-bold leading-none ${
                         isCorrect
-                          ? "bg-green-600 text-white"
-                          : "bg-slate-200 text-slate-600"
+                          ? "bg-emerald-600 text-white"
+                          : "bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                       }`}
                     >
                       {letter}
                     </span>
                     <span className="flex-1">{optionValue(q, letter)}</span>
                     {isCorrect && (
-                      <span className="shrink-0 text-xs font-semibold text-green-700">
+                      <span className="shrink-0 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
                         ✓ Benar
                       </span>
                     )}

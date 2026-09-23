@@ -229,22 +229,22 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-[var(--glass-bg,white)] border border-[var(--glass-border,#e2e8f0)] rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden my-8 transition-all">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden my-8 transition-all">
         
         {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-[var(--glass-border,#e2e8f0)] flex items-center justify-between bg-slate-500/5">
+        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-500/5">
           <div className="flex items-center gap-2">
-            <span className="p-2 rounded-xl bg-brand-primary/10 text-brand-primary">
-              <Sparkles className="w-5 h-5 text-[var(--accent,#3b82f6)]" />
+            <span className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
+              <Sparkles className="w-5 h-5 text-blue-500" />
             </span>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-[var(--text-primary,#0f172a)]">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
                 {mode === "select" && "Buat Modul Pembelajaran Baru"}
                 {mode === "scratch" && "Buat Modul dari Awal (Scratch)"}
                 {mode === "premade" && "Pilih Template Modul Bawaan"}
                 {mode === "csv" && "Bulk Upload Modul via CSV"}
               </h2>
-              <p className="text-xs text-[var(--text-muted,#64748b)]">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {mode === "select" && "Pilih metode pembuatan modul yang paling sesuai untukmu."}
                 {mode === "scratch" && "Isi informasi modul baru dari awal."}
                 {mode === "premade" && "Pilih dari kurikulum siap pakai yang sudah tersedia."}
@@ -254,7 +254,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -274,19 +274,19 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
             <div className="space-y-4">
               <div
                 onClick={() => setMode("scratch")}
-                className="group p-4 rounded-xl border border-[var(--glass-border,#e2e8f0)] bg-white/50 dark:bg-slate-800/50 hover:border-[var(--accent,#3b82f6)] hover:shadow-md cursor-pointer transition-all flex items-start gap-4"
+                className="group p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-md cursor-pointer transition-all flex items-start gap-4"
               >
-                <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 group-hover:scale-105 transition-transform">
+                <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">
                   <FileCode2 className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-[var(--text-primary,#0f172a)] group-hover:text-[var(--accent,#3b82f6)]">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
                       Option A: Start from Scratch
                     </h3>
                     <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
                   </div>
-                  <p className="text-xs text-[var(--text-muted,#64748b)] mt-1">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
                     Buat modul kosong baru, tentukan judul, tingkat kesulitan, serta pilih gamification style (Mimo, Duolingo, Quest, dll).
                   </p>
                 </div>
@@ -294,19 +294,19 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
 
               <div
                 onClick={() => setMode("premade")}
-                className="group p-4 rounded-xl border border-[var(--glass-border,#e2e8f0)] bg-white/50 dark:bg-slate-800/50 hover:border-[var(--accent,#3b82f6)] hover:shadow-md cursor-pointer transition-all flex items-start gap-4"
+                className="group p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-md cursor-pointer transition-all flex items-start gap-4"
               >
-                <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 group-hover:scale-105 transition-transform">
+                <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform">
                   <BookOpen className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-[var(--text-primary,#0f172a)] group-hover:text-[var(--accent,#3b82f6)]">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
                       Option B: Pick Premade Template (1-Click Import)
                     </h3>
                     <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
                   </div>
-                  <p className="text-xs text-[var(--text-muted,#64748b)] mt-1">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
                     Pilih modul siap pakai dari katalog Engine (HTML, CSS, JavaScript, Scratch, Tinkercad 3D) lengkap dengan topik & kuisnya.
                   </p>
                 </div>
@@ -314,19 +314,19 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
 
               <div
                 onClick={() => setMode("csv")}
-                className="group p-4 rounded-xl border border-[var(--glass-border,#e2e8f0)] bg-white/50 dark:bg-slate-800/50 hover:border-[var(--accent,#3b82f6)] hover:shadow-md cursor-pointer transition-all flex items-start gap-4"
+                className="group p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-md cursor-pointer transition-all flex items-start gap-4"
               >
-                <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 group-hover:scale-105 transition-transform">
+                <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">
                   <Upload className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-[var(--text-primary,#0f172a)] group-hover:text-[var(--accent,#3b82f6)]">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
                       Option C: Bulk Upload via CSV
                     </h3>
                     <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
                   </div>
-                  <p className="text-xs text-[var(--text-muted,#64748b)] mt-1">
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
                     Upload file CSV berstruktur untuk mengimpor banyak topik, materi interaktif, dan kuis sekaligus secara otomatis.
                   </p>
                 </div>
@@ -347,7 +347,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="Misal: Pemrograman Web Lanjutan"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
               </div>
 
@@ -360,7 +360,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Ringkasan singkat cakupan materi pada modul ini."
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
               </div>
 
@@ -372,12 +372,12 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                   <select
                     value={level}
                     onChange={(e) => setLevel(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
-                    <option value="beginner">Beginner (Pemula / SD)</option>
-                    <option value="intermediate">Intermediate (Menengah / SMP)</option>
-                    <option value="advance">Advance (Mahir / SMA)</option>
-                    <option value="master">Master (Expert)</option>
+                    <option value="beginner" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Beginner (Pemula / SD)</option>
+                    <option value="intermediate" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Intermediate (Menengah / SMP)</option>
+                    <option value="advance" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Advance (Mahir / SMA)</option>
+                    <option value="master" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Master (Expert)</option>
                   </select>
                 </div>
 
@@ -388,13 +388,13 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                   <select
                     value={gamificationType}
                     onChange={(e) => setGamificationType(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
-                    <option value="mimo">🎯 Mimo (Bite-sized Lesson Path)</option>
-                    <option value="duolingo">💚 Duolingo (Hearts & Streak Skill Path)</option>
-                    <option value="boardgame">🎲 Boardgame (Tile Map Progression)</option>
-                    <option value="quest">⚔️ Quest (Mission & Boss Challenges)</option>
-                    <option value="flashcard">📇 Flashcard (Flip & Active Recall)</option>
+                    <option value="mimo" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">🎯 Mimo (Bite-sized Lesson Path)</option>
+                    <option value="duolingo" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">💚 Duolingo (Hearts & Streak Skill Path)</option>
+                    <option value="boardgame" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">🎲 Boardgame (Tile Map Progression)</option>
+                    <option value="quest" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">⚔️ Quest (Mission & Boss Challenges)</option>
+                    <option value="flashcard" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">📇 Flashcard (Flip & Active Recall)</option>
                   </select>
                 </div>
               </div>
@@ -403,7 +403,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                 <button
                   type="button"
                   onClick={() => setMode("select")}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 >
                   ← Kembali ke Pilihan Mode
                 </button>
@@ -411,7 +411,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2 text-xs font-semibold text-slate-700 border border-slate-300 rounded-xl hover:bg-slate-50"
+                    className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700"
                   >
                     Batal
                   </button>
@@ -466,14 +466,14 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                 <button
                   type="button"
                   onClick={() => setMode("select")}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 >
                   ← Kembali ke Pilihan Mode
                 </button>
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 text-xs font-semibold text-slate-700 border border-slate-300 rounded-xl hover:bg-slate-50"
+                  className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700"
                 >
                   Tutup
                 </button>
@@ -493,7 +493,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                   value={csvModuleName}
                   onChange={(e) => setCsvModuleName(e.target.value)}
                   placeholder="Misal: Kurikulum Pemrograman CSV"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
               </div>
 
@@ -505,11 +505,11 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                   <select
                     value={csvLevel}
                     onChange={(e) => setCsvLevel(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
-                    <option value="beginner">Beginner (Pemula / SD)</option>
-                    <option value="intermediate">Intermediate (Menengah / SMP)</option>
-                    <option value="advance">Advance (Mahir / SMA)</option>
+                    <option value="beginner" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Beginner (Pemula / SD)</option>
+                    <option value="intermediate" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Intermediate (Menengah / SMP)</option>
+                    <option value="advance" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Advance (Mahir / SMA)</option>
                   </select>
                 </div>
 
@@ -520,12 +520,12 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                   <select
                     value={csvEngineStyle}
                     onChange={(e) => setCsvEngineStyle(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                    className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
-                    <option value="mimo">🎯 Mimo-Style</option>
-                    <option value="quest">⚔️ Quest-Style</option>
-                    <option value="boardgame">🎲 Boardgame-Style</option>
-                    <option value="flashcard">📇 Flashcard-Style</option>
+                    <option value="mimo" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">🎯 Mimo-Style</option>
+                    <option value="quest" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">⚔️ Quest-Style</option>
+                    <option value="boardgame" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">🎲 Boardgame-Style</option>
+                    <option value="flashcard" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">📇 Flashcard-Style</option>
                   </select>
                 </div>
               </div>
@@ -539,7 +539,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                   <a
                     href="/templates/lesson-template.csv"
                     download="lesson-template.csv"
-                    className="text-xs text-blue-600 hover:underline inline-flex items-center gap-1 font-medium"
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1 font-medium"
                   >
                     <Download className="w-3 h-3" /> Download CSV Template
                   </a>
@@ -569,8 +569,8 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                   <Upload className="w-8 h-8 mb-2 opacity-70" />
                   {csvFile ? (
                     <div className="text-center">
-                      <p className="text-xs font-bold">{csvFile.name}</p>
-                      <p className="text-[11px] opacity-70">
+                      <p className="text-xs font-bold text-slate-900 dark:text-white">{csvFile.name}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
                         ({(csvFile.size / 1024).toFixed(1)} KB) — Klik untuk mengganti
                       </p>
                     </div>
@@ -579,7 +579,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                       <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
                         Klik atau Drag & Drop file CSV di sini
                       </p>
-                      <p className="text-[11px] text-slate-500">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
                         Harus berformat .csv dengan baris LESSON, NODE, dan QUIZ
                       </p>
                     </div>
@@ -591,7 +591,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                 <button
                   type="button"
                   onClick={() => setMode("select")}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 >
                   ← Kembali ke Pilihan Mode
                 </button>
@@ -599,7 +599,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                   <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2 text-xs font-semibold text-slate-700 border border-slate-300 rounded-xl hover:bg-slate-50"
+                    className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700"
                   >
                     Batal
                   </button>

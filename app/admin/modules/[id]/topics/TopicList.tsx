@@ -52,32 +52,32 @@ export function TopicList({
         return (
           <li
             key={topic.id}
-            className="flex flex-col space-y-3 rounded-md border border-slate-200 bg-white p-4"
+            className="flex flex-col space-y-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm"
           >
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
-                <span className="text-sm font-semibold text-slate-800">
+                <span className="text-sm font-bold text-slate-800 dark:text-slate-100">
                   {topic.order_index}. {topic.title}
                 </span>
 
                 {topic.engine_topic_id && (
                   <div className="flex items-center gap-1 mt-1 flex-wrap">
-                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
                       <span>🔗</span>
                       <code className="font-mono">{topic.engine_topic_id}</code>
                     </span>
                     {topic.lesson_content ? (
                       <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${
                         topic.status === 'published'
-                          ? 'bg-green-50 text-green-700 border-green-300'
-                          : 'bg-amber-50 text-amber-700 border-amber-200'
+                          ? 'bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400 border-green-300 dark:border-green-800'
+                          : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-200 dark:border-amber-800'
                       }`}>
                         {topic.status === 'published'
                           ? `✅ Published${topic.published_at ? ` · ${new Date(topic.published_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}` : ''}`
                           : '⚠️ Draft — belum terlihat siswa'}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                         belum ada konten
                       </span>
                     )}
@@ -88,7 +88,7 @@ export function TopicList({
                   <>
                     <button
                       onClick={() => toggleSynopsis(topic.id)}
-                      className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 mt-2 font-medium"
+                      className="flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 mt-2 font-medium"
                     >
                       <span>{openSynopsis[topic.id] ? "Tutup sinopsis" : "Lihat sinopsis"}</span>
                       <svg
@@ -100,7 +100,7 @@ export function TopicList({
                     </button>
                     {openSynopsis[topic.id] && (
                       <div
-                        className="prose prose-sm mt-2 max-w-none text-sm text-slate-600 max-h-48 overflow-y-auto pr-2 border-l-2 border-blue-100 pl-2 whitespace-pre-wrap"
+                        className="prose prose-sm mt-2 max-w-none text-sm text-slate-600 dark:text-slate-300 max-h-48 overflow-y-auto pr-2 border-l-2 border-blue-100 dark:border-blue-900 pl-2 whitespace-pre-wrap"
                         dangerouslySetInnerHTML={{ __html: topic.description }}
                       />
                     )}
@@ -137,14 +137,14 @@ export function TopicList({
                   <button
                     type="button"
                     onClick={() => setPreviewTopicId(topic.engine_topic_id!)}
-                    className="text-sm font-medium text-blue-600 hover:text-blue-800 underline"
+                    className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 underline"
                   >
                     Preview
                   </button>
                 )}
                 <Link
                   href={`/admin/modules/${moduleId}/topics/${topic.id}/quiz`}
-                  className="text-sm font-medium text-slate-900 underline"
+                  className="text-sm font-medium text-slate-900 dark:text-slate-100 underline"
                 >
                   Kelola quiz
                 </Link>
@@ -199,8 +199,8 @@ export function TopicList({
               </div>
             </div>
 
-            <details className="rounded-md border border-slate-200 bg-slate-50 p-3">
-              <summary className="cursor-pointer text-sm font-semibold text-slate-900">
+            <details className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 p-3">
+              <summary className="cursor-pointer text-sm font-semibold text-slate-900 dark:text-slate-100">
                 Edit Topik
               </summary>
 
@@ -221,58 +221,58 @@ export function TopicList({
                 <input type="hidden" name="topicId" value={topic.id} />
 
                 <div>
-                  <label htmlFor={editTitleId} className="block text-sm font-medium text-slate-700">
+                  <label htmlFor={editTitleId} className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
                     Judul Topik
                   </label>
                   <input
                     id={editTitleId} name="title" type="text" required
                     defaultValue={topic.title}
-                    className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor={editOrderId} className="block text-sm font-medium text-slate-700">
+                  <label htmlFor={editOrderId} className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
                     Urutan (Order)
                   </label>
                   <input
                     id={editOrderId} name="orderIndex" type="number" required
                     defaultValue={topic.order_index}
-                    className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor={editDescriptionId} className="block text-sm font-medium text-slate-700">
+                  <label htmlFor={editDescriptionId} className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
                     Deskripsi Topik
                   </label>
                   <textarea
                     id={editDescriptionId} name="description" rows={3}
                     defaultValue={topic.description ?? ""}
-                    className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor={editProjectLinkId} className="block text-sm font-medium text-slate-700">
+                  <label htmlFor={editProjectLinkId} className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
                     Link Project
                   </label>
                   <input
                     id={editProjectLinkId} name="projectLink" type="text"
                     defaultValue={topic.project_link ?? ""}
-                    className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                     placeholder="https://github.com/..."
                   />
                 </div>
 
                 <div>
-                  <label htmlFor={editEngineTopicId} className="block text-sm font-medium text-slate-700">
+                  <label htmlFor={editEngineTopicId} className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
                     Hubungkan ke Lesson Engine (Opsional)
                   </label>
                   <select
                     id={editEngineTopicId} name="engineTopicId"
                     defaultValue={topic.engine_topic_id ?? ""}
-                    className="mt-1 block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">— Tidak dihubungkan —</option>
                     <optgroup label="HTML">
@@ -296,17 +296,17 @@ export function TopicList({
                       ))}
                     </optgroup>
                   </select>
-                  <p className="mt-1 text-xs text-slate-500">Lesson bawaan yang dibuka siswa saat &quot;Mulai Belajar&quot;.</p>
+                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Lesson bawaan yang dibuka siswa saat &quot;Mulai Belajar&quot;.</p>
                 </div>
 
                 <div>
-                  <label htmlFor={editTopicLinkId} className="block text-sm font-medium text-slate-700">
+                  <label htmlFor={editTopicLinkId} className="block text-sm font-semibold text-slate-700 dark:text-slate-300">
                     Embed Canva / Topic Link
                   </label>
                   <textarea
                     id={editTopicLinkId} name="topicLink" rows={3}
                     defaultValue={topic.topic_link ?? ""}
-                    className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="mt-1 block w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 px-3 py-2 text-sm shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                     placeholder="Paste kode embed iframe Canva di sini"
                   />
                 </div>
