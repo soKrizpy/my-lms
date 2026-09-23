@@ -595,7 +595,15 @@ async function seed() {
       objectives: [`Memahami dan menguasai ${t.title}`],
       learningPath,
       quiz: {
-        questions: t.quizzes,
+        questions: t.quizzes.map((q) => ({
+          id: q.id,
+          type: 'multiple-choice' as const,
+          question: q.question,
+          options: q.options,
+          correctAnswer: q.correctAnswer,
+          explanation: q.explanation,
+          points: 25,
+        })),
       },
       completion: {
         title: 'Topik Selesai!',
