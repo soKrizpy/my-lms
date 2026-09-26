@@ -40,7 +40,7 @@ export async function resolveTopicUnlockMap(
     try {
       const { data, error } = await admin
         .from('topics')
-        .select('id, module_id, order_index, engine_topic_id')
+        .select('id, module_id, order_index, engine_topic_id, status')
         .in('module_id', moduleIds)
         .order('module_id', { ascending: true })
         .order('order_index', { ascending: true });
@@ -49,7 +49,7 @@ export async function resolveTopicUnlockMap(
         console.error('Error fetching topics:', error);
         return new Map();
       }
-      topics = data ?? [];
+      topics = (data ?? []).filter((topic: any) => topic?.status === 'published');
     } catch (err) {
       console.error('Exception fetching topics:', err);
       return new Map();
@@ -134,10 +134,14 @@ export async function resolveTopicUnlockMap(
     const result = new Map<number, TopicUnlockResult>();
     const totalTopics = topics.length;
     const meetingsList = meetings;
+    const firstTopicByModule = new Set<number>();
 
     topics.forEach((topic, globalIndex) => {
       // Guard: ensure topic has required id property
       if (topic?.id == null) return;
+
+      const isFirstTopicInModule = !firstTopicByModule.has(topic.module_id);
+      firstTopicByModule.add(topic.module_id);
 
       // Modulo: if there are more meetings than topics the extra meetings don't open new slots;
       // if there are more topics than meetings, topics beyond meeting count stay locked by join.
@@ -150,6 +154,10 @@ export async function resolveTopicUnlockMap(
       
       const unlockedByJoin: boolean =
         meeting?.meeting_students?.[0]?.has_joined === true;
+
+      // An active module assignment must give the student a starting point.
+      // Later topics remain gated by meetings, progress, or quiz activity.
+      const unlockedByAssignment = isFirstTopicInModule;
       
       const unlockedByEngine: boolean =
         typeof topic?.engine_topic_id === 'string' && topic.engine_topic_id.length > 0
@@ -161,7 +169,8 @@ export async function resolveTopicUnlockMap(
       result.set(topic.id as number, {
         topicId: topic.id as number,
         engineTopicId: topic?.engine_topic_id ?? null,
-        isUnlocked: unlockedByJoin || unlockedByEngine || unlockedByQuiz,
+        isUnlocked:
+          unlockedByAssignment || unlockedByJoin || unlockedByEngine || unlockedByQuiz,
       });
     });
 
