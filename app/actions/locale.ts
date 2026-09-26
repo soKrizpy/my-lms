@@ -1,19 +1,10 @@
 'use server';
 
 // app/actions/locale.ts
-// Server action to switch the app locale.
-// Sets the 'locale' cookie and revalidates all cached pages.
+// REMOVED: The dual-language system has been removed.
+// The app is now standardized on Bahasa Indonesia (locale = 'id').
+// This stub is kept to prevent import errors from any lingering references.
 
-import { cookies } from 'next/headers';
-import { revalidatePath } from 'next/cache';
-
-export async function setLocale(locale: 'id' | 'en') {
-  const cookieStore = await cookies();
-  cookieStore.set('locale', locale, {
-    path: '/',
-    maxAge: 60 * 60 * 24 * 365, // 1 year
-    sameSite: 'lax',
-    httpOnly: false, // client needs to read it for immediate UI update
-  });
-  revalidatePath('/', 'layout');
+export async function setLocale(_locale: 'id' | 'en') {
+  // No-op: locale switching is disabled.
 }

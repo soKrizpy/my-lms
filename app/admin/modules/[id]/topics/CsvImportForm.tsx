@@ -126,7 +126,7 @@ export function CsvImportForm({ moduleId }: { moduleId: string }) {
       </p>
       <p className="text-xs text-[var(--warning)] bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800/50 rounded px-3 py-2 mb-3">
         ⚠ Hapus semua baris komentar (<code className="font-mono">#</code>) dari file CSV sebelum
-        upload. Baris komentar menyebabkan error "Unrecognised row".
+        upload. Baris komentar menyebabkan error &quot;Unrecognised row&quot;.
       </p>
 
 

@@ -1,0 +1,15 @@
+
+> my-lms@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.6:3000
+- Environments: .env.local
+✓ Ready in 4.2s
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+
+ GET / 200 in 1552ms (next.js: 902ms, proxy.ts: 177ms, application-code: 472ms)
+ GET /api/student/quiz?quizId=1 401 in 451ms (next.js: 401ms, proxy.ts: 8ms, application-code: 42ms)
+ GET / 200 in 139ms (next.js: 8ms, proxy.ts: 7ms, application-code: 125ms)
+ GET /api/student/quiz?quizId=1 401 in 22ms (next.js: 6ms, proxy.ts: 6ms, application-code: 10ms)

@@ -44,6 +44,7 @@ export async function POST(request: Request) {
     .from("student_modules")
     .select("module_id")
     .eq("student_id", user.id)
+    .eq("status", "active")
     .order("module_id", { ascending: true });
 
   const moduleIds = ((studentModules || []) as any[]).map((sm: any) => sm.module_id as number);
@@ -59,6 +60,7 @@ export async function POST(request: Request) {
       .from("topics")
       .select("id, title, engine_topic_id, status, lesson_content")
       .in("module_id", moduleIds)
+      .eq("status", "published")
       .order("module_id", { ascending: true })
       .order("order_index", { ascending: true });
 

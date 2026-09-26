@@ -1,8 +1,8 @@
 // app/admin/modules/CreateModuleModal.tsx
-"use client";
+'use client';
 
-import React, { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Sparkles,
   FileCode2,
@@ -14,108 +14,130 @@ import {
   Download,
   AlertCircle,
   HelpCircle,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface CreateModuleModalProps {
   onClose: () => void;
   onSuccess: () => void;
+  onModuleCreated?: () => void;
 }
 
-type Mode = "select" | "scratch" | "premade" | "csv";
+type Mode = 'select' | 'scratch' | 'premade' | 'csv';
+type SeedFailureDetails = {
+  conflicts?: Array<{ lessonId: string; title: string; moduleId: number }>;
+  errors?: Array<{ lessonId: string; title: string; message: string }>;
+};
 
 const PREMADE_TEMPLATES = [
   {
-    id: "html",
-    category: "HTML",
-    title: "HTML5 Fundamentals & Web Structure",
-    description: "10 bite-sized lessons covering HTML tags, forms, tables, semantics, and personal profile mini-projects.",
-    level: "beginner",
-    gamification_type: "mimo",
-    icon: "🌐",
+    id: 'html',
+    category: 'HTML',
+    title: 'HTML5 Fundamentals & Web Structure',
+    description:
+      '10 bite-sized lessons covering HTML tags, forms, tables, semantics, and personal profile mini-projects.',
+    level: 'beginner',
+    gamification_type: 'mimo',
+    icon: '🌐',
     topicsCount: 10,
-    color: "from-orange-500/10 to-amber-500/10 border-orange-200 dark:border-orange-800/40",
+    color:
+      'from-orange-500/10 to-amber-500/10 border-orange-200 dark:border-orange-800/40',
   },
   {
-    id: "css",
-    category: "CSS",
-    title: "Modern CSS Styling & Flexbox Layouts",
-    description: "7 interactive modules teaching typography, box model, Flexbox, landing page hero sections, and professional styling.",
-    level: "beginner",
-    gamification_type: "mimo",
-    icon: "🎨",
+    id: 'css',
+    category: 'CSS',
+    title: 'Modern CSS Styling & Flexbox Layouts',
+    description:
+      '7 interactive modules teaching typography, box model, Flexbox, landing page hero sections, and professional styling.',
+    level: 'beginner',
+    gamification_type: 'mimo',
+    icon: '🎨',
     topicsCount: 7,
-    color: "from-blue-500/10 to-cyan-500/10 border-blue-200 dark:border-blue-800/40",
+    color:
+      'from-blue-500/10 to-cyan-500/10 border-blue-200 dark:border-blue-800/40',
   },
   {
-    id: "js",
-    category: "JavaScript",
-    title: "JavaScript Interactive Web & DOM Manipulation",
-    description: "7 engaging lessons covering variables, events, DOM, conditionals, functions, and mini website projects.",
-    level: "intermediate",
-    gamification_type: "duolingo",
-    icon: "⚡",
+    id: 'js',
+    category: 'JavaScript',
+    title: 'JavaScript Interactive Web & DOM Manipulation',
+    description:
+      '7 engaging lessons covering variables, events, DOM, conditionals, functions, and mini website projects.',
+    level: 'intermediate',
+    gamification_type: 'duolingo',
+    icon: '⚡',
     topicsCount: 7,
-    color: "from-yellow-500/10 to-amber-500/10 border-yellow-200 dark:border-yellow-800/40",
+    color:
+      'from-yellow-500/10 to-amber-500/10 border-yellow-200 dark:border-yellow-800/40',
   },
   {
-    id: "scratch",
-    category: "Scratch",
-    title: "Scratch Visual Block Coding & Games",
-    description: "17 fun game projects from moving sprites to maze games, meteor dodge, and multi-stage platformers.",
-    level: "beginner",
-    gamification_type: "boardgame",
-    icon: "🐱",
-    topicsCount: 17,
-    color: "from-purple-500/10 to-indigo-500/10 border-purple-200 dark:border-purple-800/40",
+    id: 'scratch',
+    category: 'Scratch',
+    title: 'Scratch Visual Block Coding & Games',
+    description:
+      '21 fun game projects from moving sprites to maze games, meteor dodge, and multi-stage platformers.',
+    level: 'beginner',
+    gamification_type: 'boardgame',
+    icon: '🐱',
+    topicsCount: 21,
+    color:
+      'from-purple-500/10 to-indigo-500/10 border-purple-200 dark:border-purple-800/40',
   },
   {
-    id: "tinkercad",
-    category: "3D & AR",
-    title: "3D Design Tinkercad & Assembler AR",
-    description: "12 multi-tier topics (Easy, Medium, Hard) covering 3D modeling, hole cuts, and Augmented Reality presentations.",
-    level: "intermediate",
-    gamification_type: "quest",
-    icon: "🧊",
+    id: 'tinkercad',
+    category: '3D & AR',
+    title: '3D Design Tinkercad & Assembler AR',
+    description:
+      '12 multi-tier topics (Easy, Medium, Hard) covering 3D modeling, hole cuts, and Augmented Reality presentations.',
+    level: 'intermediate',
+    gamification_type: 'quest',
+    icon: '🧊',
     topicsCount: 12,
-    color: "from-emerald-500/10 to-teal-500/10 border-emerald-200 dark:border-emerald-800/40",
+    color:
+      'from-emerald-500/10 to-teal-500/10 border-emerald-200 dark:border-emerald-800/40',
   },
 ];
 
-export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps) {
+export function CreateModuleModal({
+  onClose,
+  onSuccess,
+  onModuleCreated,
+}: CreateModuleModalProps) {
   const router = useRouter();
-  const [mode, setMode] = useState<Mode>("select");
+  const [mode, setMode] = useState<Mode>('select');
 
   // Option A (Scratch) Form State
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [level, setLevel] = useState("beginner");
-  const [gamificationType, setGamificationType] = useState("mimo");
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [level, setLevel] = useState('beginner');
+  const [gamificationType, setGamificationType] = useState('mimo');
 
   // Option C (CSV) State
   const fileRef = useRef<HTMLInputElement>(null);
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [csvModuleName, setCsvModuleName] = useState("");
-  const [csvLevel, setCsvLevel] = useState("beginner");
-  const [csvEngineStyle, setCsvEngineStyle] = useState("mimo");
+  const [csvModuleName, setCsvModuleName] = useState('');
+  const [csvLevel, setCsvLevel] = useState('beginner');
+  const [csvEngineStyle, setCsvEngineStyle] = useState('mimo');
 
   // Status
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [createdModuleId, setCreatedModuleId] = useState<string | null>(null);
+  const [seedFailureDetails, setSeedFailureDetails] =
+    useState<SeedFailureDetails | null>(null);
 
   // Submit Option A: Scratch
   async function handleCreateScratch(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
-      setError("Nama modul wajib diisi.");
+      setError('Nama modul wajib diisi.');
       return;
     }
     setLoading(true);
     setError(null);
 
     try {
-      const res = await fetch("/api/modules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/modules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: name.trim(),
           description: description.trim(),
@@ -124,27 +146,32 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Gagal membuat modul.");
+      if (!res.ok) throw new Error(data.error || 'Gagal membuat modul.');
 
       onSuccess();
       router.push(`/admin/modules/${data.id}/topics?tab=topics`);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Terjadi kesalahan.");
+      setError(err instanceof Error ? err.message : 'Terjadi kesalahan.');
     } finally {
       setLoading(false);
     }
   }
 
   // Submit Option B: Premade Template
-  async function handleImportPremade(template: typeof PREMADE_TEMPLATES[number]) {
+  async function handleImportPremade(
+    template: (typeof PREMADE_TEMPLATES)[number]
+  ) {
     setLoading(true);
     setError(null);
+    setCreatedModuleId(null);
+    setSeedFailureDetails(null);
+    let createdModuleIdForRequest: string | null = null;
 
     try {
       // 1. Create module
-      const resMod = await fetch("/api/modules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const resMod = await fetch('/api/modules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: template.title,
           description: template.description,
@@ -153,23 +180,41 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
         }),
       });
       const dataMod = await resMod.json();
-      if (!resMod.ok) throw new Error(dataMod.error || "Gagal membuat modul.");
+      if (!resMod.ok) throw new Error(dataMod.error || 'Gagal membuat modul.');
 
-      const moduleId = dataMod.id;
+      const moduleId = String(dataMod.id);
+      createdModuleIdForRequest = moduleId;
+      setCreatedModuleId(moduleId);
 
       // 2. Seed topics
-      const resSeed = await fetch(`/api/admin/modules/${moduleId}/seed-engine-topics`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ category: template.category }),
-      });
+      const resSeed = await fetch(
+        `/api/admin/modules/${moduleId}/seed-engine-topics`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ category: template.category }),
+        }
+      );
       const dataSeed = await resSeed.json();
-      if (!resSeed.ok) throw new Error(dataSeed.error || "Gagal mengimpor topik bawaan.");
+      setSeedFailureDetails(dataSeed);
+      if (!resSeed.ok)
+        throw new Error(dataSeed.error || 'Gagal mengimpor topik bawaan.');
+
+      const conflictCount = dataSeed.conflicts?.length ?? 0;
+      const errorCount = dataSeed.errors?.length ?? 0;
+      if (conflictCount > 0 || errorCount > 0 || dataSeed.ok === false) {
+        setError(
+          `Modul dibuat, tetapi ${conflictCount + errorCount} topik belum dapat ditambahkan.`
+        );
+        onModuleCreated?.();
+        return;
+      }
 
       onSuccess();
       router.push(`/admin/modules/${moduleId}/topics?tab=topics`);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Terjadi kesalahan impor.");
+      if (createdModuleIdForRequest) onModuleCreated?.();
+      setError(err instanceof Error ? err.message : 'Terjadi kesalahan impor.');
     } finally {
       setLoading(false);
     }
@@ -179,7 +224,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
   async function handleImportCsv(e: React.FormEvent) {
     e.preventDefault();
     if (!csvFile) {
-      setError("Pilih file CSV terlebih dahulu.");
+      setError('Pilih file CSV terlebih dahulu.');
       return;
     }
     setLoading(true);
@@ -187,10 +232,11 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
 
     try {
       // 1. Create container module
-      const titleToUse = csvModuleName.trim() || csvFile.name.replace(/\.csv$/i, "");
-      const resMod = await fetch("/api/modules", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const titleToUse =
+        csvModuleName.trim() || csvFile.name.replace(/\.csv$/i, '');
+      const resMod = await fetch('/api/modules', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: titleToUse,
           description: `Modul hasil impor CSV: ${csvFile.name}`,
@@ -199,29 +245,32 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
         }),
       });
       const dataMod = await resMod.json();
-      if (!resMod.ok) throw new Error(dataMod.error || "Gagal membuat modul container.");
+      if (!resMod.ok)
+        throw new Error(dataMod.error || 'Gagal membuat modul container.');
 
       const moduleId = dataMod.id;
 
       // 2. Upload CSV
       const formData = new FormData();
-      formData.append("csv", csvFile);
-      formData.append("moduleId", String(moduleId));
-      formData.append("engineStyle", csvEngineStyle);
+      formData.append('csv', csvFile);
+      formData.append('moduleId', String(moduleId));
+      formData.append('engineStyle', csvEngineStyle);
 
-      const resCsv = await fetch("/api/admin/topics/import-csv", {
-        method: "POST",
+      const resCsv = await fetch('/api/admin/topics/import-csv', {
+        method: 'POST',
         body: formData,
       });
       const dataCsv = await resCsv.json();
       if (!resCsv.ok && !dataCsv.results) {
-        throw new Error(dataCsv.error || "Gagal mengimpor isi CSV.");
+        throw new Error(dataCsv.error || 'Gagal mengimpor isi CSV.');
       }
 
       onSuccess();
       router.push(`/admin/modules/${moduleId}/topics?tab=topics`);
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Terjadi kesalahan upload CSV.");
+      setError(
+        err instanceof Error ? err.message : 'Terjadi kesalahan upload CSV.'
+      );
     } finally {
       setLoading(false);
     }
@@ -230,7 +279,6 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden my-8 transition-all">
-        
         {/* Modal Header */}
         <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-500/5">
           <div className="flex items-center gap-2">
@@ -239,16 +287,19 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
             </span>
             <div>
               <h2 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-                {mode === "select" && "Buat Modul Pembelajaran Baru"}
-                {mode === "scratch" && "Buat Modul dari Awal (Scratch)"}
-                {mode === "premade" && "Pilih Template Modul Bawaan"}
-                {mode === "csv" && "Bulk Upload Modul via CSV"}
+                {mode === 'select' && 'Buat Modul Pembelajaran Baru'}
+                {mode === 'scratch' && 'Buat Modul dari Awal (Scratch)'}
+                {mode === 'premade' && 'Pilih Template Modul Bawaan'}
+                {mode === 'csv' && 'Bulk Upload Modul via CSV'}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                {mode === "select" && "Pilih metode pembuatan modul yang paling sesuai untukmu."}
-                {mode === "scratch" && "Isi informasi modul baru dari awal."}
-                {mode === "premade" && "Pilih dari kurikulum siap pakai yang sudah tersedia."}
-                {mode === "csv" && "Upload file CSV berisi lesson, node, dan quiz secara kolektif."}
+                {mode === 'select' &&
+                  'Pilih metode pembuatan modul yang paling sesuai untukmu.'}
+                {mode === 'scratch' && 'Isi informasi modul baru dari awal.'}
+                {mode === 'premade' &&
+                  'Pilih dari kurikulum siap pakai yang sudah tersedia.'}
+                {mode === 'csv' &&
+                  'Upload file CSV berisi lesson, node, dan quiz secara kolektif.'}
               </p>
             </div>
           </div>
@@ -269,11 +320,42 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
             </div>
           )}
 
+          {seedFailureDetails?.conflicts?.length ||
+          seedFailureDetails?.errors?.length ? (
+            <ul className="mb-4 space-y-1 text-xs text-slate-600 dark:text-slate-300">
+              {seedFailureDetails.conflicts?.map((conflict) => (
+                <li key={conflict.lessonId}>
+                  {conflict.lessonId} sudah digunakan di modul{' '}
+                  {conflict.moduleId}.
+                </li>
+              ))}
+              {seedFailureDetails.errors?.map((failure) => (
+                <li key={failure.lessonId}>
+                  {failure.lessonId}: {failure.message}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+
+          {createdModuleId && error && (
+            <button
+              type="button"
+              onClick={() =>
+                router.push(
+                  `/admin/modules/${createdModuleId}/topics?tab=topics`
+                )
+              }
+              className="mb-4 inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700"
+            >
+              Buka modul yang dibuat <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          )}
+
           {/* MODE SELECT: 3 Option Cards */}
-          {mode === "select" && (
+          {mode === 'select' && (
             <div className="space-y-4">
               <div
-                onClick={() => setMode("scratch")}
+                onClick={() => setMode('scratch')}
                 className="group p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-md cursor-pointer transition-all flex items-start gap-4"
               >
                 <div className="p-3 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 group-hover:scale-105 transition-transform">
@@ -287,13 +369,14 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                     <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
-                    Buat modul kosong baru, tentukan judul, tingkat kesulitan, serta pilih gamification style (Mimo, Duolingo, Quest, dll).
+                    Buat modul kosong baru, tentukan judul, tingkat kesulitan,
+                    serta pilih gamification style (Mimo, Duolingo, Quest, dll).
                   </p>
                 </div>
               </div>
 
               <div
-                onClick={() => setMode("premade")}
+                onClick={() => setMode('premade')}
                 className="group p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-md cursor-pointer transition-all flex items-start gap-4"
               >
                 <div className="p-3 rounded-xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 group-hover:scale-105 transition-transform">
@@ -307,13 +390,15 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                     <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
-                    Pilih modul siap pakai dari katalog Engine (HTML, CSS, JavaScript, Scratch, Tinkercad 3D) lengkap dengan topik & kuisnya.
+                    Pilih modul siap pakai dari katalog Engine (HTML, CSS,
+                    JavaScript, Scratch, Tinkercad 3D) lengkap dengan topik &
+                    kuisnya.
                   </p>
                 </div>
               </div>
 
               <div
-                onClick={() => setMode("csv")}
+                onClick={() => setMode('csv')}
                 className="group p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-md cursor-pointer transition-all flex items-start gap-4"
               >
                 <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 group-hover:scale-105 transition-transform">
@@ -327,7 +412,8 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                     <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
                   </div>
                   <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
-                    Upload file CSV berstruktur untuk mengimpor banyak topik, materi interaktif, dan kuis sekaligus secara otomatis.
+                    Upload file CSV berstruktur untuk mengimpor banyak topik,
+                    materi interaktif, dan kuis sekaligus secara otomatis.
                   </p>
                 </div>
               </div>
@@ -335,7 +421,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
           )}
 
           {/* MODE SCRATCH (Form) */}
-          {mode === "scratch" && (
+          {mode === 'scratch' && (
             <form onSubmit={handleCreateScratch} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -374,10 +460,30 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                     onChange={(e) => setLevel(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
-                    <option value="beginner" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Beginner (Pemula / SD)</option>
-                    <option value="intermediate" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Intermediate (Menengah / SMP)</option>
-                    <option value="advance" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Advance (Mahir / SMA)</option>
-                    <option value="master" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Master (Expert)</option>
+                    <option
+                      value="beginner"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    >
+                      Beginner (Pemula / SD)
+                    </option>
+                    <option
+                      value="intermediate"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    >
+                      Intermediate (Menengah / SMP)
+                    </option>
+                    <option
+                      value="advance"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    >
+                      Advance (Mahir / SMA)
+                    </option>
+                    <option
+                      value="master"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    >
+                      Master (Expert)
+                    </option>
                   </select>
                 </div>
 
@@ -390,11 +496,36 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                     onChange={(e) => setGamificationType(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
-                    <option value="mimo" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">🎯 Mimo (Bite-sized Lesson Path)</option>
-                    <option value="duolingo" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">💚 Duolingo (Hearts & Streak Skill Path)</option>
-                    <option value="boardgame" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">🎲 Boardgame (Tile Map Progression)</option>
-                    <option value="quest" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">⚔️ Quest (Mission & Boss Challenges)</option>
-                    <option value="flashcard" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">📇 Flashcard (Flip & Active Recall)</option>
+                    <option
+                      value="mimo"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    >
+                      🎯 Mimo (Bite-sized Lesson Path)
+                    </option>
+                    <option
+                      value="duolingo"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    >
+                      💚 Duolingo (Hearts & Streak Skill Path)
+                    </option>
+                    <option
+                      value="boardgame"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    >
+                      🎲 Boardgame (Tile Map Progression)
+                    </option>
+                    <option
+                      value="quest"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    >
+                      ⚔️ Quest (Mission & Boss Challenges)
+                    </option>
+                    <option
+                      value="flashcard"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    >
+                      📇 Flashcard (Flip & Active Recall)
+                    </option>
                   </select>
                 </div>
               </div>
@@ -402,7 +533,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
               <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
-                  onClick={() => setMode("select")}
+                  onClick={() => setMode('select')}
                   className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 >
                   ← Kembali ke Pilihan Mode
@@ -420,7 +551,9 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                     disabled={loading || !name.trim()}
                     className="px-5 py-2 text-xs font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 disabled:opacity-50 flex items-center gap-1.5"
                   >
-                    {loading ? "Memproses..." : "Buat Modul & Lanjut ke Editor →"}
+                    {loading
+                      ? 'Memproses...'
+                      : 'Buat Modul & Lanjut ke Editor →'}
                   </button>
                 </div>
               </div>
@@ -428,7 +561,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
           )}
 
           {/* MODE PREMADE (Catalog Cards) */}
-          {mode === "premade" && (
+          {mode === 'premade' && (
             <div className="space-y-4">
               <div className="grid grid-cols-1 gap-3 max-h-[380px] overflow-y-auto pr-1">
                 {PREMADE_TEMPLATES.map((tmpl) => (
@@ -456,7 +589,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                       onClick={() => handleImportPremade(tmpl)}
                       className="w-full sm:w-auto px-4 py-2 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold rounded-xl hover:opacity-90 disabled:opacity-50 flex-shrink-0 flex items-center justify-center gap-1"
                     >
-                      {loading ? "Mengimpor..." : "Import Modul Ini →"}
+                      {loading ? 'Mengimpor...' : 'Import Modul Ini →'}
                     </button>
                   </div>
                 ))}
@@ -465,7 +598,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
               <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
-                  onClick={() => setMode("select")}
+                  onClick={() => setMode('select')}
                   className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 >
                   ← Kembali ke Pilihan Mode
@@ -482,7 +615,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
           )}
 
           {/* MODE CSV UPLOAD */}
-          {mode === "csv" && (
+          {mode === 'csv' && (
             <form onSubmit={handleImportCsv} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
@@ -507,9 +640,24 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                     onChange={(e) => setCsvLevel(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
-                    <option value="beginner" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Beginner (Pemula / SD)</option>
-                    <option value="intermediate" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Intermediate (Menengah / SMP)</option>
-                    <option value="advance" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Advance (Mahir / SMA)</option>
+                    <option
+                      value="beginner"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    >
+                      Beginner (Pemula / SD)
+                    </option>
+                    <option
+                      value="intermediate"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    >
+                      Intermediate (Menengah / SMP)
+                    </option>
+                    <option
+                      value="advance"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    >
+                      Advance (Mahir / SMA)
+                    </option>
                   </select>
                 </div>
 
@@ -522,10 +670,30 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                     onChange={(e) => setCsvEngineStyle(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   >
-                    <option value="mimo" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">🎯 Mimo-Style</option>
-                    <option value="quest" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">⚔️ Quest-Style</option>
-                    <option value="boardgame" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">🎲 Boardgame-Style</option>
-                    <option value="flashcard" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">📇 Flashcard-Style</option>
+                    <option
+                      value="mimo"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    >
+                      🎯 Mimo-Style
+                    </option>
+                    <option
+                      value="quest"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    >
+                      ⚔️ Quest-Style
+                    </option>
+                    <option
+                      value="boardgame"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    >
+                      🎲 Boardgame-Style
+                    </option>
+                    <option
+                      value="flashcard"
+                      className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                    >
+                      📇 Flashcard-Style
+                    </option>
                   </select>
                 </div>
               </div>
@@ -562,16 +730,19 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                   htmlFor="modal-csv-input"
                   className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors ${
                     csvFile
-                      ? "border-emerald-500 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400"
-                      : "border-slate-300 dark:border-slate-700 hover:border-blue-500 bg-slate-50 dark:bg-slate-900/50"
+                      ? 'border-emerald-500 bg-emerald-500/5 text-emerald-700 dark:text-emerald-400'
+                      : 'border-slate-300 dark:border-slate-700 hover:border-blue-500 bg-slate-50 dark:bg-slate-900/50'
                   }`}
                 >
                   <Upload className="w-8 h-8 mb-2 opacity-70" />
                   {csvFile ? (
                     <div className="text-center">
-                      <p className="text-xs font-bold text-slate-900 dark:text-white">{csvFile.name}</p>
+                      <p className="text-xs font-bold text-slate-900 dark:text-white">
+                        {csvFile.name}
+                      </p>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        ({(csvFile.size / 1024).toFixed(1)} KB) — Klik untuk mengganti
+                        ({(csvFile.size / 1024).toFixed(1)} KB) — Klik untuk
+                        mengganti
                       </p>
                     </div>
                   ) : (
@@ -590,7 +761,7 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
               <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
                 <button
                   type="button"
-                  onClick={() => setMode("select")}
+                  onClick={() => setMode('select')}
                   className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 >
                   ← Kembali ke Pilihan Mode
@@ -608,13 +779,12 @@ export function CreateModuleModal({ onClose, onSuccess }: CreateModuleModalProps
                     disabled={loading || !csvFile}
                     className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-1.5"
                   >
-                    {loading ? "Mengunggah..." : "Upload & Impor CSV →"}
+                    {loading ? 'Mengunggah...' : 'Upload & Impor CSV →'}
                   </button>
                 </div>
               </div>
             </form>
           )}
-
         </div>
       </div>
     </div>

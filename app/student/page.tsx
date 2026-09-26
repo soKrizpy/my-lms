@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Calendar, BookOpen, Users, Sparkles, Trophy, CheckCircle2, Award, Star, AlertTriangle, Zap, FileQuestion, ClipboardList } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Calendar, BookOpen, Users, Sparkles, Trophy, CheckCircle2, Award, Star, AlertTriangle, Zap, FileQuestion, ClipboardList, Volume2, VolumeX, Home } from "lucide-react";
 import { MagicalParticles } from "@/components/MagicalParticles";
 import { MagicalCounter } from "@/components/MagicalCounter";
 import { useLmsEngineListener } from "@/lib/useLmsEngineListener";
@@ -9,7 +10,9 @@ import { getQuizQuestions } from "@/lib/quizResponse";
 import { QuestMap } from "@/components/quest-map/QuestMap";
 import { AvatarDisplay } from "@/components/avatar/AvatarDisplay";
 import { getTitleById } from "@/lib/gamification/catalog";
-import { useTranslations } from "next-intl";
+import { TownSquareTab } from "@/components/town-square/TownSquareTab";
+import { soundFx } from "@/lib/audio/soundFx";
+
 import type { BadgeDefinition, EarnedBadgeRow } from '@/lib/gamification/badgeCatalog';
 import { BadgeCelebrationModal } from '@/components/gamification/BadgeCelebrationModal';
 
@@ -39,7 +42,7 @@ interface Topic {
   status?: string | null;
   lesson_content?: unknown | null;
   isUnlocked: boolean;
-  quiz: { id: number; title: string } | null;
+  quiz: { id: number; title: string; source?: "manual" | "csv" | "engine" } | null;
 }
 
 interface Module {
@@ -104,7 +107,7 @@ function useCountdown(targetDate: string) {
 
 // --- Synopsis Floating Panel ---
 function SynopsisPanel({ topic, onClose }: { topic: Topic; onClose: () => void }) {
-  const t = useTranslations('student');
+
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/30" onClick={onClose}>
       <div
@@ -114,7 +117,7 @@ function SynopsisPanel({ topic, onClose }: { topic: Topic; onClose: () => void }
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-blue-600">
           <div>
-            <p className="text-xs font-medium text-blue-100 uppercase tracking-wide">{t('meeting.synopsis')}</p>
+            <p className="text-xs font-medium text-blue-100 uppercase tracking-wide">Sinopsis</p>
             <h3 className="font-bold text-white text-base mt-0.5 leading-snug">{topic.title}</h3>
           </div>
           <button onClick={onClose} className="text-white/70 hover:text-white p-1 rounded">
@@ -131,7 +134,7 @@ function SynopsisPanel({ topic, onClose }: { topic: Topic; onClose: () => void }
               {topic.description.replace(/<[^>]*>?/gm, "")}
             </p>
           ) : (
-            <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>{t('meeting.noSynopsis')}</p>
+            <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>Tidak ada sinopsis untuk topik ini.</p>
           )}
         </div>
 
@@ -147,7 +150,7 @@ function SynopsisPanel({ topic, onClose }: { topic: Topic; onClose: () => void }
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6m0 0v6m0-6L10 14" />
               </svg>
-              {t('meeting.openProject')}
+              Buka Link Project
             </a>
           </div>
         )}
@@ -205,23 +208,14 @@ function PendingTasksSection({
       const isMaxed = attemptsUsed >= 2;
       const isPassed = typeof score === 'number' && score >= 70;
       if (!isMaxed && !isPassed) {
-        // Detect quiz origin: Engine Lesson vs Bulk CSV vs Admin Manual
-        let origin: 'engine' | 'csv' | 'manual' = 'manual';
-        let originLabel = 'Admin Manual';
-
-        if (topic.engine_topic_id) {
-          const engIdLower = String(topic.engine_topic_id).toLowerCase();
-          const contentStr = typeof topic.lesson_content === 'string'
-            ? topic.lesson_content
-            : JSON.stringify(topic.lesson_content || '');
-          if (engIdLower.includes('csv') || contentStr.includes('isCsvImport') || contentStr.includes('csv')) {
-            origin = 'csv';
-            originLabel = 'Bulk CSV';
-          } else {
-            origin = 'engine';
-            originLabel = 'Engine Lesson';
-          }
-        }
+        // Origin is persisted by the authoring/import flow. Do not infer it
+        // from arbitrary lesson content or a topic ID string.
+        const origin = topicQuiz.source ?? 'manual';
+        const originLabel = origin === 'engine'
+          ? 'Engine Lesson'
+          : origin === 'csv'
+            ? 'Bulk CSV'
+            : 'Admin Manual';
 
         pendingQuizzes.push({
           quizId: topicQuiz.id,
@@ -416,7 +410,7 @@ function PendingTasksSection({
 
 // --- Meeting Card (Student View) ---
 function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh, onJoined }: { meet: Meeting, modules: Module[], quizAttempts: any[], onRefresh: () => void, onJoined?: (unlockedTopic: UnlockedTopic | null) => void }) {
-  const t = useTranslations('student');
+
   const [synopsisOpen, setSynopsisOpen] = useState(false);
   const timeLeft = useCountdown(meet.meeting_date);
   const now = Date.now();
@@ -458,11 +452,11 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh, onJoined }
           <div className="flex gap-1 flex-wrap justify-end">
             {meet.session_count > 1 && (
               <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-100">
-                {t('meeting.session', { current: meet.session_number, total: meet.session_count })}
+                Sesi {meet.session_number}/{meet.session_count}
               </span>
             )}
-            {isLive && <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 animate-pulse">{t('meeting.live')}</span>}
-            {isCompleted && <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">{t('meeting.done')}</span>}
+            {isLive && <span className="text-xs font-medium text-red-700 bg-red-50 px-2 py-0.5 rounded border border-red-200 animate-pulse">● LIVE</span>}
+            {isCompleted && <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">✓ Selesai</span>}
           </div>
         </div>
 
@@ -478,17 +472,17 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh, onJoined }
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
-                  {t('meeting.synopsis')}
+                  Sinopsis
                 </button>
               ) : (
                 <div
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-400 text-xs font-semibold cursor-not-allowed select-none"
-                  title={t('meeting.lockedHint')}
+                  title="Bergabung ke kelas untuk membuka"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                  {t('meeting.synopsis')}
+                  Sinopsis
                 </div>
               )
             )}
@@ -503,17 +497,17 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh, onJoined }
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6m0 0v6m0-6L10 14" />
                   </svg>
-                  {t('meeting.projectLink')}
+                  Link Project
                 </a>
               ) : (
                 <div
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-400 text-xs font-semibold cursor-not-allowed select-none"
-                  title={t('meeting.lockedHint')}
+                  title="Bergabung ke kelas untuk membuka"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
-                  {t('meeting.projectLink')}
+                  Link Project
                 </div>
               )
             )}
@@ -525,16 +519,16 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh, onJoined }
           meet.meeting_students?.[0]?.has_joined ? (
             hasAttempted ? (
               <div className="flex items-center justify-center w-full bg-green-100 text-green-700 rounded-lg py-2 text-sm font-medium border border-green-200 mt-3">
-                {t('meeting.classDone')}
+                Kelas Selesai
               </div>
             ) : (
               <div className="flex items-center justify-center w-full bg-orange-100 text-orange-700 rounded-lg py-2 text-sm font-medium border border-orange-200 mt-3">
-                {t('meeting.finishQuiz')}
+                Selesaikan Quiz
               </div>
             )
           ) : (
             <div className="flex items-center justify-center w-full bg-red-100 text-red-700 rounded-lg py-2 text-sm font-medium border border-red-200 mt-3">
-              {t('meeting.absent')}
+              Tidak Hadir (Missing Class)
             </div>
           )
         ) : canJoinLive && meet.link_url ? (
@@ -558,7 +552,7 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh, onJoined }
               className="flex items-center justify-center w-full bg-red-600 text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-red-700 transition-colors gap-2"
               style={{ animation: "none" }}>
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-              {t('meeting.joinNow')}
+              Bergabung Sekarang!
             </a>
           </div>
         ) : (
@@ -568,10 +562,10 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh, onJoined }
                 {timeLeft.days > 0 && (
                   <div className="text-center">
                     <div className="bg-slate-900 text-white rounded px-2 py-1 text-sm font-mono font-bold min-w-[28px]">{timeLeft.days}</div>
-                    <div className="text-[10px] text-slate-500 mt-0.5">{t('meeting.countdown.days')}</div>
+                    <div className="text-[10px] text-slate-500 mt-0.5">Hari</div>
                   </div>
                 )}
-                {[{ v: timeLeft.hours, l: t('meeting.countdown.hours') }, { v: timeLeft.minutes, l: t('meeting.countdown.minutes') }, { v: timeLeft.seconds, l: t('meeting.countdown.seconds') }].map(({ v, l }) => (
+                {[{ v: timeLeft.hours, l: 'Jam' }, { v: timeLeft.minutes, l: 'Mnt' }, { v: timeLeft.seconds, l: 'Dtk' }].map(({ v, l }) => (
                   <div key={l} className="text-center">
                     <div className="bg-slate-800 text-white rounded px-2 py-1 text-sm font-mono font-bold min-w-[28px]">{String(v).padStart(2, "0")}</div>
                     <div className="text-[10px] text-slate-500 mt-0.5">{l}</div>
@@ -581,7 +575,7 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh, onJoined }
             )}
             <div className="flex items-center justify-center w-full bg-slate-100 text-slate-400 rounded-lg py-2 text-sm border border-slate-200 gap-2">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-              {t('meeting.notYet')}
+              Belum Waktunya
             </div>
           </div>
         )}
@@ -592,7 +586,7 @@ function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh, onJoined }
 
 // --- Quiz Modal ---
 function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose: () => void; onComplete: () => void }) {
-  const t = useTranslations('student');
+
   const [questions, setQuestions] = useState<any[]>([]);
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [result, setResult] = useState<{ score: number; total: number; correct: number; attemptsCount?: number; bestScore?: number; correctAnswers?: Record<string, string> } | null>(null);
@@ -621,7 +615,7 @@ function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose
 
   const handleSubmit = async () => {
     if (Object.keys(answers).length < questions.length) {
-      alert(t('quiz.allAnswered'));
+      alert('Jawab semua pertanyaan terlebih dahulu.');
       return;
     }
     setSubmitting(true);
@@ -632,7 +626,7 @@ function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose
     });
     const data = await res.json();
     if (!res.ok) {
-      alert(data.error || t('common.error'));
+      alert(data.error || 'Terjadi kesalahan');
     } else {
       setResult(data);
     }
@@ -650,31 +644,31 @@ function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose
         </div>
         <div className="overflow-y-auto flex-1 p-6">
           {loading ? (
-            <p className="text-center" style={{ color: 'var(--text-muted)' }}>{t('quiz.loading')}</p>
+            <p className="text-center" style={{ color: 'var(--text-muted)' }}>Memuat soal...</p>
           ) : result ? (
             <div className="text-center space-y-4">
               <div className={`w-24 h-24 rounded-full flex items-center justify-center text-3xl font-bold mx-auto ${result.score >= 70 ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
                 {result.score}
               </div>
-              <p className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>{result.score >= 70 ? t('quiz.good') : t('quiz.retry')}</p>
-              <p style={{ color: 'var(--text-muted)' }}>{t('quiz.correct', { correct: result.correct, total: result.total })}</p>
+              <p className="text-xl font-semibold" style={{ color: 'var(--text-primary)' }}>{result.score >= 70 ? 'Bagus! 🎉' : 'Coba lagi ya!'}</p>
+              <p style={{ color: 'var(--text-muted)' }}>{result.correct} dari {result.total} jawaban benar</p>
               {(result.attemptsCount ?? 0) >= 2 && (
-                <p className="text-xs text-orange-600 bg-orange-50 inline-block px-3 py-1 rounded-full border border-orange-100">{t('quiz.maxAttempts', { score: result.bestScore })}</p>
+                <p className="text-xs text-orange-600 bg-orange-50 inline-block px-3 py-1 rounded-full border border-orange-100">Batas percobaan habis. Nilai terbaikmu: {result.bestScore}</p>
               )}
 
               {/* Kunci Jawaban */}
               {result.correctAnswers && (
                 <div className="mt-6 text-left border border-[var(--glass-border)] rounded-xl overflow-hidden text-sm">
-                  <div className="px-4 py-2 border-b border-[var(--glass-border)] font-semibold" style={{ background: 'var(--glass-bg)', color: 'var(--text-secondary)' }}>{t('quiz.answerKey')}</div>
+                  <div className="px-4 py-2 border-b border-[var(--glass-border)] font-semibold" style={{ background: 'var(--glass-bg)', color: 'var(--text-secondary)' }}>Kunci Jawaban</div>
                   <div className="p-4 space-y-3 max-h-[30vh] overflow-y-auto">
                     {questions.map((q, idx) => (
                       <div key={q.id} className="pb-3 border-b border-[var(--glass-border)] last:border-0 last:pb-0">
                         <p className="mb-1" style={{ color: 'var(--text-primary)' }}>{idx + 1}. {q.question_text}</p>
                         <p className={`font-medium ${answers[q.id] === result.correctAnswers![q.id] ? "text-green-600" : "text-red-500"}`}>
-                          {t('quiz.yourAnswer', { answer: answers[q.id] })}
+                          Jawabanmu: {answers[q.id]}
                         </p>
                         {answers[q.id] !== result.correctAnswers![q.id] && (
-                          <p className="text-green-600 font-medium">{t('quiz.correctAnswer', { answer: result.correctAnswers![q.id] })}</p>
+                          <p className="text-green-600 font-medium">Benar: {result.correctAnswers![q.id]}</p>
                         )}
                       </div>
                     ))}
@@ -682,10 +676,10 @@ function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose
                 </div>
               )}
 
-              <button onClick={() => { onComplete(); onClose(); }} className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">{t('common.close')}</button>
+              <button onClick={() => { onComplete(); onClose(); }} className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">Tutup</button>
             </div>
           ) : questions.length === 0 ? (
-            <p className="text-center" style={{ color: 'var(--text-muted)' }}>{t('quiz.empty')}</p>
+            <p className="text-center" style={{ color: 'var(--text-muted)' }}>Belum ada soal untuk quiz ini.</p>
           ) : (
             <div className="space-y-6">
               {questions.map((q, idx) => (
@@ -711,7 +705,7 @@ function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose
                 disabled={submitting || Object.keys(answers).length < questions.length}
                 className="w-full py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-colors mt-4"
               >
-                {submitting ? t('quiz.sending') : t('quiz.submit')}
+                {submitting ? 'Mengirim...' : 'Kumpulkan Jawaban'}
               </button>
             </div>
           )}
@@ -723,7 +717,7 @@ function QuizModal({ quiz, onClose, onComplete }: { quiz: Topic["quiz"]; onClose
 
 // --- Learning Path ---
 function LearningPath({ modules, quizAttempts, onRefresh, onStartLesson }: { modules: Module[], quizAttempts: any[], onRefresh: () => void, onStartLesson?: (engineTopicId: string) => void }) {
-  const t = useTranslations('student');
+
   // Default-open the first active (partially unlocked) module, or first module if all locked
   const defaultOpen = modules.find((m: any) => m.isModuleActive)?.id
     ?? modules.find((m: any) => !m.isModuleLocked)?.id
@@ -737,7 +731,7 @@ function LearningPath({ modules, quizAttempts, onRefresh, onStartLesson }: { mod
     setOpenSynopsis((prev) => ({ ...prev, [topicId]: !prev[topicId] }));
 
   if (modules.length === 0) {
-    return <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>{t('learning.empty')}</p>;
+    return <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>Belum ada modul yang di-assign untukmu.</p>;
   }
 
   return (
@@ -772,13 +766,13 @@ function LearningPath({ modules, quizAttempts, onRefresh, onStartLesson }: { mod
                 <div className="flex items-center gap-2">
                   <p className={`font-semibold text-sm ${isLocked ? "text-slate-400" : "text-slate-900"}`}>{mod.title}</p>
                   {isLocked && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-200 px-2 py-0.5 rounded-full">{t('learning.locked')}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-200 px-2 py-0.5 rounded-full">Terkunci</span>
                   )}
                   {isComplete && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-green-700 bg-green-100 px-2 py-0.5 rounded-full">{t('learning.done')}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-green-700 bg-green-100 px-2 py-0.5 rounded-full">Selesai</span>
                   )}
                   {!isLocked && !isComplete && (
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">{t('learning.active')}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">Aktif</span>
                   )}
                 </div>
                 {!isLocked && (
@@ -786,11 +780,11 @@ function LearningPath({ modules, quizAttempts, onRefresh, onStartLesson }: { mod
                     <div className="flex-1 bg-slate-100 rounded-full h-1.5">
                       <div className={`h-1.5 rounded-full transition-all ${isComplete ? "bg-green-500" : "bg-blue-600"}`} style={{ width: `${progress}%` }} />
                     </div>
-                    <span className="text-xs text-slate-500 whitespace-nowrap">{t('learning.topicCount', { unlocked: unlockedCount, total: mod.topics.length })}</span>
+                    <span className="text-xs text-slate-500 whitespace-nowrap">{unlockedCount}/{mod.topics.length} topik</span>
                   </div>
                 )}
                 {isLocked && (
-                  <p className="text-xs text-slate-400 mt-0.5">{t('learning.lockedHint')}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Selesaikan modul sebelumnya untuk membuka modul ini</p>
                 )}
               </div>
 
@@ -830,7 +824,7 @@ function LearningPath({ modules, quizAttempts, onRefresh, onStartLesson }: { mod
                                 onClick={() => toggleSynopsis(topic.id)}
                                 className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 mt-1 font-medium"
                               >
-                                <span>{openSynopsis[topic.id] ? t('learning.synopsis.close') : t('learning.synopsis.open')}</span>
+                                <span>{openSynopsis[topic.id] ? 'Tutup sinopsis' : 'Lihat sinopsis'}</span>
                                 <svg
                                   className={`w-3.5 h-3.5 transition-transform ${openSynopsis[topic.id] ? "rotate-180" : ""}`}
                                   fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -867,11 +861,11 @@ function LearningPath({ modules, quizAttempts, onRefresh, onStartLesson }: { mod
                             // Show "segera tersedia" only when lesson_content exists but not yet published (draft)
                             (topic.status === 'published' || !topic.lesson_content) ? (
                               <button
-                                onClick={() => onStartLesson?.(topic.engine_topic_id!)}
+                                onClick={() => onStartLesson?.(topic.id)}
                                 className="inline-flex items-center gap-1.5 text-xs text-white bg-brand-primary hover:bg-brand-primary/80 px-3 py-1.5 rounded-lg mt-2 font-semibold shadow-sm transition-colors w-max focus:outline-none focus-visible:ring-2"
                               >
                                 <Sparkles className="w-3.5 h-3.5" />
-                                {t('learning.startLesson')}
+                                Mulai Belajar
                               </button>
                             ) : (
                               <span className="inline-flex items-center gap-1 text-xs text-amber-600 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg mt-2 font-medium w-max">
@@ -884,7 +878,7 @@ function LearningPath({ modules, quizAttempts, onRefresh, onStartLesson }: { mod
                           <div className="flex items-center gap-2 self-start mt-0.5">
                             {attempt && attempt.attempts_count >= 2 ? (
                               <span className="text-xs font-bold text-green-700 bg-green-50 px-3 py-1 rounded-lg border border-green-200">
-                                {t('learning.quiz.score', { score: attempt.score })}
+                                Nilai: {attempt.score}
                               </span>
                             ) : (
                               <button
@@ -907,20 +901,20 @@ function LearningPath({ modules, quizAttempts, onRefresh, onStartLesson }: { mod
                           </div>
                         )}
                         {!topic.isUnlocked && (
-                          <span className="text-xs self-start mt-0.5" style={{ color: 'var(--text-muted)' }}>{t('learning.takeCourse')}</span>
+                          <span className="text-xs self-start mt-0.5" style={{ color: 'var(--text-muted)' }}>Ikuti kelas</span>
                         )}
                       </div>
                       
                       {isTopicExpanded && attempt && (
                         <div className="px-14 pb-4 pt-1" style={{ background: 'var(--glass-bg)' }}>
                           <div className="text-xs border border-[var(--glass-border)] rounded-md p-3 shadow-sm space-y-2" style={{ background: 'var(--background)' }}>
-                            <h4 className="font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>{t('learning.quiz.history')}</h4>
+                            <h4 className="font-semibold mb-1" style={{ color: 'var(--text-secondary)' }}>Riwayat Kuis</h4>
                             <div className="flex justify-between items-center border-b border-[var(--glass-border)] pb-1" style={{ color: 'var(--text-muted)' }}>
-                              <span>{t('learning.quiz.attemptsUsed')}</span>
+                              <span>Percobaan Terpakai</span>
                               <span className="font-medium" style={{ color: 'var(--text-primary)' }}>{attempt.attempts_count} / 2</span>
                             </div>
                             <div className="flex justify-between items-center" style={{ color: 'var(--text-muted)' }}>
-                              <span>{t('learning.quiz.bestScore')}</span>
+                              <span>Nilai Terbaik</span>
                               <span className={`font-bold ${attempt.score >= 70 ? 'text-green-600' : 'text-orange-600'}`}>{attempt.score} / 100</span>
                             </div>
                           </div>
@@ -1019,7 +1013,7 @@ function EngineProgressSection({ topicProgress }: { topicProgress: TopicProgress
 
 // --- Parent Hub ---
 function ParentHub({ pastMeetings, quizAttempts, modules, topicProgress }: { pastMeetings: Meeting[]; quizAttempts: QuizAttempt[]; modules: Module[]; topicProgress: TopicProgress[] }) {
-  const t = useTranslations('student');
+
   const [openModules, setOpenModules] = useState<Record<number, boolean>>({});
 
   const toggleModule = (id: number) => {
@@ -1030,7 +1024,7 @@ function ParentHub({ pastMeetings, quizAttempts, modules, topicProgress }: { pas
 
   if (completedMeetings.length === 0) {
     return (
-      <p className="text-sm italic text-center py-10" style={{ color: 'var(--text-muted)' }}>{t('parent.empty')}</p>
+      <p className="text-sm italic text-center py-10" style={{ color: 'var(--text-muted)' }}>Belum ada kelas yang selesai.</p>
     );
   }
 
@@ -1084,23 +1078,23 @@ function ParentHub({ pastMeetings, quizAttempts, modules, topicProgress }: { pas
                       <div className="flex divide-x divide-[var(--glass-border)]">
                         {/* Teacher Report */}
                         <div className="flex-1 p-4 min-w-0">
-                          <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>{t('parent.teacherReport')}</p>
+                          <p className="text-xs font-semibold uppercase tracking-wide mb-2" style={{ color: 'var(--text-muted)' }}>Laporan Guru</p>
                           {meet.progress_report ? (
                             <p className="text-sm whitespace-pre-wrap leading-relaxed" style={{ color: 'var(--text-secondary)' }}>{meet.progress_report}</p>
                           ) : (
-                            <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>{t('parent.noReport')}</p>
+                            <p className="text-sm italic" style={{ color: 'var(--text-muted)' }}>Laporan belum tersedia.</p>
                           )}
                         </div>
 
                         {/* Quiz Score — best score only, no attempt count */}
                         <div className="w-36 shrink-0 p-4 flex flex-col items-center justify-center gap-1 text-center bg-black/5">
-                          <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>{t('parent.quizScore')}</p>
+                          <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: 'var(--text-muted)' }}>Nilai Quiz</p>
                           {quizAttempt ? (
                             <span className={`text-2xl font-bold ${quizAttempt.score >= 80 ? "text-green-500" : quizAttempt.score >= 70 ? "text-emerald-500" : quizAttempt.score >= 50 ? "text-yellow-500" : "text-red-500"}`}>
                               {quizAttempt.score}
                             </span>
                           ) : (
-                            <p className="text-xs italic leading-snug" style={{ color: 'var(--text-muted)' }}>{t('parent.noAttempt')}</p>
+                            <p className="text-xs italic leading-snug" style={{ color: 'var(--text-muted)' }}>Quiz belum dikerjakan.</p>
                           )}
                         </div>
                       </div>
@@ -1120,7 +1114,7 @@ function ParentHub({ pastMeetings, quizAttempts, modules, topicProgress }: { pas
 
 // --- Invoice Banner Component ---
 function InvoiceBanner({ invoice }: { invoice: any }) {
-  const t = useTranslations('student');
+
   const [visible, setVisible] = useState(true);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [paidState] = useState(invoice.status === 'paid');
@@ -1150,8 +1144,8 @@ function InvoiceBanner({ invoice }: { invoice: any }) {
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
         </div>
         <div className="flex-1">
-          <p className="font-bold">{t('invoice.paid')}</p>
-          <p className="text-sm text-green-100">{t('invoice.paidBody', { month: invoice.month_year })}</p>
+          <p className="font-bold">Terima Kasih!</p>
+          <p className="text-sm text-green-100">Tagihan bulan {invoice.month_year} sudah dibayar lunas.</p>
         </div>
       </div>
     );
@@ -1167,7 +1161,7 @@ function InvoiceBanner({ invoice }: { invoice: any }) {
             </svg>
           </div>
           <span className="font-bold text-sm truncate">
-            {t('invoice.collapsedLabel', { month: invoice.month_year, amount: invoice.total_amount.toLocaleString('id-ID') })}
+            Tagihan {invoice.month_year}: Rp {invoice.total_amount.toLocaleString('id-ID')}
           </span>
         </div>
         <button
@@ -1192,7 +1186,7 @@ function InvoiceBanner({ invoice }: { invoice: any }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-start">
-          <p className="font-bold">{t('invoice.heading', { month: invoice.month_year })}</p>
+          <p className="font-bold">Tagihan Bulan {invoice.month_year}</p>
           <button
             onClick={() => setIsCollapsed(true)}
             className="p-1 -mr-1 -mt-1 rounded-lg hover:bg-white/20 transition-colors flex-shrink-0 text-blue-100 hover:text-white"
@@ -1204,11 +1198,11 @@ function InvoiceBanner({ invoice }: { invoice: any }) {
           </button>
         </div>
         <p className="text-sm text-blue-100 mt-1">
-          {t('invoice.breakdown', { count: invoice.attended_meetings, price: invoice.price_per_meeting.toLocaleString('id-ID') })}
+          {invoice.attended_meetings} Kehadiran × Rp {invoice.price_per_meeting.toLocaleString('id-ID')}
         </p>
         <p className="text-lg font-bold mt-2">Rp {invoice.total_amount.toLocaleString('id-ID')}</p>
         <div className="mt-3 pt-3 border-t border-blue-400/50">
-          <p className="text-xs text-blue-100 mb-1">{t('invoice.bankLabel')}</p>
+          <p className="text-xs text-blue-100 mb-1">Transfer ke rekening:</p>
           <p className="text-sm font-semibold tracking-wide bg-black/20 p-2 rounded-lg text-center break-all">
             {invoice.bank_account}
           </p>
@@ -1220,14 +1214,31 @@ function InvoiceBanner({ invoice }: { invoice: any }) {
 
 // --- Main Student Dashboard Page ---
 export default function StudentDashboard() {
-  const t = useTranslations('student');
+  const router = useRouter();
   const [data, setData] = useState<any>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"jadwal" | "learning" | "parent">("jadwal");
+  const [activeTab, setActiveTab] = useState<"town-square" | "jadwal" | "learning" | "parent">("town-square");
   const [announcement, setAnnouncement] = useState<string | null>(null);
   const [studentId, setStudentId] = useState<string>('');
-  const [locale, setLocale] = useState<string>('id');
+
+  // Town Square state (coins, inventory, equipped hat)
+  const [coins, setCoins] = useState(150);
+  const [inventory, setInventory] = useState<string[]>([]);
+  const [equippedHatId, setEquippedHatId] = useState<string | null>(null);
+
+  // Sound toggle
+  const [isMuted, setIsMuted] = useState(() => {
+    if (typeof window !== 'undefined') return soundFx.getMuted();
+    return false;
+  });
+
+  const toggleSound = () => {
+    const nowMuted = soundFx.toggleMute();
+    setIsMuted(nowMuted);
+    if (!nowMuted) soundFx.playClick();
+  };
+
   const [activeQuiz, setActiveQuiz] = useState<{ id: number; title: string } | null>(null);
   const [badgeQueue, setBadgeQueue] = useState<BadgeDefinition[]>([]);
   const [earnedBadges, setEarnedBadges] = useState<EarnedBadgeRow[]>([]);
@@ -1289,6 +1300,9 @@ export default function StudentDashboard() {
         totalXP: typeof json.totalXP === 'number' ? json.totalXP : json.engineXpTotal ?? 0,
         level: typeof json.level === 'number' ? json.level : 1,
         earnedBadges: Array.isArray(json.earnedBadges) ? json.earnedBadges : [],
+        coins: typeof json.coins === 'number' ? json.coins : 150,
+        equippedHatId: json.equippedHatId ?? null,
+        inventory: Array.isArray(json.inventory) ? json.inventory : [],
       };
       
       setData(validatedData);
@@ -1296,6 +1310,9 @@ export default function StudentDashboard() {
       setTotalXP(validatedData.totalXP);
       setLevel(validatedData.level);
       setEarnedBadges(validatedData.earnedBadges);
+      setCoins(validatedData.coins);
+      setEquippedHatId(validatedData.equippedHatId);
+      setInventory(validatedData.inventory);
       if (validatedData.announcement) setAnnouncement(validatedData.announcement);
     } catch (err) {
       console.error("Failed to fetch dashboard data:", {
@@ -1345,15 +1362,7 @@ export default function StudentDashboard() {
     },
   });
 
-  // The dashboard API provides the authenticated user ID. Locale remains
-  // client-side because it is stored in the browser cookie.
-  useEffect(() => {
-    const cookieLocale = document.cookie
-      .split('; ')
-      .find(row => row.startsWith('locale='))
-      ?.split('=')[1];
-    setLocale(cookieLocale === 'en' ? 'en' : 'id');
-  }, []);
+
 
   useEffect(() => { 
     fetchData(); 
@@ -1397,31 +1406,21 @@ export default function StudentDashboard() {
     };
   }, [fetchData]);
   const tabs = [
-    { id: "jadwal" as const, label: t('tabs.schedule'), icon: Calendar },
-    { id: "learning" as const, label: "Learning Path", icon: BookOpen },
+    { id: "town-square" as const, label: "Town Square", icon: Home },
+    { id: "jadwal" as const, label: "Jadwal", icon: Calendar },
+    { id: "learning" as const, label: "Quest Map", icon: BookOpen },
     { id: "parent" as const, label: "Parent Hub", icon: Users },
   ];
 
-  // Handler: open lesson in a new tab
-  const handleStartLesson = useCallback(async (engineTopicId: string) => {
-    // Do not launch an engine lesson until the authenticated dashboard API has
-    // provided the student ID; an empty ID cannot be synced back to the LMS.
+  // Handler: open native lesson player
+  const handleStartLesson = useCallback(async (topicId: string | number) => {
     if (!studentId) return;
 
-    const lmsOrigin = encodeURIComponent(typeof window !== 'undefined' ? window.location.origin : '');
-    const params = `?studentId=${encodeURIComponent(studentId)}&theme=dark&lang=${locale}&lmsOrigin=${lmsOrigin}`;
+    // We now use the native lesson player in the LMS itself!
+    router.push(`/student/lesson/${topicId}`);
 
-    // Use proxy URL (same-origin, avoids CORS)
-    const proxyUrl = `/learning/lesson/${encodeURIComponent(engineTopicId)}${params}`;
-
-    const newTab = window.open(proxyUrl, '_blank', 'noopener');
-
-    // Poll dashboard after 5s so new progress shows up when student returns
-    // Also poll every 30s while the tab might still be open
-    setTimeout(() => void fetchData(), 5000);
-    setTimeout(() => void fetchData(), 30000);
     setTimeout(() => void fetchData(), 60000);
-  }, [studentId, locale, fetchData]);
+  }, [studentId, fetchData]);
 
   // Handler: student clicked "Bergabung Sekarang" — topic unlocked, maybe open engine
   const handleJoined = useCallback((unlockedTopic: UnlockedTopic | null) => {
@@ -1460,19 +1459,32 @@ export default function StudentDashboard() {
 
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
             <div className="flex items-center gap-4">
-              <AvatarDisplay avatarId={data.avatarId} size="xl" showAura />
+              <AvatarDisplay avatarId={data.avatarId} size="xl" showAura hatId={equippedHatId} />
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2 flex-wrap">
                   <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/20 dark:bg-purple-600/30 border border-white/35 dark:border-purple-400/50 text-white dark:text-purple-200 text-xs font-semibold backdrop-blur-md shadow-sm">
                     <Sparkles className="w-3 h-3 text-amber-300 dark:text-pink-400 animate-spin" style={{ animationDuration: '6s' }} />
                     <span className="tracking-wide">Student Quest Portal</span>
                   </div>
+                  {/* Sound toggle button */}
+                  <button
+                    onClick={toggleSound}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 border border-white/20 text-white/80 hover:text-white hover:bg-white/20 transition-all text-xs"
+                    title={isMuted ? 'Aktifkan suara' : 'Matikan suara'}
+                  >
+                    {isMuted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+                    <span>{isMuted ? 'Mute' : 'Sound ON'}</span>
+                  </button>
+                  {/* Coin display in header */}
+                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold">
+                    🪙 {coins}
+                  </div>
                 </div>
                 <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)]">
-                  {t('greeting', { name: data.studentName })} <span className="inline-block hover:scale-125 transition-transform cursor-default animate-bounce" style={{ animationDuration: '3s' }}>✨</span>
+                  Halo, {data.studentName}! <span className="inline-block hover:scale-125 transition-transform cursor-default animate-bounce" style={{ animationDuration: '3s' }}>✨</span>
                 </h1>
                 <p className="text-sm text-blue-100/95 dark:text-purple-200/90 max-w-lg leading-relaxed font-medium">
-                  {t('greetingSubline')}
+                  Siap melanjutkan petualangan koding hari ini? Selesaikan modul dan taklukkan tantangannya!
                 </p>
               </div>
             </div>
@@ -1498,10 +1510,10 @@ export default function StudentDashboard() {
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-[10px] uppercase tracking-wider text-blue-100 dark:text-purple-300/80 font-bold">{t('stats.completed')}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-blue-100 dark:text-purple-300/80 font-bold">Selesai</div>
                   <div className="text-xs sm:text-sm font-black text-white tabular-nums flex items-center gap-1">
                     <MagicalCounter value={data.pastMeetings?.filter((m: Meeting) => m.is_completed)?.length || 0} />
-                    <span className="text-[11px] font-medium text-blue-100/90 dark:text-slate-300">{t('stats.sessions')}</span>
+                    <span className="text-[11px] font-medium text-blue-100/90 dark:text-slate-300">Sesi</span>
                   </div>
                 </div>
               </div>
@@ -1512,10 +1524,10 @@ export default function StudentDashboard() {
                   <Trophy className="w-4 h-4" />
                 </div>
                 <div>
-                  <div className="text-[10px] uppercase tracking-wider text-blue-100 dark:text-purple-300/80 font-bold">{t('stats.quiz')}</div>
+                  <div className="text-[10px] uppercase tracking-wider text-blue-100 dark:text-purple-300/80 font-bold">Quiz</div>
                   <div className="text-xs sm:text-sm font-black text-white tabular-nums flex items-center gap-1">
                     <MagicalCounter value={data.quizAttempts?.length || 0} />
-                    <span className="text-[11px] font-medium text-blue-100/90 dark:text-slate-300">{t('stats.completed')}</span>
+                    <span className="text-[11px] font-medium text-blue-100/90 dark:text-slate-300">Selesai</span>
                   </div>
                 </div>
               </div>
@@ -1609,12 +1621,63 @@ export default function StudentDashboard() {
       {loading ? (
         <div className="text-center py-16" style={{ color: 'var(--text-muted)' }}>
           <div className="animate-spin w-8 h-8 border-2 border-[var(--accent)] border-t-transparent rounded-full mx-auto mb-3" />
-          {t('schedule.loading')}
+          Memuat data...
         </div>
       ) : !data ? (
-        <p className="text-center py-10" style={{ color: 'var(--text-muted)' }}>{t('schedule.failed')}</p>
+        <p className="text-center py-10" style={{ color: 'var(--text-muted)' }}>Gagal memuat data.</p>
       ) : (
         <>
+          {/* ── Town Square Tab ──────────────────────────────────────── */}
+          {activeTab === "town-square" && (
+            <div className="space-y-4">
+              {/* Urgent action hero card — only if there's something to do */}
+              {data.upcomingMeetings.length > 0 && (
+                <div className="relative overflow-hidden rounded-2xl border border-emerald-500/50 bg-gradient-to-r from-emerald-950/80 to-teal-950/80 shadow-[0_0_25px_rgba(16,185,129,0.25)] p-4">
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-400/15 rounded-full blur-3xl" />
+                  </div>
+                  <div className="relative flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-400/40">
+                      <Calendar className="w-5 h-5 text-emerald-400" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Misi Hari Ini</p>
+                      <p className="font-black text-white mt-0.5">{data.upcomingMeetings[0].title}</p>
+                      <p className="text-xs text-emerald-200 mt-0.5">
+                        {new Date(data.upcomingMeetings[0].meeting_date).toLocaleDateString('id-ID', { weekday: 'long', hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    <a
+                      href={data.upcomingMeetings[0].link_url || '#'}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => soundFx.playClick()}
+                      className="px-4 py-2 rounded-xl bg-emerald-500 text-white text-xs font-black hover:bg-emerald-400 transition-all shadow-lg whitespace-nowrap"
+                    >
+                      🎯 Masuk Kelas
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              <TownSquareTab
+                studentName={data.studentName || 'Siswa'}
+                avatarId={data.avatarId || 'pixel-bot'}
+                titleId={data.titleId || 'novice-coder'}
+                coins={coins}
+                inventory={inventory}
+                equippedHatId={equippedHatId}
+                onSuccessTransaction={(newCoins, newInventory, newEquipped) => {
+                  setCoins(newCoins);
+                  setInventory(newInventory);
+                  setEquippedHatId(newEquipped);
+                  setData((prev: any) => prev ? { ...prev, equippedHatId: newEquipped, inventory: newInventory, coins: newCoins } : prev);
+                }}
+              />
+            </div>
+          )}
+
+          {/* ── Jadwal Tab ────────────────────────────────────────────── */}
           {activeTab === "jadwal" && (
             <div className="space-y-4">
               {/* Pending Tasks Section (shows only on Schedule / Jadwal tab) */}
@@ -1627,13 +1690,13 @@ export default function StudentDashboard() {
               />
 
               <div className="flex items-center justify-between">
-                <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>{t('schedule.heading')}</h2>
+                <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>3 Jadwal Mendatang</h2>
                 <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{data.upcomingMeetings.length} jadwal</span>
               </div>
               {data.upcomingMeetings.length === 0 ? (
                 <div className="text-center py-12 glass-panel rounded-xl">
                   <svg className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--glass-border)' }} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{t('schedule.empty')}</p>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Tidak ada jadwal mendatang</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -1645,6 +1708,7 @@ export default function StudentDashboard() {
             </div>
           )}
 
+          {/* ── Quest Map Tab ─────────────────────────────────────────── */}
           {activeTab === "learning" && (
             <div className="space-y-4">
               {/* Refresh button — tap after completing a lesson in a new tab */}
@@ -1682,6 +1746,7 @@ export default function StudentDashboard() {
             </div>
           )}
 
+          {/* ── Parent Hub Tab ────────────────────────────────────────── */}
           {activeTab === "parent" && (
             <div className="space-y-4">
               <h2 className="font-bold" style={{ color: 'var(--text-primary)' }}>Parent Hub</h2>

@@ -1,13 +1,13 @@
 // app/admin/modules/page.tsx
-"use client";
+'use client';
 
-import Link from "next/link";
-import React, { useEffect, useState } from "react";
-import AdminToast, { type AdminNotice } from "../components/AdminToast";
-import EditModuleModal from "./EditModuleModal";
-import AssignModuleModal from "./AssignModuleModal";
-import { CreateModuleModal } from "./CreateModuleModal";
-import { EngineModal } from "@/components/EngineModal";
+import Link from 'next/link';
+import React, { useEffect, useState } from 'react';
+import AdminToast, { type AdminNotice } from '../components/AdminToast';
+import EditModuleModal from './EditModuleModal';
+import AssignModuleModal from './AssignModuleModal';
+import { CreateModuleModal } from './CreateModuleModal';
+import { EngineModal } from '@/components/EngineModal';
 import {
   Plus,
   Search,
@@ -20,7 +20,7 @@ import {
   Layers,
   Sparkles,
   Filter,
-} from "lucide-react";
+} from 'lucide-react';
 
 interface TopicSummary {
   id: number;
@@ -38,16 +38,16 @@ interface Module {
   gamification_type?: string;
 }
 
-type FilterTab = "all" | "published" | "drafts";
+type FilterTab = 'all' | 'published' | 'drafts';
 
 export default function ModulesPage() {
   const [modules, setModules] = useState<Module[]>([]);
   const [topicMap, setTopicMap] = useState<Record<string, TopicSummary[]>>({});
   const [loading, setLoading] = useState(true);
-  
+
   // UI Controls
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterTab, setFilterTab] = useState<FilterTab>("all");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterTab, setFilterTab] = useState<FilterTab>('all');
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingModule, setEditingModule] = useState<Module | null>(null);
   const [assigningModule, setAssigningModule] = useState<Module | null>(null);
@@ -57,24 +57,24 @@ export default function ModulesPage() {
   async function handleDeleteModule(id: string) {
     if (
       !confirm(
-        "Yakin ingin menghapus modul ini beserta semua topik dan kuis di dalamnya?",
+        'Yakin ingin menghapus modul ini beserta semua topik dan kuis di dalamnya?'
       )
     )
       return;
     try {
-      const res = await fetch(`/api/modules?id=${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/modules?id=${id}`, { method: 'DELETE' });
       const payload = await res.json().catch(() => null);
 
       if (!res.ok) {
-        throw new Error(payload?.error || "Gagal menghapus modul.");
+        throw new Error(payload?.error || 'Gagal menghapus modul.');
       }
 
       await loadModules();
-      setNotice({ type: "success", text: "Modul berhasil dihapus." });
+      setNotice({ type: 'success', text: 'Modul berhasil dihapus.' });
     } catch (err) {
       setNotice({
-        type: "error",
-        text: err instanceof Error ? err.message : "Terjadi kesalahan sistem.",
+        type: 'error',
+        text: err instanceof Error ? err.message : 'Terjadi kesalahan sistem.',
       });
     }
   }
@@ -82,11 +82,11 @@ export default function ModulesPage() {
   async function loadModules() {
     setLoading(true);
     try {
-      const res = await fetch("/api/modules");
+      const res = await fetch('/api/modules');
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data?.error || "Gagal memuat modul.");
+        throw new Error(data?.error || 'Gagal memuat modul.');
       }
 
       setModules(data);
@@ -96,7 +96,7 @@ export default function ModulesPage() {
           const topicRes = await fetch(`/api/modules/${mod.id}/topics`);
           const topics = topicRes.ok ? await topicRes.json() : [];
           return [mod.id, topics] as const;
-        }),
+        })
       );
 
       const nextTopicMap = Object.fromEntries(topicResults) as Record<
@@ -115,17 +115,32 @@ export default function ModulesPage() {
 
   const getEngineBadge = (type?: string) => {
     switch (type) {
-      case "duolingo":
-        return { label: "💚 Duolingo", cls: "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800" };
-      case "boardgame":
-        return { label: "🎲 Boardgame", cls: "bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-200 dark:border-amber-800" };
-      case "quest":
-        return { label: "⚔️ Quest", cls: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800" };
-      case "flashcard":
-        return { label: "📇 Flashcard", cls: "bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400 border-sky-200 dark:border-sky-800" };
-      case "mimo":
+      case 'duolingo':
+        return {
+          label: '💚 Duolingo',
+          cls: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
+        };
+      case 'boardgame':
+        return {
+          label: '🎲 Boardgame',
+          cls: 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-200 dark:border-amber-800',
+        };
+      case 'quest':
+        return {
+          label: '⚔️ Quest',
+          cls: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950/40 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800',
+        };
+      case 'flashcard':
+        return {
+          label: '📇 Flashcard',
+          cls: 'bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-400 border-sky-200 dark:border-sky-800',
+        };
+      case 'mimo':
       default:
-        return { label: "🎯 Mimo", cls: "bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 border-purple-200 dark:border-purple-800" };
+        return {
+          label: '🎯 Mimo',
+          cls: 'bg-purple-50 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400 border-purple-200 dark:border-purple-800',
+        };
     }
   };
 
@@ -137,13 +152,13 @@ export default function ModulesPage() {
   const filteredModules = modules.filter((mod) => {
     const matchesSearch =
       mod.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (mod.description ?? "").toLowerCase().includes(searchQuery.toLowerCase());
+      (mod.description ?? '').toLowerCase().includes(searchQuery.toLowerCase());
 
     const topics = topicMap[mod.id] ?? [];
-    const hasPublished = topics.some((t) => t.status === "published");
+    const hasPublished = topics.some((t) => t.status === 'published');
 
-    if (filterTab === "published") return matchesSearch && hasPublished;
-    if (filterTab === "drafts") return matchesSearch && !hasPublished;
+    if (filterTab === 'published') return matchesSearch && hasPublished;
+    if (filterTab === 'drafts') return matchesSearch && !hasPublished;
     return matchesSearch;
   });
 
@@ -154,14 +169,20 @@ export default function ModulesPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <nav className="flex items-center gap-1.5 text-xs text-[var(--text-muted,#64748b)] mb-1">
-              <Link href="/admin" className="hover:text-[var(--accent,#3b82f6)] transition-colors">
+              <Link
+                href="/admin"
+                className="hover:text-[var(--accent,#3b82f6)] transition-colors"
+              >
                 Dashboard
               </Link>
               <span>/</span>
-              <span className="font-semibold text-[var(--text-primary,#0f172a)]">Modules</span>
+              <span className="font-semibold text-[var(--text-primary,#0f172a)]">
+                Modules
+              </span>
             </nav>
             <h1 className="text-xl font-bold text-[var(--text-primary,#0f172a)] flex items-center gap-2">
-              <Layers className="w-5 h-5 text-[var(--accent,#3b82f6)]" /> Kelola Modul Pembelajaran
+              <Layers className="w-5 h-5 text-[var(--accent,#3b82f6)]" /> Kelola
+              Modul Pembelajaran
             </h1>
           </div>
 
@@ -184,33 +205,33 @@ export default function ModulesPage() {
         <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-full sm:w-auto">
           <button
             type="button"
-            onClick={() => setFilterTab("all")}
+            onClick={() => setFilterTab('all')}
             className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-              filterTab === "all"
-                ? "bg-white dark:bg-slate-900 text-[var(--text-primary,#0f172a)] shadow-sm"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              filterTab === 'all'
+                ? 'bg-white dark:bg-slate-900 text-[var(--text-primary,#0f172a)] shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
             }`}
           >
             All ({modules.length})
           </button>
           <button
             type="button"
-            onClick={() => setFilterTab("published")}
+            onClick={() => setFilterTab('published')}
             className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-              filterTab === "published"
-                ? "bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              filterTab === 'published'
+                ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
             }`}
           >
             Published
           </button>
           <button
             type="button"
-            onClick={() => setFilterTab("drafts")}
+            onClick={() => setFilterTab('drafts')}
             className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${
-              filterTab === "drafts"
-                ? "bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-sm"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+              filterTab === 'drafts'
+                ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
             }`}
           >
             Drafts
@@ -241,11 +262,13 @@ export default function ModulesPage() {
           <div className="py-12 text-center glass-panel rounded-2xl space-y-3 p-8">
             <BookOpen className="w-10 h-10 text-slate-400 mx-auto opacity-60" />
             <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200">
-              {searchQuery ? "Modul tidak ditemukan" : "Belum ada modul terdaftar"}
+              {searchQuery
+                ? 'Modul tidak ditemukan'
+                : 'Belum ada modul terdaftar'}
             </h3>
             <p className="text-xs text-slate-500 max-w-sm mx-auto">
               {searchQuery
-                ? "Coba gunakan kata kunci pencarian yang lain."
+                ? 'Coba gunakan kata kunci pencarian yang lain.'
                 : "Klik tombol '+ Create New Module' untuk memulai modul baru atau mengimpor template siap pakai."}
             </p>
             {!searchQuery && (
@@ -263,8 +286,11 @@ export default function ModulesPage() {
             {filteredModules.map((mod) => {
               const engineBadge = getEngineBadge(mod.gamification_type);
               const topics = topicMap[mod.id] ?? [];
-              const publishedCount = topics.filter((t) => t.status === "published").length;
-              const firstEngineTopicId = topics.find((t) => t.engine_topic_id)?.engine_topic_id ?? null;
+              const publishedCount = topics.filter(
+                (t) => t.status === 'published'
+              ).length;
+              const firstEngineTopicId =
+                topics.find((t) => t.engine_topic_id)?.engine_topic_id ?? null;
 
               return (
                 <div
@@ -274,7 +300,9 @@ export default function ModulesPage() {
                   <div className="space-y-2 flex-1">
                     {/* Header Badges */}
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${engineBadge.cls}`}>
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${engineBadge.cls}`}
+                      >
                         {engineBadge.label}
                       </span>
 
@@ -285,7 +313,8 @@ export default function ModulesPage() {
                       )}
 
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
-                        <Layers className="w-3 h-3" /> {topics.length} Topik ({publishedCount} Published)
+                        <Layers className="w-3 h-3" /> {topics.length} Topik (
+                        {publishedCount} Published)
                       </span>
                     </div>
 
@@ -368,10 +397,13 @@ export default function ModulesPage() {
       {showCreateModal && (
         <CreateModuleModal
           onClose={() => setShowCreateModal(false)}
+          onModuleCreated={() => {
+            void loadModules();
+          }}
           onSuccess={() => {
             setShowCreateModal(false);
             loadModules();
-            setNotice({ type: "success", text: "Modul baru berhasil dibuat!" });
+            setNotice({ type: 'success', text: 'Modul baru berhasil dibuat!' });
           }}
         />
       )}
@@ -384,7 +416,7 @@ export default function ModulesPage() {
           onSuccess={() => {
             setEditingModule(null);
             loadModules();
-            setNotice({ type: "success", text: "Modul berhasil diperbarui." });
+            setNotice({ type: 'success', text: 'Modul berhasil diperbarui.' });
           }}
         />
       )}
@@ -396,7 +428,10 @@ export default function ModulesPage() {
           onClose={() => setAssigningModule(null)}
           onSuccess={() => {
             setAssigningModule(null);
-            setNotice({ type: "success", text: "Modul berhasil di-assign ke siswa." });
+            setNotice({
+              type: 'success',
+              text: 'Modul berhasil di-assign ke siswa.',
+            });
           }}
         />
       )}

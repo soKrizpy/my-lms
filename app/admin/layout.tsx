@@ -1,12 +1,11 @@
 // app/admin/layout.tsx
-// Server Component — authorisation guard + locale for the admin area.
+// Server Component — authorisation guard for the admin area.
 //
 // Defence-in-depth: middleware is the first line (redirects students at the
 // network edge), but this layout is the definitive server-side enforcement.
 // Even if middleware is bypassed, non-admin users are redirected here.
 
 import { redirect } from 'next/navigation';
-import { cookies } from 'next/headers';
 import { getSessionRole } from '@/lib/auth';
 import AdminLayoutShell from './AdminLayoutShell';
 
@@ -28,18 +27,8 @@ export default async function AdminLayout({
     redirect('/student');
   }
 
-  // ── Locale for language toggle ─────────────────────────────────────────────
-  let locale = 'id';
-  try {
-    const cookieStore = await cookies();
-    const raw = cookieStore.get('locale')?.value;
-    if (raw === 'en') locale = 'en';
-  } catch {
-    // default to 'id'
-  }
-
   return (
-    <AdminLayoutShell locale={locale}>
+    <AdminLayoutShell>
       {children}
     </AdminLayoutShell>
   );

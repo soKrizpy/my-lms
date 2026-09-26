@@ -65,7 +65,7 @@ export async function getTopicById(topicId: string) {
   const supabase = getSupabaseAdmin();
   return supabase
     .from("topics")
-    .select("id, title, module_id, description, project_link, engine_topic_id")
+    .select("id, title, module_id, order_index, description, project_link, topic_link, engine_topic_id, lesson_content")
     .eq("id", Number(topicId))
     .maybeSingle();
 }

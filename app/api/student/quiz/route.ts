@@ -1,6 +1,65 @@
 import { NextResponse } from "next/server";
 import { createClient } from "../../../../lib/supabase/server";
 import { getSupabaseAdmin } from "../../../../lib/supabaseAdmin";
+import { resolveTopicUnlockMap } from "../../../../lib/topicUnlock";
+
+type QuizAccess = {
+  id: number;
+  title: string;
+  topic_id: number;
+  topics: {
+    title: string;
+    engine_topic_id: string | null;
+    module_id: number;
+    status: "draft" | "published";
+    modules: { title: string } | null;
+  } | null;
+};
+
+/**
+ * A quiz ID is untrusted input. Verify the complete student-facing path before
+ * exposing questions or accepting an attempt, rather than relying on the
+ * dashboard to hide inaccessible quizzes.
+ */
+async function getAccessibleQuiz(studentId: string, quizId: number) {
+  const supabaseAdmin = getSupabaseAdmin();
+  const { data, error } = await supabaseAdmin
+    .from("quizzes")
+    .select("id, title, topic_id, topics!inner(title, engine_topic_id, module_id, status, modules(title))")
+    .eq("id", quizId)
+    .maybeSingle();
+
+  if (error) {
+    return { error: NextResponse.json({ error: error.message }, { status: 500 }) };
+  }
+
+  const quiz = data as QuizAccess | null;
+  if (!quiz || !quiz.topics || quiz.topics.status !== "published") {
+    return { error: NextResponse.json({ error: "Quiz tidak ditemukan." }, { status: 404 }) };
+  }
+
+  const { data: enrollment, error: enrollmentError } = await supabaseAdmin
+    .from("student_modules")
+    .select("student_id")
+    .eq("student_id", studentId)
+    .eq("module_id", quiz.topics.module_id)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (enrollmentError) {
+    return { error: NextResponse.json({ error: enrollmentError.message }, { status: 500 }) };
+  }
+  if (!enrollment) {
+    return { error: NextResponse.json({ error: "Kamu tidak dapat mengakses quiz ini." }, { status: 403 }) };
+  }
+
+  const unlockMap = await resolveTopicUnlockMap(studentId, [quiz.topics.module_id]);
+  if (!unlockMap.get(quiz.topic_id)?.isUnlocked) {
+    return { error: NextResponse.json({ error: "Topik quiz ini belum terbuka." }, { status: 403 }) };
+  }
+
+  return { quiz };
+}
 
 // POST /api/student/quiz - submit quiz answers
 export async function POST(request: Request) {
@@ -12,11 +71,15 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { quizId, answers } = body; // answers: { questionId: "A" | "B" | "C" | "D" }[]
+  const { quizId: rawQuizId, answers } = body; // answers: { questionId: "A" | "B" | "C" | "D" }
+  const quizId = Number(rawQuizId);
 
-  if (!quizId || !answers) {
+  if (!Number.isInteger(quizId) || quizId <= 0 || !answers || typeof answers !== "object" || Array.isArray(answers)) {
     return NextResponse.json({ error: "Missing quizId or answers" }, { status: 400 });
   }
+
+  const access = await getAccessibleQuiz(user.id, quizId);
+  if ("error" in access) return access.error;
 
   const supabaseAdmin = getSupabaseAdmin();
 
@@ -87,18 +150,16 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const quizId = searchParams.get("quizId");
+  const quizId = Number(searchParams.get("quizId"));
 
-  if (!quizId) return NextResponse.json({ error: "Missing quizId" }, { status: 400 });
+  if (!Number.isInteger(quizId) || quizId <= 0) {
+    return NextResponse.json({ error: "Missing or invalid quizId" }, { status: 400 });
+  }
 
   const supabaseAdmin = getSupabaseAdmin();
-
-  // Fetch quiz metadata with topic and module title
-  const { data: quizData } = await supabaseAdmin
-    .from("quizzes")
-    .select("id, title, topic_id, topics(title, engine_topic_id, modules(title))")
-    .eq("id", quizId)
-    .maybeSingle();
+  const access = await getAccessibleQuiz(user.id, quizId);
+  if ("error" in access) return access.error;
+  const quizData = access.quiz;
 
   // Fetch attempt history for student
   const { data: existingAttempt } = await supabaseAdmin
@@ -118,13 +179,13 @@ export async function GET(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   return NextResponse.json({
-    quiz: quizData ? {
+    quiz: {
       id: quizData.id,
       title: quizData.title,
-      topicTitle: (quizData as any).topics?.title ?? "Topik Quiz",
-      moduleTitle: (quizData as any).topics?.modules?.title ?? "Modul",
-      engineTopicId: (quizData as any).topics?.engine_topic_id ?? null,
-    } : null,
+      topicTitle: quizData.topics?.title ?? "Topik Quiz",
+      moduleTitle: quizData.topics?.modules?.title ?? "Modul",
+      engineTopicId: quizData.topics?.engine_topic_id ?? null,
+    },
     attempt: existingAttempt ? {
       attemptsCount: existingAttempt.attempts_count ?? 1,
       score: existingAttempt.score ?? 0,

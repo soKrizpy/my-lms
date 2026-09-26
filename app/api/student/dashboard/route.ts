@@ -91,6 +91,7 @@ export async function GET() {
         .from("student_modules")
         .select(`module_id, status, modules(id, title, description, level, gamification_type)`)
         .eq("student_id", studentId)
+        .eq("status", "active")
         .order("module_id", { ascending: true });
 
       if (error) {
@@ -152,7 +153,9 @@ export async function GET() {
         if (error) {
           console.error("Error fetching topics:", error);
         } else {
-          topics = data ?? [];
+          // Older topic rows may be present in deployments before the authoring
+          // migration. Only explicitly published rows are student-facing.
+          topics = (data ?? []).filter((topic: any) => topic?.status === "published");
         }
       } catch (err) {
         console.error("Exception fetching topics:", err);
@@ -167,7 +170,7 @@ export async function GET() {
           if (topicIds.length > 0) {
             const { data, error } = await supabaseAdmin
               .from("quizzes")
-              .select("id, topic_id, title")
+              .select("id, topic_id, title, source")
               .in("topic_id", topicIds);
 
             if (error) {
@@ -362,17 +365,23 @@ export async function GET() {
     // 9. Student customisation (avatar & title)
     let avatarId = user.user_metadata?.avatar_id || "pixel-bot";
     let titleId = user.user_metadata?.title_id || "novice-coder";
+    let coins = 150;
+    let equippedHatId: string | null = null;
+    let inventory: string[] = [];
 
     try {
       const { data: studentData } = await supabaseAdmin
         .from("students")
-        .select("avatar_id, title_id")
+        .select("avatar_id, title_id, coins, equipped_hat_id, inventory")
         .eq("id", studentId)
         .maybeSingle();
 
       if (studentData) {
         if (studentData.avatar_id) avatarId = studentData.avatar_id;
         if (studentData.title_id) titleId = studentData.title_id;
+        if (typeof (studentData as any).coins === "number") coins = (studentData as any).coins;
+        if ((studentData as any).equipped_hat_id) equippedHatId = (studentData as any).equipped_hat_id;
+        if (Array.isArray((studentData as any).inventory)) inventory = (studentData as any).inventory;
       }
     } catch (studentErr) {
       console.warn("Could not query avatar/title from students table:", studentErr);
@@ -401,6 +410,9 @@ export async function GET() {
       studentName: firstName || "Siswa",
       avatarId,
       titleId,
+      coins,
+      equippedHatId,
+      inventory,
       bestQuizScore,
       engineXpTotal: typeof engineXpTotal === "number" ? engineXpTotal : 0,
       completedEngineTopics: typeof completedEngineTopics === "number" ? completedEngineTopics : 0,

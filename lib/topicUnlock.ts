@@ -49,7 +49,9 @@ export async function resolveTopicUnlockMap(
         console.error('Error fetching topics:', error);
         return new Map();
       }
-      topics = (data ?? []).filter((topic: any) => topic?.status === 'published');
+      topics = (data ?? []).filter(
+        (topic: any) => topic?.status === 'published'
+      );
     } catch (err) {
       console.error('Exception fetching topics:', err);
       return new Map();
@@ -62,7 +64,9 @@ export async function resolveTopicUnlockMap(
     try {
       const { data, error } = await admin
         .from('meetings')
-        .select('id, meeting_date, meeting_students!inner(student_id, has_joined)')
+        .select(
+          'id, meeting_date, meeting_students!inner(student_id, has_joined)'
+        )
         .eq('meeting_students.student_id', studentId)
         .order('meeting_date', { ascending: true });
 
@@ -96,7 +100,9 @@ export async function resolveTopicUnlockMap(
           completedEngineTopicIds = new Set();
         } else {
           completedEngineTopicIds = new Set(
-            (data ?? []).map((p: any) => p?.engine_topic_id as string).filter(Boolean)
+            (data ?? [])
+              .map((p: any) => p?.engine_topic_id as string)
+              .filter(Boolean)
           );
         }
       } catch (err) {
@@ -145,32 +151,40 @@ export async function resolveTopicUnlockMap(
 
       // Modulo: if there are more meetings than topics the extra meetings don't open new slots;
       // if there are more topics than meetings, topics beyond meeting count stay locked by join.
-      const meetingIdx = totalTopics > 0 ? globalIndex % totalTopics : globalIndex;
-      
+      const meetingIdx =
+        totalTopics > 0 ? globalIndex % totalTopics : globalIndex;
+
       // Bounds checking: ensure meetingIdx is within array bounds
-      const meeting = meetingIdx >= 0 && meetingIdx < meetingsList.length 
-        ? meetingsList[meetingIdx] 
-        : undefined;
-      
+      const meeting =
+        meetingIdx >= 0 && meetingIdx < meetingsList.length
+          ? meetingsList[meetingIdx]
+          : undefined;
+
       const unlockedByJoin: boolean =
         meeting?.meeting_students?.[0]?.has_joined === true;
 
       // An active module assignment must give the student a starting point.
       // Later topics remain gated by meetings, progress, or quiz activity.
       const unlockedByAssignment = isFirstTopicInModule;
-      
+
       const unlockedByEngine: boolean =
-        typeof topic?.engine_topic_id === 'string' && topic.engine_topic_id.length > 0
+        typeof topic?.engine_topic_id === 'string' &&
+        topic.engine_topic_id.length > 0
           ? completedEngineTopicIds.has(topic.engine_topic_id)
           : false;
 
-      const unlockedByQuiz: boolean = quizAttemptedTopicIds.has(topic.id as number);
+      const unlockedByQuiz: boolean = quizAttemptedTopicIds.has(
+        topic.id as number
+      );
 
       result.set(topic.id as number, {
         topicId: topic.id as number,
         engineTopicId: topic?.engine_topic_id ?? null,
         isUnlocked:
-          unlockedByAssignment || unlockedByJoin || unlockedByEngine || unlockedByQuiz,
+          unlockedByAssignment ||
+          unlockedByJoin ||
+          unlockedByEngine ||
+          unlockedByQuiz,
       });
     });
 

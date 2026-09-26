@@ -120,9 +120,12 @@ export async function POST(request: Request) {
 
     // 3. Assign modules
     if (Array.isArray(moduleIds) && moduleIds.length > 0) {
-      const rows = moduleIds.map((moduleId: number) => ({
+      const rows = moduleIds.map((moduleId: number, index: number) => ({
         student_id: userId,
         module_id: moduleId,
+        // A new student may have many assigned modules, but only the first
+        // starts active; the rest remain available for a teacher to activate.
+        status: index === 0 ? "active" : "paused",
       }));
       const { error: smError } = await supabaseAdmin.from("student_modules").insert(rows);
       if (smError) console.error("Module assign error:", smError.message);
@@ -133,4 +136,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: error.message || "Terjadi kesalahan." }, { status: 500 });
   }
 }
-

@@ -91,9 +91,44 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 3. Tambahkan Data Fragment ke CyPeCo & Koin ke Siswa
+    let fragmentType: 'logic' | 'creative' | 'spatial' = 'logic';
+    const lowerTopic = (body.topicId || '').toLowerCase();
+    if (lowerTopic.includes('html') || lowerTopic.includes('css') || lowerTopic.includes('style') || lowerTopic.includes('art')) {
+      fragmentType = 'creative';
+    } else if (lowerTopic.includes('3d') || lowerTopic.includes('canvas') || lowerTopic.includes('coord') || lowerTopic.includes('map')) {
+      fragmentType = 'spatial';
+    }
+
+    try {
+      // Ambil atau buat pet
+      const { data: pet } = await admin.from('student_pets').select('*').eq('student_id', studentId).maybeSingle();
+      if (pet) {
+        const updatePetPayload: Record<string, any> = {
+          hatch_progress: Math.min(100, (pet.hatch_progress || 0) + 10),
+          updated_at: new Date().toISOString(),
+        };
+        if (fragmentType === 'logic') updatePetPayload.logic_data = (pet.logic_data || 0) + 15;
+        if (fragmentType === 'creative') updatePetPayload.creative_data = (pet.creative_data || 0) + 15;
+        if (fragmentType === 'spatial') updatePetPayload.spatial_data = (pet.spatial_data || 0) + 15;
+        if (updatePetPayload.hatch_progress >= 100 && pet.stage === 'EGG') {
+          updatePetPayload.stage = 'READY_TO_HATCH';
+        }
+        await admin.from('student_pets').update(updatePetPayload).eq('id', pet.id);
+      }
+
+      // Hadiah Koin +25 ke siswa
+      const { data: student } = await admin.from('students').select('coins').eq('id', studentId).maybeSingle();
+      if (student) {
+        await admin.from('students').update({ coins: (student.coins || 0) + 25 }).eq('id', studentId);
+      }
+    } catch (syncRewardErr) {
+      console.warn('Gagal sinkronisasi reward CyPeCo & Koin:', syncRewardErr);
+    }
+
     let newBadges: BadgeDefinition[] = [];
     try { newBadges = await evaluateBadges(studentId); } catch { newBadges = []; }
-    return NextResponse.json({ ok: true, newBadges });
+    return NextResponse.json({ ok: true, newBadges, fragmentRewarded: fragmentType, coinsRewarded: 25 });
   }
 
   // ── QUIZ_SUBMITTED ─────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2, AlertTriangle, FileQuestion, Sparkles, Trophy, Zap, HelpCircle, XCircle } from "lucide-react";
-import { useTranslations } from "next-intl";
+
 import { getQuizQuestions } from "@/lib/quizResponse";
 
 interface QuestionItem {
@@ -18,7 +18,7 @@ interface QuestionItem {
 export default function StudentQuizPage() {
   const params = useParams();
   const router = useRouter();
-  const t = useTranslations('student');
+
 
   const quizIdStr = params?.quizId as string;
   const quizId = parseInt(quizIdStr, 10);

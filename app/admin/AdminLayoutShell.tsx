@@ -10,7 +10,6 @@ import { usePathname } from "next/navigation";
 import LogoutButton from "./components/LogoutButton";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Logo } from "@/components/Logo";
-import { LanguageToggle } from '@/components/LanguageToggle';
 import {
   LayoutDashboard,
   BookOpen,
@@ -21,10 +20,8 @@ import {
 
 export default function AdminLayoutShell({
   children,
-  locale,
 }: {
   children: React.ReactNode;
-  locale: string;
 }) {
   const pathname = usePathname();
 
@@ -52,7 +49,6 @@ export default function AdminLayoutShell({
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <LanguageToggle currentLocale={locale} />
           <ThemeToggle />
           <LogoutButton />
         </div>
@@ -90,7 +86,6 @@ export default function AdminLayoutShell({
 
         <div className="mt-auto pt-4 border-t border-[var(--glass-border)] flex items-center justify-between">
           <LogoutButton />
-          <LanguageToggle currentLocale={locale} />
           <ThemeToggle />
         </div>
       </aside>

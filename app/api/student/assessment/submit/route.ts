@@ -82,6 +82,7 @@ export async function POST(request: Request) {
     .select("student_id")
     .eq("student_id", studentId)
     .eq("module_id", moduleId)
+    .eq("status", "active")
     .maybeSingle();
 
   if (enrollmentError) {

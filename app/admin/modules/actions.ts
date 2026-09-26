@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "../../../lib/supabaseAdmin";
+import { getSessionRole } from "../../../lib/auth";
 
 function readString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -12,7 +13,14 @@ function revalidateModules() {
   revalidatePath("/admin/modules");
 }
 
+async function requireAdminAction() {
+  if (await getSessionRole() !== "admin") {
+    throw new Error("Unauthorized");
+  }
+}
+
 export async function createModuleAction(formData: FormData) {
+  await requireAdminAction();
   const name = readString(formData, "name");
   const description = readString(formData, "description");
   const level = readString(formData, "level") || "beginner";
@@ -36,6 +44,7 @@ export async function createModuleAction(formData: FormData) {
 }
 
 export async function updateModuleAction(formData: FormData) {
+  await requireAdminAction();
   const id = readString(formData, "id");
   const name = readString(formData, "name");
   const description = readString(formData, "description");
@@ -61,6 +70,7 @@ export async function updateModuleAction(formData: FormData) {
 }
 
 export async function deleteModuleAction(formData: FormData) {
+  await requireAdminAction();
   const id = readString(formData, "id");
 
   if (!id) {

@@ -55,7 +55,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (moduleIds !== undefined) {
       await supabaseAdmin.from("student_modules").delete().eq("student_id", id);
       if (moduleIds.length > 0) {
-        const inserts = moduleIds.map((modId: number) => ({ student_id: id, module_id: modId }));
+        const inserts = moduleIds.map((modId: number, index: number) => ({
+          student_id: id,
+          module_id: modId,
+          status: index === 0 ? "active" : "paused",
+        }));
         await supabaseAdmin.from("student_modules").insert(inserts);
       }
     }

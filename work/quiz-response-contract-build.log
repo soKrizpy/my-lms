@@ -1,0 +1,70 @@
+
+> my-lms@0.1.0 build
+> next build
+
+▲ Next.js 16.2.10 (Turbopack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 8.6s
+  Running TypeScript ...
+  Finished TypeScript in 12.8s ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/29) ...
+  Generating static pages using 11 workers (7/29) 
+  Generating static pages using 11 workers (14/29) 
+  Generating static pages using 11 workers (21/29) 
+✓ Generating static pages using 11 workers (29/29) in 454ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ƒ /
+├ ƒ /_not-found
+├ ƒ /admin
+├ ƒ /admin/invoices
+├ ƒ /admin/meetings
+├ ƒ /admin/modules
+├ ƒ /admin/modules/[id]/assessment
+├ ƒ /admin/modules/[id]/topics
+├ ƒ /admin/modules/[id]/topics/[topicId]/quiz
+├ ƒ /admin/students
+├ ƒ /api/admin/announcements
+├ ƒ /api/admin/invoices
+├ ƒ /api/admin/invoices/[id]/attendance
+├ ƒ /api/admin/invoices/generate
+├ ƒ /api/admin/meetings
+├ ƒ /api/admin/meetings/[id]/topic
+├ ƒ /api/admin/modules/[id]/seed-engine-topics
+├ ƒ /api/admin/parent-links
+├ ƒ /api/admin/students
+├ ƒ /api/admin/students/[id]
+├ ƒ /api/admin/students/[id]/details
+├ ƒ /api/admin/students/[id]/modules/[moduleId]/status
+├ ƒ /api/admin/students/[id]/quiz-score
+├ ƒ /api/admin/topics/import-csv
+├ ƒ /api/engine/progress
+├ ƒ /api/lesson-content/[topicId]
+├ ƒ /api/modules
+├ ƒ /api/modules/[moduleId]/assign
+├ ƒ /api/modules/[moduleId]/topics
+├ ƒ /api/parent/[token]
+├ ƒ /api/quiz
+├ ƒ /api/student/assessment
+├ ƒ /api/student/assessment/submit
+├ ƒ /api/student/dashboard
+├ ƒ /api/student/engine-sync
+├ ƒ /api/student/invoices
+├ ƒ /api/student/meetings/join
+├ ƒ /api/student/profile
+├ ƒ /api/student/quiz
+├ ƒ /login
+├ ƒ /parent/[token]
+├ ƒ /student
+└ ƒ /student/quiz/[quizId]
+
+
+ƒ Proxy (Middleware)
+
+ƒ  (Dynamic)  server-rendered on demand
+

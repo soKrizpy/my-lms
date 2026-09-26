@@ -11,6 +11,7 @@ export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
 
 interface AvatarDisplayProps {
   avatarId?: string | null;
+  hatId?: string | null;
   size?: AvatarSize;
   showAura?: boolean;
   isLocked?: boolean;
@@ -32,6 +33,7 @@ const SIZE_CONFIG: Record<
 
 export function AvatarDisplay({
   avatarId,
+  hatId,
   size = 'md',
   showAura = true,
   isLocked = false,
@@ -71,6 +73,7 @@ export function AvatarDisplay({
         aria-hidden="true"
       >
         <AvatarSvgContent id={avatar.id} accentColor={avatar.accentColor} />
+        {hatId && <AccessorySvgOverlay hatId={hatId} />}
       </svg>
 
       {/* Lock overlay badge if locked */}
@@ -497,5 +500,150 @@ function AvatarSvgContent({ id, accentColor }: { id: string; accentColor: string
           <line x1="26" y1="40" x2="38" y2="40" stroke={accentColor} strokeWidth="2" strokeLinecap="round" />
         </g>
       );
+  }
+}
+
+// ─── SVG Vector Content for Headgear / Accessories (Roblox-Style) ────────────
+
+function AccessorySvgOverlay({ hatId }: { hatId: string }) {
+  switch (hatId) {
+    case 'topi-hacker':
+      return (
+        <g className="filter drop-shadow-md">
+          {/* Cap dome */}
+          <path d="M16 18 C16 7, 48 7, 48 18 Z" fill="#06b6d4" stroke="#0891b2" strokeWidth="1.5" />
+          {/* Brim */}
+          <path d="M14 18 L52 18 L56 22 L10 22 Z" fill="#0284c7" />
+          {/* HUD visor line */}
+          <line x1="14" y1="21" x2="52" y2="21" stroke="#38bdf8" strokeWidth="1.5" />
+          {/* Antenna */}
+          <line x1="42" y1="12" x2="48" y2="5" stroke="#38bdf8" strokeWidth="1.5" strokeLinecap="round" />
+          <circle cx="48" cy="5" r="1.5" fill="#ffffff" />
+        </g>
+      );
+
+    case 'dino-cap':
+      return (
+        <g className="filter drop-shadow-md">
+          {/* Cap */}
+          <path d="M16 19 C16 8, 48 8, 48 19 Z" fill="#10b981" stroke="#059669" strokeWidth="1.5" />
+          {/* Spines */}
+          <polygon points="26,11 28,5 30,11" fill="#34d399" />
+          <polygon points="34,11 36,5 38,11" fill="#34d399" />
+          {/* Cute teeth */}
+          <path d="M18 19 L21 23 L24 19 L27 23 L30 19 L33 23 L36 19 L39 23 L42 19 L45 23 L48 19" fill="#f8fafc" />
+        </g>
+      );
+
+    case 'ninja-headband':
+      return (
+        <g className="filter drop-shadow-md">
+          {/* Trailing ribbon */}
+          <path d="M13 18 L3 23 L6 27 L12 21 Z" fill="#dc2626" />
+          {/* Headband */}
+          <rect x="12" y="16" width="40" height="6" rx="2" fill="#ef4444" stroke="#b91c1c" strokeWidth="1" />
+          {/* Center Plate */}
+          <rect x="27" y="15" width="10" height="8" rx="2" fill="#cbd5e1" stroke="#475569" strokeWidth="1" />
+          <circle cx="32" cy="19" r="1.5" fill="#ef4444" />
+        </g>
+      );
+
+    case 'rookie-band':
+      return (
+        <g className="filter drop-shadow-md">
+          <rect x="13" y="16" width="38" height="5" rx="2" fill="#3b82f6" stroke="#1d4ed8" strokeWidth="1" />
+          <polygon points="32,15 33,18 36,18 33.5,20 34.5,23 32,21 29.5,23 30.5,20 28,18 31,18" fill="#ffffff" />
+        </g>
+      );
+
+    case 'tudung-wizard':
+      return (
+        <g className="filter drop-shadow-md">
+          {/* Hood peak */}
+          <path d="M32 2 L50 20 L14 20 Z" fill="#7e22ce" stroke="#c084fc" strokeWidth="1.5" />
+          {/* Brim */}
+          <ellipse cx="32" cy="20" rx="22" ry="4" fill="#6b21a8" stroke="#a855f7" strokeWidth="1" />
+          {/* Glowing Rune */}
+          <circle cx="32" cy="13" r="2.5" fill="#facc15" />
+        </g>
+      );
+
+    case 'headset-cat':
+      return (
+        <g className="filter drop-shadow-md">
+          {/* Cat Ears */}
+          <polygon points="17,14 12,3 24,10" fill="#ec4899" stroke="#be185d" strokeWidth="1.5" />
+          <polygon points="18,12 15,6 22,10" fill="#fbcfe8" />
+          <polygon points="47,14 52,3 40,10" fill="#ec4899" stroke="#be185d" strokeWidth="1.5" />
+          <polygon points="46,12 49,6 42,10" fill="#fbcfe8" />
+          {/* Arch band */}
+          <path d="M14 26 C14 8, 50 8, 50 26" stroke="#f43f5e" strokeWidth="3" fill="none" />
+          {/* Earcups */}
+          <rect x="9" y="24" width="5" height="12" rx="2.5" fill="#db2777" />
+          <rect x="50" y="24" width="5" height="12" rx="2.5" fill="#db2777" />
+        </g>
+      );
+
+    case 'headset-pro':
+      return (
+        <g className="filter drop-shadow-md">
+          <path d="M14 26 C14 8, 50 8, 50 26" stroke="#f59e0b" strokeWidth="3.5" fill="none" />
+          <rect x="9" y="23" width="5.5" height="13" rx="2.5" fill="#d97706" />
+          <rect x="49.5" y="23" width="5.5" height="13" rx="2.5" fill="#d97706" />
+          <path d="M11 34 L17 42 L23 40" stroke="#f59e0b" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          <circle cx="23" cy="40" r="1.5" fill="#ef4444" />
+        </g>
+      );
+
+    case 'visor-neon':
+      return (
+        <g className="filter drop-shadow-lg">
+          <rect x="16" y="22" width="32" height="11" rx="3.5" fill="rgba(6,182,212,0.75)" stroke="#00f0ff" strokeWidth="1.5" />
+          <line x1="20" y1="26" x2="30" y2="26" stroke="#ffffff" strokeWidth="1" />
+          <circle cx="41" cy="27.5" r="2.5" fill="#ffffff" />
+        </g>
+      );
+
+    case 'vr-goggles':
+      return (
+        <g className="filter drop-shadow-md">
+          <line x1="11" y1="27" x2="16" y2="27" stroke="#3b0764" strokeWidth="3.5" />
+          <line x1="48" y1="27" x2="53" y2="27" stroke="#3b0764" strokeWidth="3.5" />
+          <rect x="15" y="21" width="34" height="13" rx="4" fill="#581c87" stroke="#a855f7" strokeWidth="1.5" />
+          <circle cx="24" cy="27.5" r="3.5" fill="#06b6d4" />
+          <circle cx="40" cy="27.5" r="3.5" fill="#06b6d4" />
+        </g>
+      );
+
+    case 'steampunk-goggles':
+      return (
+        <g className="filter drop-shadow-md">
+          <circle cx="23" cy="26" r="6" fill="#78350f" stroke="#d97706" strokeWidth="2" />
+          <circle cx="41" cy="26" r="6" fill="#78350f" stroke="#d97706" strokeWidth="2" />
+          <circle cx="23" cy="26" r="3" fill="#fed7aa" />
+          <circle cx="41" cy="26" r="3" fill="#fed7aa" />
+          <path d="M29 26 C31 23, 33 23, 35 26" stroke="#b45309" strokeWidth="2" fill="none" />
+        </g>
+      );
+
+    case 'golden-halo':
+      return (
+        <g className="filter drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]">
+          <ellipse cx="32" cy="7" rx="16" ry="4" stroke="#facc15" strokeWidth="2.5" fill="none" />
+        </g>
+      );
+
+    case 'cyber-crown':
+      return (
+        <g className="filter drop-shadow-[0_0_10px_rgba(251,191,36,0.8)]">
+          <polygon points="17,17 20,6 26,12 32,4 38,12 44,6 47,17" fill="#fbbf24" stroke="#d97706" strokeWidth="1.5" />
+          <circle cx="32" cy="13" r="2" fill="#06b6d4" />
+          <circle cx="21" cy="15" r="1.5" fill="#ef4444" />
+          <circle cx="43" cy="15" r="1.5" fill="#a855f7" />
+        </g>
+      );
+
+    default:
+      return null;
   }
 }

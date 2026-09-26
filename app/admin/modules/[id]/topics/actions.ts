@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "../../../../../lib/supabaseAdmin";
+import { getSessionRole } from "../../../../../lib/auth";
 
 function readString(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -12,7 +13,16 @@ function topicPath(moduleId: string) {
   return `/admin/modules/${moduleId}/topics`;
 }
 
+async function requireAdminAction() {
+  if (await getSessionRole() !== "admin") {
+    return { error: "Unauthorized" };
+  }
+  return null;
+}
+
 export async function createTopicAction(formData: FormData) {
+  const authError = await requireAdminAction();
+  if (authError) return authError;
   const moduleId = readString(formData, "moduleId");
   const title = readString(formData, "title");
   const orderIndex = Number(readString(formData, "orderIndex"));
@@ -50,6 +60,8 @@ export async function createTopicAction(formData: FormData) {
 }
 
 export async function updateTopicAction(formData: FormData) {
+  const authError = await requireAdminAction();
+  if (authError) return authError;
   const moduleId = readString(formData, "moduleId");
   const topicId = Number(readString(formData, "topicId"));
   const title = readString(formData, "title");
@@ -90,6 +102,8 @@ export async function updateTopicAction(formData: FormData) {
 }
 
 export async function deleteTopicAction(formData: FormData) {
+  const authError = await requireAdminAction();
+  if (authError) return authError;
   const moduleId = readString(formData, "moduleId");
   const topicId = Number(readString(formData, "topicId"));
 
@@ -98,7 +112,11 @@ export async function deleteTopicAction(formData: FormData) {
   }
 
   const supabaseAdmin = getSupabaseAdmin();
-  const { error } = await supabaseAdmin.from("topics").delete().eq("id", topicId);
+  const { error } = await supabaseAdmin
+    .from("topics")
+    .delete()
+    .eq("id", topicId)
+    .eq("module_id", Number(moduleId));
 
   if (error) return { error: error.message };
 
@@ -108,6 +126,8 @@ export async function deleteTopicAction(formData: FormData) {
 }
 
 export async function publishTopicAction(formData: FormData) {
+  const authError = await requireAdminAction();
+  if (authError) return authError;
   const moduleId = readString(formData, "moduleId");
   const topicId = Number(readString(formData, "topicId"));
 
@@ -132,6 +152,8 @@ export async function publishTopicAction(formData: FormData) {
 }
 
 export async function unpublishTopicAction(formData: FormData) {
+  const authError = await requireAdminAction();
+  if (authError) return authError;
   const moduleId = readString(formData, "moduleId");
   const topicId = Number(readString(formData, "topicId"));
 
