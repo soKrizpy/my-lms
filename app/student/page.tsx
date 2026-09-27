@@ -1434,6 +1434,25 @@ export default function StudentDashboard() {
     fetchInvoices();
   }, [fetchData]);
 
+  // Handle tab query parameter from URL (e.g., ?tab=quest-map, ?tab=learning-path, ?tab=jadwal)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const searchParams = new URLSearchParams(window.location.search);
+    const tabParam = searchParams.get('tab');
+    if (tabParam) {
+      const lower = tabParam.toLowerCase();
+      if (lower === 'quest-map' || lower === 'learning-path' || lower === 'learning') {
+        setActiveTab('learning');
+      } else if (lower === 'town-square' || lower === 'townsquare') {
+        setActiveTab('town-square');
+      } else if (lower === 'jadwal' || lower === 'schedule') {
+        setActiveTab('jadwal');
+      } else if (lower === 'parent') {
+        setActiveTab('parent');
+      }
+    }
+  }, []);
+
   // Auto-open quiz modal if quizId parameter is present in URL (when opened from Pending Tasks card)
   useEffect(() => {
     if (!data || activeQuiz) return;
@@ -1470,6 +1489,7 @@ export default function StudentDashboard() {
       window.removeEventListener('focus', refreshOnReturn);
     };
   }, [fetchData]);
+
   const tabs = [
     { id: "town-square" as const, label: "Town Square", icon: Home },
     { id: "jadwal" as const, label: "Jadwal", icon: Calendar },
@@ -1479,13 +1499,13 @@ export default function StudentDashboard() {
 
   // Handler: open native lesson player
   const handleStartLesson = useCallback(async (topicId: string | number) => {
-    if (!studentId) return;
+    if (!topicId) return;
 
     // We now use the native lesson player in the LMS itself!
     router.push(`/student/lesson/${topicId}`);
 
     setTimeout(() => void fetchData(), 60000);
-  }, [studentId, fetchData]);
+  }, [router, fetchData]);
 
   // Handler: student clicked "Bergabung Sekarang" — topic unlocked, maybe open engine
   const handleJoined = useCallback((unlockedTopic: UnlockedTopic | null) => {

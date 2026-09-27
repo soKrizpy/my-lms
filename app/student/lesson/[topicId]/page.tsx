@@ -10,9 +10,9 @@ type PageProps = {
 
 export default async function LessonPage({ params }: PageProps) {
   const resolvedParams = await params;
-  const topicId = Number(resolvedParams.topicId);
-  
-  if (!topicId || isNaN(topicId)) {
+  const rawTopicParam = resolvedParams.topicId;
+
+  if (!rawTopicParam) {
     return redirect("/student");
   }
 
@@ -23,7 +23,7 @@ export default async function LessonPage({ params }: PageProps) {
     return redirect("/login");
   }
 
-  const { data: topic, error: topicError } = await getTopicById(topicId.toString());
+  const { data: topic, error: topicError } = await getTopicById(rawTopicParam);
 
   if (topicError || !topic) {
     return (
@@ -56,7 +56,7 @@ export default async function LessonPage({ params }: PageProps) {
   }
 
   // Get quiz for the topic (The Challenge at the end)
-  const { data: quiz } = await getOrCreateQuiz(topicId, `Quiz untuk ${topic.title || 'topik'}`);
+  const { data: quiz } = await getOrCreateQuiz(topic.id, `Quiz untuk ${topic.title || 'topik'}`);
   let questions: any[] = [];
   
   if (quiz?.id) {

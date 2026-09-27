@@ -60,29 +60,23 @@ export function TopicList({
                   {topic.order_index}. {topic.title}
                 </span>
 
-                {topic.engine_topic_id && (
-                  <div className="flex items-center gap-1 mt-1 flex-wrap">
+                <div className="flex items-center gap-1 mt-1 flex-wrap">
+                  {topic.engine_topic_id && (
                     <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400 border border-blue-200 dark:border-blue-800">
                       <span>🔗</span>
                       <code className="font-mono">{topic.engine_topic_id}</code>
                     </span>
-                    {topic.lesson_content ? (
-                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${
-                        topic.status === 'published'
-                          ? 'bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400 border-green-300 dark:border-green-800'
-                          : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-200 dark:border-amber-800'
-                      }`}>
-                        {topic.status === 'published'
-                          ? `✅ Published${topic.published_at ? ` · ${new Date(topic.published_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}` : ''}`
-                          : '⚠️ Draft — belum terlihat siswa'}
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-                        belum ada konten
-                      </span>
-                    )}
-                  </div>
-                )}
+                  )}
+                  <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border ${
+                    topic.status === 'published'
+                      ? 'bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400 border-green-300 dark:border-green-800'
+                      : 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+                  }`}>
+                    {topic.status === 'published'
+                      ? `✅ Published${topic.published_at ? ` · ${new Date(topic.published_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}` : ''}`
+                      : '⚠️ Draft — belum terlihat siswa'}
+                  </span>
+                </div>
 
                 {topic.description && (
                   <>
@@ -148,8 +142,7 @@ export function TopicList({
                 >
                   Kelola quiz
                 </Link>
-                {Boolean(topic.lesson_content) && (
-                  <form
+                <form
                     action={(formData) => {
                       startTransition(async () => {
                         const action = topic.status === 'published' ? unpublishTopicAction : publishTopicAction;
@@ -174,7 +167,6 @@ export function TopicList({
                       {topic.status === 'published' ? '📤 Unpublish' : '🚀 Publish Sekarang!'}
                     </button>
                   </form>
-                )}
                 <form
                   action={(formData) => {
                     if (!confirm("Hapus topik ini?")) return;

@@ -66,7 +66,7 @@ export async function getTopicById(topicId: string) {
   return supabase
     .from("topics")
     .select("id, title, module_id, order_index, description, project_link, topic_link, engine_topic_id, lesson_content")
-    .eq("id", Number(topicId))
+    .eq(isNaN(Number(topicId)) ? "engine_topic_id" : "id", isNaN(Number(topicId)) ? topicId : Number(topicId))
     .maybeSingle();
 }
 

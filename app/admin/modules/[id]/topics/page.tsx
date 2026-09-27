@@ -203,6 +203,13 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
                       🔗 {topic.engine_topic_id}
                     </span>
                   )}
+                  <span className={`ml-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${
+                    topic.status === 'published'
+                      ? 'border-green-300 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/40 dark:text-green-400'
+                      : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-700/50 dark:bg-amber-950/40 dark:text-amber-400'
+                  }`}>
+                    {topic.status === 'published' ? '✅ Published' : '⚠️ Draft'}
+                  </span>
                 </div>
                 <span className="ml-3 shrink-0 text-xs font-semibold text-brand-primary">
                   Kelola Quiz →

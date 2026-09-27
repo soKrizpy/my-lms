@@ -15,7 +15,10 @@ import { triggerConfetti } from '@/lib/triggerConfetti';
 import type { TopicNodeTopic, TopicProgress, QuizAttempt } from './TopicNode';
 import type { AssessmentSummary, AssessmentState } from '../../lib/lmsData';
 import { BadgeWall } from '@/components/gamification/BadgeWall';
-import type { EarnedBadgeRow, BadgeDefinition } from '@/lib/gamification/badgeCatalog';
+import type {
+  EarnedBadgeRow,
+  BadgeDefinition,
+} from '@/lib/gamification/badgeCatalog';
 
 // ── Badge definitions ─────────────────────────────────────────────────────────
 
@@ -107,7 +110,10 @@ interface QuestMapProps {
   maxStreak: number;
   completedEngineTopics: number;
   onOpenQuiz?: (quiz: { id: number; title: string }) => void;
-  onUpdateProfile?: (avatarId: string, titleId: string) => Promise<boolean> | void;
+  onUpdateProfile?: (
+    avatarId: string,
+    titleId: string
+  ) => Promise<boolean> | void;
   onGoToSchedule?: () => void;
   assessmentSummaries?: AssessmentSummary[];
   totalXP?: number;
@@ -121,7 +127,10 @@ function BadgePanel({ badges }: { badges: Badge[] }) {
   return (
     <div
       className="rounded-xl border p-4 mb-4"
-      style={{ background: 'var(--glass-bg)', borderColor: 'var(--glass-border)' }}
+      style={{
+        background: 'var(--glass-bg)',
+        borderColor: 'var(--glass-border)',
+      }}
     >
       <h3 className="text-xs font-bold uppercase tracking-widest mb-3 text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
         <span aria-hidden="true">🏅</span> Achievement Badges
@@ -138,7 +147,10 @@ function BadgePanel({ badges }: { badges: Badge[] }) {
                 : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400',
             ].join(' ')}
           >
-            <span aria-hidden="true" className={badge.unlocked ? '' : 'grayscale opacity-60'}>
+            <span
+              aria-hidden="true"
+              className={badge.unlocked ? '' : 'grayscale opacity-60'}
+            >
               {badge.icon}
             </span>
             <span>{badge.label}</span>
@@ -153,7 +165,7 @@ function BadgePanel({ badges }: { badges: Badge[] }) {
 
 function buildAssessmentState(
   mod: Module,
-  summaries: AssessmentSummary[],
+  summaries: AssessmentSummary[]
 ): AssessmentState {
   if (!mod.assessmentId) return { status: 'no_assessment' };
   if (!mod.isModuleComplete) return { status: 'locked' };
@@ -228,7 +240,12 @@ function QuestMapInner({
     prevCompletedRef.current = completedEngineTopics;
   }, [completedEngineTopics]);
 
-  const badges = computeBadges(completedEngineTopics, streak, maxStreak, quizAttempts);
+  const badges = computeBadges(
+    completedEngineTopics,
+    streak,
+    maxStreak,
+    quizAttempts
+  );
 
   const handleStartLesson = useCallback(
     (engineTopicId: string) => onStartLesson?.(engineTopicId),
@@ -258,10 +275,18 @@ function QuestMapInner({
     return (
       <div
         className="rounded-2xl border p-10 text-center"
-        style={{ background: 'var(--glass-bg)', borderColor: 'var(--glass-border)' }}
+        style={{
+          background: 'var(--glass-bg)',
+          borderColor: 'var(--glass-border)',
+        }}
       >
-        <p className="text-3xl mb-3" aria-hidden="true">🗺️</p>
-        <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+        <p className="text-3xl mb-3" aria-hidden="true">
+          🗺️
+        </p>
+        <p
+          className="font-semibold text-sm"
+          style={{ color: 'var(--text-primary)' }}
+        >
           Belum ada modul
         </p>
         <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>
@@ -294,17 +319,18 @@ function QuestMapInner({
 
       {/* All Locked Guidance Banner */}
       {allLocked && (
-        <div
-          className="rounded-2xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 animate-in fade-in bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-500/30"
-        >
+        <div className="rounded-2xl border p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 animate-in fade-in bg-sky-50 dark:bg-sky-950/40 border-sky-200 dark:border-sky-500/30">
           <div className="flex items-center gap-3">
-            <span className="text-2xl flex-shrink-0" aria-hidden="true">🔒</span>
+            <span className="text-2xl flex-shrink-0" aria-hidden="true">
+              🔒
+            </span>
             <div>
               <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white">
                 Ikuti kelas belajarmu untuk membuka materi
               </p>
               <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
-                Klik &quot;Bergabung Sekarang&quot; di tab Jadwal Belajar saat kelas berlangsung untuk mulai membuka materi!
+                Klik &quot;Bergabung Sekarang&quot; di tab Jadwal Belajar saat
+                kelas berlangsung untuk mulai membuka materi!
               </p>
             </div>
           </div>
@@ -357,27 +383,33 @@ function QuestMapInner({
             return aStatus === 'active' ? -1 : 1;
           })
           .map((mod) => (
-          <ModulePathSection
-            key={mod.id}
-            module={mod}
-            topicProgress={topicProgress}
-            quizAttempts={quizAttempts}
-            onStartLesson={handleStartLesson}
-            onOpenQuiz={handleOpenQuiz}
-            onSelectTopic={handleSelectTopic}
-            assessmentState={buildAssessmentState(mod, assessmentSummaries ?? [])}
-            onOpenAssessment={() => {
-              if (!mod.assessmentId) return;
-              const state = buildAssessmentState(mod, assessmentSummaries ?? []);
-              if (state.status !== 'available') return;
-              setActiveAssessment({
-                assessmentId: mod.assessmentId,
-                assessmentTitle: mod.assessmentTitle ?? 'Tryout',
-                attemptCount: state.attempt_count,
-              });
-            }}
-          />
-        ))}
+            <ModulePathSection
+              key={mod.id}
+              module={mod}
+              topicProgress={topicProgress}
+              quizAttempts={quizAttempts}
+              onStartLesson={handleStartLesson}
+              onOpenQuiz={handleOpenQuiz}
+              onSelectTopic={handleSelectTopic}
+              assessmentState={buildAssessmentState(
+                mod,
+                assessmentSummaries ?? []
+              )}
+              onOpenAssessment={() => {
+                if (!mod.assessmentId) return;
+                const state = buildAssessmentState(
+                  mod,
+                  assessmentSummaries ?? []
+                );
+                if (state.status !== 'available') return;
+                setActiveAssessment({
+                  assessmentId: mod.assessmentId,
+                  assessmentTitle: mod.assessmentTitle ?? 'Tryout',
+                  attemptCount: state.attempt_count,
+                });
+              }}
+            />
+          ))}
       </div>
 
       {/* ── Duolingo / Mimo Style Learning Flow Modal ──────────────────────── */}
@@ -410,10 +442,10 @@ function QuestMapInner({
           attemptCount={activeAssessment.attemptCount}
           onClose={() => setActiveAssessment(null)}
           onSuccess={(newBadges) => {
-              setActiveAssessment(null);
-              onAssessmentSuccess?.(newBadges);
-              onRefresh();
-            }}
+            setActiveAssessment(null);
+            onAssessmentSuccess?.(newBadges);
+            onRefresh();
+          }}
         />
       )}
     </div>

@@ -1,0 +1,14 @@
+{
+  "pbtResults": {
+    "1. Write bug condition exploration test": {
+      "status": "passed",
+      "failingExample": "canStartEngine_original({ engine_topic_id: null, lesson_content: { nodes: [] }, status: 'published', isUnlocked: true }, 'unlocked') → false (expected true). Badge: segeraBadgeCondition_original({ engine_topic_id: null, lesson_content: {...}, status: 'draft', isUnlocked: true }, false, 'unlocked') → false (expected true).",
+      "lastRunTimestamp": 1790534003437
+    },
+    "2. Write preservation property tests (BEFORE implementing fix)": {
+      "status": "passed",
+      "lastRunTimestamp": 1790534489948
+    }
+  },
+  "executionHistory": {}
+}

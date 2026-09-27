@@ -118,7 +118,7 @@ function TopicNodeInner({
   // Students should always be able to review their material.
   const canStartEngine =
     state !== 'locked' &&
-    topic.engine_topic_id !== null &&
+    (topic.engine_topic_id !== null || topic.lesson_content != null) &&
     (topic.status === 'published' || topic.lesson_content == null);
 
   // Quiz state
@@ -139,11 +139,21 @@ function TopicNodeInner({
       'bg-emerald-50 dark:bg-emerald-950/30 border-2 border-emerald-600 dark:border-emerald-400 cursor-pointer hover:scale-105 transition-all shadow-[0_0_12px_rgba(16,185,129,0.25)]',
   };
 
-  const handleNodeClick = () => {
-    if (state === 'locked') return;
-    // Engine lesson takes priority: open in new tab
-    if (canStartEngine && onStartLesson) {
-      onStartLesson(topic.engine_topic_id!);
+  const handleNodeClick = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    if (state === 'locked') {
+      if (onSelectTopic) onSelectTopic(topic);
+      return;
+    }
+
+    // Engine lesson takes priority: navigate to lesson player
+    const targetId = topic.id ? String(topic.id) : (topic.engine_topic_id || '');
+    if (canStartEngine && onStartLesson && targetId) {
+      onStartLesson(targetId);
       return;
     }
     // No engine lesson — open the LMS topic flow modal (manual content)
@@ -286,7 +296,7 @@ function TopicNodeInner({
         )}
 
         {/* Coming soon badge — engine_topic_id linked but lesson not published yet */}
-        {topic.engine_topic_id && !canStartEngine && state !== 'locked' && (
+        {(topic.engine_topic_id || topic.lesson_content != null) && !canStartEngine && state !== 'locked' && (
           <span
             className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-700/50"
           >
