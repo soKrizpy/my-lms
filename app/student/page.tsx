@@ -1523,35 +1523,32 @@ export default function StudentDashboard() {
           <div className="absolute top-4 left-1/2 text-white/90 dark:text-cyan-300/80 text-xs pointer-events-none animate-bounce" style={{ animationDuration: '5s' }}>⋆</div>
 
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-            <div className="flex items-center gap-4">
-              <AvatarDisplay avatarId={data.avatarId} size="xl" showAura hatId={equippedHatId} />
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/20 dark:bg-purple-600/30 border border-white/35 dark:border-purple-400/50 text-white dark:text-purple-200 text-xs font-semibold backdrop-blur-md shadow-sm">
-                    <Sparkles className="w-3 h-3 text-amber-300 dark:text-pink-400 animate-spin" style={{ animationDuration: '6s' }} />
-                    <span className="tracking-wide">Student Quest Portal</span>
-                  </div>
-                  {/* Sound toggle button */}
-                  <button
-                    onClick={toggleSound}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 border border-white/20 text-white/80 hover:text-white hover:bg-white/20 transition-all text-xs"
-                    title={isMuted ? 'Aktifkan suara' : 'Matikan suara'}
-                  >
-                    {isMuted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
-                    <span>{isMuted ? 'Mute' : 'Sound ON'}</span>
-                  </button>
-                  {/* Coin display in header */}
-                  <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold">
-                    🪙 {coins}
-                  </div>
+            <div className="space-y-2 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-white/20 dark:bg-purple-600/30 border border-white/35 dark:border-purple-400/50 text-white dark:text-purple-200 text-xs font-semibold backdrop-blur-md shadow-sm">
+                  <Sparkles className="w-3 h-3 text-amber-300 dark:text-pink-400 animate-spin" style={{ animationDuration: '6s' }} />
+                  <span className="tracking-wide">Student Quest Portal</span>
                 </div>
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)]">
-                  Halo, {data.studentName}! <span className="inline-block hover:scale-125 transition-transform cursor-default animate-bounce" style={{ animationDuration: '3s' }}>✨</span>
-                </h1>
-                <p className="text-sm text-blue-100/95 dark:text-purple-200/90 max-w-lg leading-relaxed font-medium">
-                  Siap melanjutkan petualangan koding hari ini? Selesaikan modul dan taklukkan tantangannya!
-                </p>
+                {/* Sound toggle button */}
+                <button
+                  onClick={toggleSound}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 border border-white/20 text-white/80 hover:text-white hover:bg-white/20 transition-all text-xs"
+                  title={isMuted ? 'Aktifkan suara' : 'Matikan suara'}
+                >
+                  {isMuted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+                  <span>{isMuted ? 'Mute' : 'Sound ON'}</span>
+                </button>
+                {/* Coin display in header */}
+                <div className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-300 text-xs font-bold">
+                  🪙 {coins}
+                </div>
               </div>
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.3)]">
+                Halo, {data.studentName}! <span className="inline-block hover:scale-125 transition-transform cursor-default animate-bounce" style={{ animationDuration: '3s' }}>✨</span>
+              </h1>
+              <p className="text-sm text-blue-100/95 dark:text-purple-200/90 max-w-lg leading-relaxed font-medium">
+                Siap melanjutkan petualangan koding hari ini? Selesaikan modul dan taklukkan tantangannya!
+              </p>
             </div>
 
             {/* Live Stats Magical 2x2 Grid */}
