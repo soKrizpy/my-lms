@@ -10,9 +10,9 @@ type PageProps = {
 
 export default async function LessonPage({ params }: PageProps) {
   const resolvedParams = await params;
-  const rawTopicParam = resolvedParams.topicId;
+  const topicId = Number(resolvedParams.topicId);
 
-  if (!rawTopicParam) {
+  if (!topicId || isNaN(topicId)) {
     return redirect("/student");
   }
 
@@ -23,7 +23,7 @@ export default async function LessonPage({ params }: PageProps) {
     return redirect("/login");
   }
 
-  const { data: topic, error: topicError } = await getTopicById(rawTopicParam);
+  const { data: topic, error: topicError } = await getTopicById(topicId.toString());
 
   if (topicError || !topic) {
     return (

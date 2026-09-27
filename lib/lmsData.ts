@@ -66,7 +66,16 @@ export async function getTopicById(topicId: string) {
   return supabase
     .from("topics")
     .select("id, title, module_id, order_index, description, project_link, topic_link, engine_topic_id, lesson_content")
-    .eq(isNaN(Number(topicId)) ? "engine_topic_id" : "id", isNaN(Number(topicId)) ? topicId : Number(topicId))
+    .eq("id", Number(topicId))
+    .maybeSingle();
+}
+
+export async function getTopicByEngineId(engineTopicId: string) {
+  const supabase = getSupabaseAdmin();
+  return supabase
+    .from("topics")
+    .select("id, title, module_id, order_index, description, project_link, topic_link, engine_topic_id, lesson_content")
+    .eq("engine_topic_id", engineTopicId)
     .maybeSingle();
 }
 

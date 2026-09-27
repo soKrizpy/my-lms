@@ -142,6 +142,7 @@ export function TopicList({
                 >
                   Kelola quiz
                 </Link>
+                {Boolean(topic.lesson_content) && (
                 <form
                     action={(formData) => {
                       startTransition(async () => {
@@ -167,6 +168,7 @@ export function TopicList({
                       {topic.status === 'published' ? '📤 Unpublish' : '🚀 Publish Sekarang!'}
                     </button>
                   </form>
+                )}
                 <form
                   action={(formData) => {
                     if (!confirm("Hapus topik ini?")) return;
