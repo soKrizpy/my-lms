@@ -408,6 +408,71 @@ function PendingTasksSection({
   );
 }
 
+// --- Today Mission Hero Card (Conditional Visibility & Neon Glow) ---
+function TodayMissionCard({ meetings }: { meetings: Meeting[] }) {
+  const [now, setNow] = useState<number>(() => Date.now());
+
+  useEffect(() => {
+    // Check every second to maintain precise time calculation (targetTime - currentTime)
+    const timer = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  if (!meetings || meetings.length === 0) return null;
+
+  // Find meeting that is currently within the active window (H-5 mins before start until class end)
+  const activeMeeting = meetings.find((meet) => {
+    if (!meet.meeting_date) return false;
+    const startTime = new Date(meet.meeting_date).getTime();
+    if (isNaN(startTime)) return false;
+
+    const windowStart = startTime - 5 * 60 * 1000; // H-5 minutes (e.g. 18:25 for 18:30 class)
+    const windowEnd = startTime + 60 * 60 * 1000;  // Class end (60 minutes after start)
+
+    return now >= windowStart && now <= windowEnd;
+  });
+
+  // Default: Sembunyikan (do not render) jika di luar rentang H-5 menit s/d kelas berakhir
+  if (!activeMeeting) return null;
+
+  return (
+    <div className="relative overflow-hidden rounded-2xl border-2 border-emerald-400 bg-gradient-to-r from-emerald-950/90 via-teal-950/90 to-emerald-950/90 shadow-[0_0_25px_rgba(0,255,136,0.6)] p-4 animate-neon-glow transition-all duration-300">
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-400/20 rounded-full blur-3xl animate-pulse" />
+      </div>
+      <div className="relative flex items-center gap-4">
+        <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-400/60 shadow-[0_0_12px_rgba(0,255,136,0.4)]">
+          <Calendar className="w-5 h-5 text-emerald-400 animate-bounce" />
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+            </span>
+            <p className="text-xs font-black text-emerald-400 uppercase tracking-wider">MISI HARI INI</p>
+          </div>
+          <p className="font-black text-white text-base mt-0.5">{activeMeeting.title}</p>
+          <p className="text-xs text-emerald-200 mt-0.5 font-medium">
+            {new Date(activeMeeting.meeting_date).toLocaleDateString('id-ID', { weekday: 'long', hour: '2-digit', minute: '2-digit' })}
+          </p>
+        </div>
+        <a
+          href={activeMeeting.link_url || '#'}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => soundFx.playClick()}
+          className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black transition-all shadow-[0_0_15px_rgba(0,255,136,0.5)] hover:shadow-[0_0_25px_rgba(0,255,136,0.8)] hover:scale-105 active:scale-95 whitespace-nowrap cursor-pointer"
+        >
+          🎯 Masuk Kelas
+        </a>
+      </div>
+    </div>
+  );
+}
+
 // --- Meeting Card (Student View) ---
 function StudentMeetingCard({ meet, modules, quizAttempts, onRefresh, onJoined }: { meet: Meeting, modules: Module[], quizAttempts: any[], onRefresh: () => void, onJoined?: (unlockedTopic: UnlockedTopic | null) => void }) {
 
@@ -1630,35 +1695,8 @@ export default function StudentDashboard() {
           {/* ── Town Square Tab ──────────────────────────────────────── */}
           {activeTab === "town-square" && (
             <div className="space-y-4">
-              {/* Urgent action hero card — only if there's something to do */}
-              {data.upcomingMeetings.length > 0 && (
-                <div className="relative overflow-hidden rounded-2xl border border-emerald-500/50 bg-gradient-to-r from-emerald-950/80 to-teal-950/80 shadow-[0_0_25px_rgba(16,185,129,0.25)] p-4">
-                  <div className="absolute inset-0 pointer-events-none">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-400/15 rounded-full blur-3xl" />
-                  </div>
-                  <div className="relative flex items-center gap-4">
-                    <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-400/40">
-                      <Calendar className="w-5 h-5 text-emerald-400" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-xs font-bold text-emerald-400 uppercase tracking-wide">Misi Hari Ini</p>
-                      <p className="font-black text-white mt-0.5">{data.upcomingMeetings[0].title}</p>
-                      <p className="text-xs text-emerald-200 mt-0.5">
-                        {new Date(data.upcomingMeetings[0].meeting_date).toLocaleDateString('id-ID', { weekday: 'long', hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                    <a
-                      href={data.upcomingMeetings[0].link_url || '#'}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => soundFx.playClick()}
-                      className="px-4 py-2 rounded-xl bg-emerald-500 text-white text-xs font-black hover:bg-emerald-400 transition-all shadow-lg whitespace-nowrap"
-                    >
-                      🎯 Masuk Kelas
-                    </a>
-                  </div>
-                </div>
-              )}
+              {/* Misi Hari Ini hero card — conditional display H-5 mins before class */}
+              <TodayMissionCard meetings={data.upcomingMeetings} />
 
               <TownSquareTab
                 studentName={data.studentName || 'Siswa'}

@@ -676,3 +676,20 @@ html:not(.dark) ::-webkit-scrollbar-thumb {
 html:not(.dark) ::-webkit-scrollbar-thumb:hover {
   background: #2563eb;
 }
+
+/* Neon pulsing glow animation for Misi Hari Ini card */
+@keyframes neonPulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 25px rgba(0, 255, 136, 0.6), inset 0 0 10px rgba(0, 255, 136, 0.2);
+    border-color: #34d399; /* emerald-400 */
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(0, 255, 136, 0.9), inset 0 0 18px rgba(0, 255, 136, 0.4);
+    border-color: #00ff88;
+  }
+}
+
+.animate-neon-glow {
+  animation: neonPulseGlow 2s ease-in-out infinite;
+}
+
