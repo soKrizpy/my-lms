@@ -693,3 +693,82 @@ html:not(.dark) ::-webkit-scrollbar-thumb:hover {
   animation: neonPulseGlow 2s ease-in-out infinite;
 }
 
+
+/* ----------------------------------------------------------
+   13. DARK MODE — Missing amber/yellow overrides + border/hover fixes
+       These were absent from the original override block, causing
+       bright yellow surfaces and near-invisible borders in dark mode.
+   ---------------------------------------------------------- */
+
+/* ── Amber / Yellow (used in Unpublish button, assessment warning) ── */
+.dark .bg-amber-50  { background-color: #2a1900 !important; }
+.dark .bg-amber-100 { background-color: #3a2200 !important; }
+.dark .bg-amber-200 { background-color: #4a2c00 !important; }
+.dark .hover\:bg-amber-200:hover { background-color: #4a2c00 !important; }
+.dark .text-amber-900 { color: #fde68a !important; }
+.dark .text-amber-800 { color: #fcd34d !important; }
+.dark .text-amber-700 { color: #fbbf24 !important; }
+.dark .text-amber-600 { color: #f59e0b !important; }
+.dark .border-amber-400 { border-color: #b45309 !important; }
+.dark .border-amber-300 { border-color: #92400e !important; }
+.dark .border-amber-200 { border-color: #78350f !important; }
+.dark .border-amber-100 { border-color: #4d2a07 !important; }
+.dark .ring-amber-500   { --tw-ring-color: #f59e0b; }
+
+/* ── Students page: Detail button border-slate-200 low contrast fix ── */
+/* border-slate-200 in dark is #372866 (very close to bg) → bump to visible */
+/* Already overridden globally; specific fix for bordered button on dark bg: */
+.dark .hover\:border-blue-300:hover { border-color: #7c3aed !important; }
+.dark .hover\:bg-blue-50:hover      { background-color: #1a0a2e !important; }
+
+/* ── Meetings page: hover:text-slate-700 on inactive tabs (not in globals) ── */
+.dark .hover\:text-slate-700:hover { color: #c084fc !important; }
+
+/* ── Admin page dashboard: textarea inside ProgressReportModal ── */
+/* .dark textarea already overridden above — ensure placeholder readable */
+.dark .placeholder\:text-slate-400::placeholder { color: #8b7ca8 !important; }
+.dark .placeholder\:text-slate-500::placeholder { color: #7a6b96 !important; }
+
+/* ── Meetings past-history inner card: bg-slate-50 border-slate-100 ── */
+/* border-b border-slate-100 divider inside glass-panel → already #2c2052,
+   add a tiny luminance bump for PastMeetingsByStudent student name divider */
+.dark .border-b.border-slate-100 { border-color: #35285e !important; }
+
+/* ── Green badge used for 10+ assessment questions (bg-green-100 text-green-800) ── */
+/* Already covered by .dark .bg-green-100 / .dark .text-green-800 above */
+
+/* ── Missing: bg-amber-50 text-amber-800 warning banners in topics/page.tsx ── */
+/* Already covered above — explicit repeat for specificity with border */
+
+/* ── Green 50/100 used for assessment soal count ── */
+.dark .bg-green-100.text-green-800 { background-color: #063f1a !important; color: #6ee7b7 !important; }
+
+/* ── hover:text-blue-700 on Detail button (students) ── */
+.dark .hover\:text-blue-700:hover { color: #a78bfa !important; }
+
+/* ── hover:border-slate-300 on tab bar (meetings) ── */
+.dark .hover\:border-slate-300:hover { border-color: #6d28d9 !important; }
+
+/* ── Student table action row: text-red-600 / text-blue-600 edit/delete ── */
+/* text-red-600 + text-blue-600 already overridden to #f87171 / #c084fc above */
+
+/* ── Admin page: select dropdown filter (bg-white) ── */
+/* .dark select → already covered by global input/select rule */
+
+/* ── Announcement badge active: glow-primary border-brand-primary/30 ── */
+/* brand-primary uses --accent which swaps to purple in dark — ok */
+
+/* ── text-slate-600 inside hover:bg-blue-50 in students Detail button ── */
+.dark .text-slate-600.hover\:text-blue-700 { color: #9090b8 !important; }
+
+/* ── Missing border contrast: border-slate-200 on action buttons ── */
+/* The global .dark .border-slate-200 → #372866 is sometimes too dark.
+   For interactive elements (buttons), override with a more visible purple. */
+.dark button.border-slate-200,
+.dark a.border-slate-200 {
+  border-color: #4a3272 !important;
+}
+.dark button.hover\:border-blue-300:hover,
+.dark a.hover\:border-blue-300:hover {
+  border-color: #7c3aed !important;
+}

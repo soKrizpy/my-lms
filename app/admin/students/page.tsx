@@ -164,8 +164,8 @@ export default function StudentsPage() {
 
       <section className="glass-panel border border-[var(--glass-border)] rounded-2xl overflow-hidden shadow-lg">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200">
-            <thead className="bg-slate-50">
+          <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
+            <thead className="bg-slate-50 dark:bg-slate-900/50">
               <tr>
                 <th
                   scope="col"
@@ -281,7 +281,7 @@ export default function StudentsPage() {
                         <button
                           onClick={() => setDetailStudentId(student.id)}
                           title="Lihat Detail"
-                          className="inline-flex items-center gap-1.5 text-slate-600 hover:text-blue-700 text-xs font-semibold px-2.5 py-1.5 rounded-md border border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-colors"
+                          className="inline-flex items-center gap-1.5 text-slate-600 dark:text-slate-300 hover:text-blue-700 dark:hover:text-purple-400 text-xs font-semibold px-2.5 py-1.5 rounded-md border border-slate-200 dark:border-slate-600 hover:border-blue-300 dark:hover:border-purple-500 hover:bg-blue-50 dark:hover:bg-purple-950/30 transition-colors"
                         >
                           <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />

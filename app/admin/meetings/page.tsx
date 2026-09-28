@@ -180,14 +180,14 @@ function ProgressReportModal({
                   ? "Contoh: Siswa menyelesaikan bab 3..."
                   : "Contoh: Siswa tidak hadir karena sakit..."
               }
-              className="block w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              className="block w-full rounded-md border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
             />
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-md hover:bg-slate-50"
+              className="px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-md hover:bg-slate-50 dark:hover:bg-slate-700"
             >
               Batal
             </button>
@@ -507,10 +507,10 @@ function CalendarView({
   return (
     <div className="flex gap-6 flex-col lg:flex-row">
       <div className="flex-1 glass-panel rounded-xl border border-[var(--glass-border)] shadow-sm overflow-hidden min-w-0">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
           <button
             onClick={prevMonth}
-            className="p-1.5 rounded-md hover:bg-slate-200 text-slate-600 transition-colors"
+            className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
           >
             <svg
               className="w-5 h-5"
@@ -539,7 +539,7 @@ function CalendarView({
           </div>
           <button
             onClick={nextMonth}
-            className="p-1.5 rounded-md hover:bg-slate-200 text-slate-600 transition-colors"
+            className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors"
           >
             <svg
               className="w-5 h-5"
@@ -557,11 +557,11 @@ function CalendarView({
           </button>
         </div>
 
-        <div className="grid grid-cols-7 border-b border-slate-100">
+        <div className="grid grid-cols-7 border-b border-slate-100 dark:border-slate-800">
           {DAY_NAMES.map((d) => (
             <div
               key={d}
-              className="py-2 text-center text-xs font-semibold text-slate-500 uppercase tracking-wide"
+              className="py-2 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide"
             >
               {d}
             </div>
@@ -574,7 +574,7 @@ function CalendarView({
               return (
                 <div
                   key={`blank-${i}`}
-                  className="border-b border-r border-slate-100 min-h-[72px] bg-slate-50/50"
+                  className="border-b border-r border-slate-100 dark:border-slate-800 min-h-[72px] bg-slate-50/50 dark:bg-slate-900/20"
                 />
               );
             const key = getKey(day);
@@ -587,11 +587,11 @@ function CalendarView({
                 onClick={() =>
                   setSelectedDay(new Date(viewYear, viewMonth, day))
                 }
-                className={`border-b border-r border-slate-100 min-h-[72px] p-1.5 cursor-pointer transition-colors ${selectedCls && !todayCls ? "bg-blue-50" : "hover:bg-slate-50"}`}
+                className={`border-b border-r border-slate-100 dark:border-slate-800 min-h-[72px] p-1.5 cursor-pointer transition-colors ${selectedCls && !todayCls ? "bg-blue-50 dark:bg-blue-950/30" : "hover:bg-slate-50 dark:hover:bg-slate-800/40"}`}
               >
                 <div className="flex justify-end mb-1">
                   <span
-                    className={`text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full ${todayCls ? "bg-blue-600 text-white" : "text-slate-700"}`}
+                    className={`text-xs font-semibold w-6 h-6 flex items-center justify-center rounded-full ${todayCls ? "bg-blue-600 text-white" : "text-slate-700 dark:text-slate-300"}`}
                   >
                     {day}
                   </span>
@@ -624,8 +624,8 @@ function CalendarView({
 
       <div className="w-full lg:w-80 flex-shrink-0">
         <div className="glass-panel rounded-xl border border-[var(--glass-border)] shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100 bg-slate-50">
-            <h3 className="font-semibold text-slate-900 text-sm">
+          <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50">
+            <h3 className="font-semibold text-slate-900 dark:text-slate-100 text-sm">
               {selectedDay
                 ? selectedDay.toLocaleDateString("id-ID", {
                     weekday: "long",
@@ -750,14 +750,14 @@ function PastMeetingsByStudent({
                     {new Date(meet.meeting_date).toLocaleString("id-ID")}
                   </span>
                   {meet.progress_report && (
-                    <p className="mt-1 text-slate-700 italic border-l-2 border-slate-300 pl-2 text-xs">
+                    <p className="mt-1 text-slate-700 dark:text-slate-300 italic border-l-2 border-slate-300 dark:border-slate-600 pl-2 text-xs">
                       {meet.progress_report}
                     </p>
                   )}
                   {!meet.is_completed && (
                     <button
                       onClick={() => onReport(meet)}
-                      className="mt-2 self-start px-2 py-1 bg-orange-100 text-orange-700 hover:bg-orange-200 text-xs rounded border border-orange-200"
+                      className="mt-2 self-start px-2 py-1 bg-orange-100 dark:bg-amber-900/40 text-orange-700 dark:text-amber-300 hover:bg-orange-200 dark:hover:bg-amber-900/60 text-xs rounded border border-orange-200 dark:border-amber-700/50"
                     >
                       Tulis Report
                     </button>
@@ -927,7 +927,7 @@ export default function MeetingsPage() {
           <button
             onClick={handleExportCSV}
             disabled={meetings.length === 0}
-            className="inline-flex items-center rounded-md border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 disabled:opacity-50"
+            className="inline-flex items-center rounded-md border border-slate-300 dark:border-slate-600 px-3 py-2 text-sm font-medium text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 disabled:opacity-50 transition-colors"
           >
             Export CSV
           </button>
@@ -940,11 +940,11 @@ export default function MeetingsPage() {
         </div>
       </header>
 
-      <div className="border-b border-slate-200">
+      <div className="border-b border-slate-200 dark:border-slate-700">
         <nav className="-mb-px flex space-x-8">
           <button
             onClick={() => setActiveTab("calendar")}
-            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === "calendar" ? "border-blue-500 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"}`}
+            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === "calendar" ? "border-blue-500 text-blue-600 dark:text-purple-400 dark:border-purple-500" : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-500"}`}
           >
             <svg
               className="w-4 h-4"
@@ -963,7 +963,7 @@ export default function MeetingsPage() {
           </button>
           <button
             onClick={() => setActiveTab("past")}
-            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === "past" ? "border-blue-500 text-blue-600" : "border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300"}`}
+            className={`whitespace-nowrap pb-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${activeTab === "past" ? "border-blue-500 text-blue-600 dark:text-purple-400 dark:border-purple-500" : "border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:border-slate-300 dark:hover:border-slate-500"}`}
           >
             <svg
               className="w-4 h-4"
