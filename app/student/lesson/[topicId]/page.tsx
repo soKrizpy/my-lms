@@ -67,7 +67,7 @@ export default async function LessonPage({ params }: PageProps) {
   return (
     <LessonPlayerClient 
       topic={topic}
-      nodes={nodes}
+      nodes={nodes as any[]}
       questions={questions}
       quizId={quiz?.id}
       studentId={user.id}

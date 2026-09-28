@@ -1,320 +1,405 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { X, Check, HeartCrack, Sparkles, Trophy } from "lucide-react";
+import { X, ChevronRight, Check, XCircle, Star, Coins } from "lucide-react";
 
-// Web Audio API Helpers for Sound Effects
-const playTone = (freq: number, type: OscillatorType, duration: number, vol = 0.1) => {
-  if (typeof window === 'undefined') return;
+// ── Sound helpers ─────────────────────────────────────────────────────────────
+
+function playTone(freq: number, type: OscillatorType, dur: number, vol = 0.08) {
+  if (typeof window === "undefined") return;
   try {
-    const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    
-    oscillator.type = type;
-    oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    
-    gainNode.gain.setValueAtTime(vol, audioCtx.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    
-    oscillator.start();
-    oscillator.stop(audioCtx.currentTime + duration);
-  } catch(e) {
-    console.error("Audio play failed", e);
-  }
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(vol, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + dur);
+  } catch { /* ok */ }
+}
+const sfx = {
+  correct: () => { playTone(523, "sine", 0.1); setTimeout(() => playTone(659, "sine", 0.25), 100); },
+  wrong:   () => { playTone(300, "square", 0.15, 0.06); setTimeout(() => playTone(250, "square", 0.2, 0.06), 150); },
+  tada:    () => { [440, 554, 659, 880].forEach((f, i) => setTimeout(() => playTone(f, "sine", 0.15), i * 90)); },
+  next:    () => playTone(700, "sine", 0.07, 0.05),
 };
 
-const playSuccessSound = () => {
-  playTone(440, "sine", 0.1); // A4
-  setTimeout(() => playTone(659.25, "sine", 0.3), 100); // E5
-};
+// ── Confetti ──────────────────────────────────────────────────────────────────
 
-const playErrorSound = () => {
-  playTone(300, "square", 0.2, 0.05);
-  setTimeout(() => playTone(250, "square", 0.3, 0.05), 150);
-};
+function ConfettiCanvas() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const COLORS = ["#a3e635", "#38bdf8", "#f97316", "#c084fc", "#ef4444", "#fbbf24"];
+    const particles = Array.from({ length: 80 }, () => ({
+      x: Math.random() * canvas.width,
+      y: -20 - Math.random() * 100,
+      vx: (Math.random() - 0.5) * 3,
+      vy: 2 + Math.random() * 4,
+      r: 4 + Math.random() * 6,
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      rot: Math.random() * Math.PI * 2,
+      drot: (Math.random() - 0.5) * 0.2,
+    }));
+    let frame = 0;
+    let raf: number;
+    function draw() {
+      ctx!.clearRect(0, 0, canvas!.width, canvas!.height);
+      for (const p of particles) {
+        p.x += p.vx; p.y += p.vy; p.rot += p.drot;
+        ctx!.save();
+        ctx!.translate(p.x, p.y);
+        ctx!.rotate(p.rot);
+        ctx!.fillStyle = p.color;
+        ctx!.fillRect(-p.r / 2, -p.r / 2, p.r, p.r * 1.6);
+        ctx!.restore();
+      }
+      frame++;
+      if (frame < 120) raf = requestAnimationFrame(draw);
+    }
+    raf = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return <canvas ref={ref} className="fixed inset-0 pointer-events-none z-50" />;
+}
 
-const playTadaSound = () => {
-  playTone(440, "sine", 0.1); // A4
-  setTimeout(() => playTone(554.37, "sine", 0.1), 100); // C#5
-  setTimeout(() => playTone(659.25, "sine", 0.1), 200); // E5
-  setTimeout(() => playTone(880, "sine", 0.4), 300); // A5
-};
+// ── Types ─────────────────────────────────────────────────────────────────────
 
+interface LessonNode {
+  id: string;
+  type: string;
+  title: string;
+  explanation?: string;
+  content?: string;
+  instruction?: string;
+  instructions?: string;
+  code?: { language: string; content: string } | string;
+  language?: string;
+  codeContent?: string;
+  options?: string[];
+  correctOption?: string;
+  interactionType?: string;
+  [key: string]: unknown;
+}
 
-export function LessonPlayerClient({ 
-  topic, 
-  nodes, 
-  questions, 
-  quizId,
-  studentId 
-}: { 
-  topic: any, 
-  nodes: any[], 
-  questions: any[], 
-  quizId?: number,
-  studentId: string
+interface LessonPlayerProps {
+  topic: {
+    id: number;
+    title: string;
+    description?: string | null;
+    lesson_content?: unknown;
+  };
+  nodes: LessonNode[];
+  questions: unknown[];
+  quizId?: number;
+  studentId: string;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function getCode(node: LessonNode): string {
+  if (typeof node.code === "string") return node.code;
+  if (node.code && typeof node.code === "object") return (node.code as { content: string }).content ?? "";
+  if (typeof node.codeContent === "string") return node.codeContent;
+  return "";
+}
+
+function getLang(node: LessonNode): string {
+  if (node.language) return node.language;
+  if (node.code && typeof node.code === "object") return (node.code as { language: string }).language ?? "code";
+  return "code";
+}
+
+function getText(node: LessonNode): string {
+  return node.explanation ?? node.content ?? node.instruction ?? node.instructions ?? "";
+}
+
+function isInteractive(node: LessonNode): boolean {
+  return (
+    node.type === "practice" ||
+    node.type === "challenge" ||
+    node.type === "quiz_fill_blank" ||
+    node.type === "code_puzzle" ||
+    (!!node.options?.length && !!node.correctOption)
+  );
+}
+
+// ── Node Card Components ──────────────────────────────────────────────────────
+
+function LessonCard({ node }: { node: LessonNode }) {
+  const code = getCode(node);
+  const lang = getLang(node);
+  const text = getText(node);
+  return (
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <h2 className="text-xl font-bold text-slate-900 dark:text-white leading-snug">{node.title}</h2>
+      {text && (
+        <p className="text-base text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{text}</p>
+      )}
+      {code && (
+        <div className="rounded-2xl bg-slate-900 border border-slate-700 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-2 bg-slate-800 border-b border-slate-700">
+            <span className="text-xs font-mono text-slate-400 uppercase tracking-wider">{lang}</span>
+          </div>
+          <pre className="p-4 text-sm font-mono text-green-400 overflow-x-auto leading-relaxed whitespace-pre">
+            <code>{code}</code>
+          </pre>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PracticeCard({
+  node,
+  onAnswered,
+}: {
+  node: LessonNode;
+  onAnswered: (correct: boolean) => void;
 }) {
+  const [selected, setSelected] = useState<string | null>(null);
+  const [checked, setChecked] = useState(false);
+  const text = getText(node);
+  const code = getCode(node);
+  const options = node.options ?? [];
+  const correct = node.correctOption ?? "";
+
+  const isCorrect = selected?.trim().toLowerCase() === correct.trim().toLowerCase();
+
+  function check() {
+    if (!selected || checked) return;
+    setChecked(true);
+    if (isCorrect) { sfx.correct(); onAnswered(true); }
+    else { sfx.wrong(); onAnswered(false); }
+  }
+
+  return (
+    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-300">
+      <h2 className="text-xl font-bold text-slate-900 dark:text-white">{node.title}</h2>
+      {text && <p className="text-base text-slate-600 dark:text-slate-300 leading-relaxed">{text}</p>}
+      {code && (
+        <pre className="rounded-xl bg-slate-900 text-green-400 text-sm font-mono p-4 overflow-x-auto">
+          <code>{code}</code>
+        </pre>
+      )}
+      <div className="space-y-2.5">
+        {options.map((opt, i) => {
+          const isSelected = selected === opt;
+          const isThis = opt.trim().toLowerCase() === correct.trim().toLowerCase();
+          let cls = "w-full text-left px-5 py-3.5 rounded-2xl border-2 font-medium text-base transition-all duration-150 ";
+          if (!checked) {
+            cls += isSelected
+              ? "border-blue-500 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-200"
+              : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-blue-400 hover:bg-blue-50/50";
+          } else {
+            if (isSelected && isThis)  cls += "border-green-500 bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-200";
+            else if (isSelected && !isThis) cls += "border-red-500 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-200";
+            else if (isThis)           cls += "border-green-400 bg-green-50/60 dark:bg-green-950/20 text-green-700 dark:text-green-300";
+            else                       cls += "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-400 opacity-60";
+          }
+          return (
+            <button key={i} disabled={checked} onClick={() => setSelected(opt)} className={cls}>
+              <span className="font-bold text-xs mr-2 opacity-60">{String.fromCharCode(65 + i)}.</span>
+              {opt}
+            </button>
+          );
+        })}
+      </div>
+      {!checked && (
+        <button
+          onClick={check}
+          disabled={!selected}
+          className="w-full py-3.5 rounded-2xl font-bold text-base bg-green-500 hover:bg-green-400 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+        >
+          Cek Jawaban
+        </button>
+      )}
+      {checked && (
+        <div className={`flex items-center gap-3 p-4 rounded-2xl font-semibold text-sm ${isCorrect ? "bg-green-100 dark:bg-green-950/40 text-green-700 dark:text-green-300" : "bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-300"}`}>
+          {isCorrect ? <Check className="w-5 h-5 flex-shrink-0" /> : <XCircle className="w-5 h-5 flex-shrink-0" />}
+          {isCorrect ? "Tepat sekali! 🎉" : `Jawaban yang benar: ${correct}`}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function CompletionCard({
+  topic,
+  expReward,
+  coinsReward,
+}: {
+  topic: { title: string };
+  expReward: number;
+  coinsReward: number;
+}) {
+  return (
+    <div className="text-center space-y-6 animate-in fade-in zoom-in-95 duration-500">
+      <div className="text-7xl animate-bounce">🏆</div>
+      <div>
+        <h2 className="text-3xl font-extrabold text-slate-900 dark:text-white mb-2">Luar Biasa!</h2>
+        <p className="text-slate-500 dark:text-slate-400 text-base">
+          Kamu telah menyelesaikan semua materi topik:<br />
+          <span className="font-bold text-slate-800 dark:text-slate-100">{topic.title}</span>
+        </p>
+      </div>
+      <div className="flex items-center justify-center gap-4">
+        {expReward > 0 && (
+          <div className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-amber-100 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-700/50">
+            <Star className="w-5 h-5 text-amber-500" />
+            <span className="font-extrabold text-amber-700 dark:text-amber-300 text-lg">+{expReward} XP</span>
+          </div>
+        )}
+        {coinsReward > 0 && (
+          <div className="flex items-center gap-2 px-5 py-3 rounded-2xl bg-yellow-100 dark:bg-yellow-950/40 border border-yellow-300 dark:border-yellow-700/50">
+            <Coins className="w-5 h-5 text-yellow-500" />
+            <span className="font-extrabold text-yellow-700 dark:text-yellow-300 text-lg">+{coinsReward} Koin</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Main Player ───────────────────────────────────────────────────────────────
+
+export function LessonPlayerClient({
+  topic,
+  nodes,
+  studentId,
+}: LessonPlayerProps) {
   const router = useRouter();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [isChecked, setIsChecked] = useState(false);
-  const [isCorrect, setIsCorrect] = useState(false);
-  const [isFinished, setIsFinished] = useState(false);
+  const [currentIdx, setCurrentIdx] = useState(0);
+  const [canContinue, setCanContinue] = useState(false);
+  const [finished, setFinished] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
 
-  // Combine nodes and questions into a flat array of "slides"
-  const slides = useMemo(() => {
-    const list: any[] = [];
-    nodes.forEach(node => {
-      if (node.type === "lesson" || node.type === "code") {
-        list.push({ ...node, slideType: "lesson" });
-      } else if (node.type === "practice" && node.options?.length > 0) {
-        list.push({ ...node, slideType: "practice" });
-      }
-    });
+  const lc = topic.lesson_content as Record<string, unknown> | null;
+  const expReward  = typeof lc?.exp_reward    === "number" ? lc.exp_reward    : 0;
+  const coinsReward = typeof lc?.coins_reward  === "number" ? lc.coins_reward  : 0;
 
-    questions.forEach((q, idx) => {
-      list.push({
-        id: `q-${q.id}`,
-        slideType: "challenge",
-        title: `Challenge ${idx + 1}`,
-        instructions: q.question_text,
-        options: [q.option_a, q.option_b, q.option_c, q.option_d],
-        correctOption: q.correct_option === "A" ? q.option_a : 
-                       q.correct_option === "B" ? q.option_b : 
-                       q.correct_option === "C" ? q.option_c : q.option_d
-      });
-    });
+  const totalNodes = nodes.length;
+  const currentNode = nodes[currentIdx];
+  const progress = totalNodes > 0 ? Math.round(((currentIdx) / totalNodes) * 100) : 0;
 
-    return list;
-  }, [nodes, questions]);
-
-  const currentSlide = slides[currentIndex];
-  const progress = slides.length > 0 ? (currentIndex / slides.length) * 100 : 0;
-
-  const handleClose = () => {
-    if (confirm("Yakin ingin keluar? Progres kamu tidak akan tersimpan.")) {
-      router.push("/student");
+  // Auto-allow continue for non-interactive nodes after a short delay
+  useEffect(() => {
+    setCanContinue(false);
+    if (!currentNode) return;
+    if (!isInteractive(currentNode)) {
+      const t = setTimeout(() => setCanContinue(true), 800);
+      return () => clearTimeout(t);
     }
-  };
+  }, [currentIdx, currentNode]);
 
-  const checkAnswer = () => {
-    if (!selectedOption) return;
-    
-    // Check if correct
-    let correct = false;
-    if (currentSlide.correctOption) {
-      correct = selectedOption.trim().toLowerCase() === currentSlide.correctOption.trim().toLowerCase();
-    }
-    
-    setIsCorrect(correct);
-    setIsChecked(true);
+  const handleAnswered = useCallback((_correct: boolean) => {
+    setCanContinue(true);
+  }, []);
 
-    // Play sound effect
-    if (correct) {
-      playSuccessSound();
+  async function handleContinue() {
+    if (!canContinue) return;
+    sfx.next();
+    if (currentIdx < totalNodes - 1) {
+      setCurrentIdx((p) => p + 1);
     } else {
-      playErrorSound();
-    }
-  };
-
-  const nextSlide = () => {
-    if (currentIndex < slides.length - 1) {
-      setCurrentIndex(prev => prev + 1);
-      setSelectedOption(null);
-      setIsChecked(false);
-      setIsCorrect(false);
-    } else {
-      finishLesson();
-    }
-  };
-
-  const finishLesson = async () => {
-    setIsFinished(true);
-    setSaving(true);
-    playTadaSound();
-
-    try {
-      // 1. Give XP/Coins via the town square logic or custom API
-      // Since we don't have a specific API for lesson finish yet, we can use the quiz-score API
-      // If there are questions, submit the score. For simplicity, just give a perfect score if they finish.
-      // Wait, Mimo style enforces they get it right to proceed, so they essentially get 100%.
-      if (quizId) {
-         await fetch(`/api/admin/students/${studentId}/quiz-score`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
-              quiz_id: quizId, 
-              score: questions.length, // Perfect score
-              total_questions: questions.length 
-            })
-         });
-      }
-      
-      // We can also reward coins via the shop/transaction API if it exists, but quiz-score is good enough for now.
-    } catch (err) {
-      console.error("Failed to save progress", err);
-    } finally {
+      // Final node — finish
+      setFinished(true);
+      setShowConfetti(true);
+      sfx.tada();
+      setSaving(true);
+      try {
+        await fetch("/api/student/lesson-complete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ topicId: topic.id, expReward, coinsReward }),
+        });
+      } catch { /* non-fatal */ }
       setSaving(false);
     }
-  };
+  }
 
-  if (isFinished) {
+  function handleClose() {
+    if (!finished && !confirm("Keluar? Progres kamu belum tersimpan.")) return;
+    router.push("/student");
+  }
+
+  function handleBackToDashboard() {
+    router.push("/student");
+  }
+
+  if (!currentNode && !finished) {
     return (
-      <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-white font-sans">
-        <Trophy className="w-24 h-24 text-yellow-400 mb-6 animate-bounce" />
-        <h1 className="text-4xl font-extrabold mb-4 text-center">Luar Biasa!</h1>
-        <p className="text-xl text-slate-300 text-center mb-8">
-          Kamu telah menyelesaikan topik: <span className="text-white font-semibold">{topic.title}</span>
-        </p>
-        
-        <button
-          onClick={() => router.push("/student")}
-          disabled={saving}
-          className="w-full max-w-sm py-4 rounded-2xl font-bold text-lg bg-green-500 hover:bg-green-400 text-slate-900 transition-transform active:scale-95 disabled:opacity-50"
-        >
-          {saving ? "Menyimpan..." : "Lanjut ke Dashboard"}
-        </button>
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-slate-500">Materi tidak ditemukan.</p>
       </div>
     );
   }
 
-  if (!currentSlide) return null;
-
-  const isInteractive = currentSlide.slideType === "practice" || currentSlide.slideType === "challenge";
-
   return (
-    <div className="min-h-screen bg-white flex flex-col font-sans">
-      {/* Top Bar */}
-      <div className="w-full max-w-3xl mx-auto px-4 py-6 flex items-center gap-4">
-        <button 
-          onClick={handleClose}
-          className="text-slate-400 hover:text-slate-600 transition-colors"
-        >
-          <X className="w-6 h-6" />
-        </button>
-        <div className="flex-1 h-4 bg-slate-200 rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-green-500 rounded-full transition-all duration-500 ease-out"
-            style={{ width: `${progress}%` }}
-          />
+    <div className="min-h-screen bg-white dark:bg-slate-950 flex flex-col font-sans">
+      {showConfetti && <ConfettiCanvas />}
+
+      {/* ── Top bar ── */}
+      <div className="sticky top-0 z-30 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800">
+        <div className="w-full max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
+          <button onClick={handleClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors">
+            <X className="w-5 h-5" />
+          </button>
+          <div className="flex-1 h-3 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-green-500 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${finished ? 100 : progress}%` }}
+            />
+          </div>
+          <span className="text-xs font-bold text-slate-400 tabular-nums min-w-[48px] text-right">
+            {finished ? "✓" : `${currentIdx + 1}/${totalNodes}`}
+          </span>
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 w-full max-w-3xl mx-auto px-4 pb-32 flex flex-col pt-8">
-        <h1 className="text-2xl font-bold text-slate-800 mb-6">
-          {currentSlide.title || (currentSlide.slideType === "challenge" ? "Challenge Time!" : "Materi")}
-        </h1>
-
-        {/* Lesson / Explanation */}
-        {(currentSlide.explanation || currentSlide.instructions) && (
-          <div className="text-lg text-slate-700 leading-relaxed mb-8 whitespace-pre-wrap">
-            {currentSlide.explanation || currentSlide.instructions}
-          </div>
-        )}
-
-        {/* Code Snippet (if any) */}
-        {currentSlide.code && (
-          <div className="bg-slate-900 rounded-xl p-4 mb-8 overflow-x-auto">
-            <pre className="text-green-400 font-mono text-sm">
-              <code>{currentSlide.code.content}</code>
-            </pre>
-          </div>
-        )}
-
-        {/* Multiple Choice Options */}
-        {isInteractive && currentSlide.options && (
-          <div className="flex flex-col gap-3 mt-auto">
-            {currentSlide.options.map((opt: string, idx: number) => {
-              const isSelected = selectedOption === opt;
-              let borderClass = "border-slate-200";
-              let bgClass = "bg-white hover:bg-slate-50";
-              let textClass = "text-slate-700";
-
-              if (isChecked) {
-                const isThisCorrect = opt.trim().toLowerCase() === currentSlide.correctOption?.trim().toLowerCase();
-                if (isSelected) {
-                  if (isThisCorrect) {
-                    borderClass = "border-green-500";
-                    bgClass = "bg-green-50";
-                    textClass = "text-green-700";
-                  } else {
-                    borderClass = "border-red-500";
-                    bgClass = "bg-red-50";
-                    textClass = "text-red-700";
-                  }
-                } else if (isThisCorrect && !isCorrect) {
-                  // Show the correct answer if they got it wrong
-                  borderClass = "border-green-500";
-                  bgClass = "bg-green-50";
-                  textClass = "text-green-700";
-                }
-              } else if (isSelected) {
-                borderClass = "border-blue-500";
-                bgClass = "bg-blue-50";
-                textClass = "text-blue-700";
-              }
-
-              return (
-                <button
-                  key={idx}
-                  onClick={() => !isChecked && setSelectedOption(opt)}
-                  disabled={isChecked}
-                  className={`text-left p-4 rounded-2xl border-2 font-medium transition-all ${borderClass} ${bgClass} ${textClass}`}
-                >
-                  {opt}
-                </button>
-              );
-            })}
-          </div>
+      {/* ── Main content ── */}
+      <div className="flex-1 w-full max-w-2xl mx-auto px-4 pt-8 pb-36">
+        {finished ? (
+          <CompletionCard topic={topic} expReward={expReward} coinsReward={coinsReward} />
+        ) : isInteractive(currentNode) ? (
+          <PracticeCard key={currentNode.id} node={currentNode} onAnswered={handleAnswered} />
+        ) : (
+          <LessonCard key={currentNode.id} node={currentNode} />
         )}
       </div>
 
-      {/* Bottom Bar */}
-      <div className={`fixed bottom-0 left-0 w-full border-t-2 p-4 transition-colors ${
-        !isChecked ? "bg-white border-slate-200" :
-        isCorrect ? "bg-green-100 border-green-200" : "bg-red-100 border-red-200"
+      {/* ── Bottom bar ── */}
+      <div className={`fixed bottom-0 left-0 w-full z-20 border-t transition-colors duration-300 ${
+        finished ? "bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800/50" : "bg-white dark:bg-slate-950 border-slate-100 dark:border-slate-800"
       }`}>
-        <div className="w-full max-w-3xl mx-auto flex items-center justify-between">
-          
-          <div className="flex items-center gap-3">
-            {isChecked && isCorrect && (
-              <>
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-green-500">
-                  <Check className="w-8 h-8" />
-                </div>
-                <div className="text-green-600 font-bold text-xl hidden sm:block">Hebat! Jawabanmu benar.</div>
-              </>
-            )}
-            {isChecked && !isCorrect && (
-              <>
-                <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-red-500">
-                  <HeartCrack className="w-8 h-8" />
-                </div>
-                <div className="text-red-600 font-bold text-xl hidden sm:block">Oops, kurang tepat!</div>
-              </>
-            )}
-          </div>
-
-          <button
-            onClick={isChecked || !isInteractive ? nextSlide : checkAnswer}
-            disabled={isInteractive && !selectedOption && !isChecked}
-            className={`py-3 px-8 rounded-2xl font-bold text-lg transition-transform active:scale-95 disabled:opacity-50 disabled:active:scale-100 ${
-              !isChecked && isInteractive 
-                ? "bg-green-500 hover:bg-green-400 text-white" 
-                : isCorrect || !isInteractive
-                  ? "bg-green-500 hover:bg-green-400 text-white ml-auto"
-                  : "bg-red-500 hover:bg-red-400 text-white ml-auto"
-            }`}
-          >
-            {!isInteractive ? "Lanjut" : isChecked ? "Lanjut" : "Cek Jawaban"}
-          </button>
+        <div className="max-w-2xl mx-auto px-4 py-4">
+          {finished ? (
+            <button
+              onClick={handleBackToDashboard}
+              disabled={saving}
+              className="w-full py-4 rounded-2xl font-extrabold text-lg bg-green-500 hover:bg-green-400 text-white transition-all active:scale-[0.98] disabled:opacity-60"
+            >
+              {saving ? "Menyimpan..." : "🎉 Lanjut ke Dashboard"}
+            </button>
+          ) : (
+            <button
+              onClick={handleContinue}
+              disabled={!canContinue}
+              className="w-full py-4 rounded-2xl font-extrabold text-lg bg-green-500 hover:bg-green-400 text-white transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {isInteractive(currentNode) && !canContinue ? "Pilih Jawaban" : (
+                <>Lanjut <ChevronRight className="w-5 h-5" /></>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>
