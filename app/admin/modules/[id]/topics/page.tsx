@@ -1,19 +1,13 @@
 // app/admin/modules/[id]/topics/page.tsx
 // Unified module management page with three tabs:
-//   Tab 1 (topics)     — existing topic management (unchanged)
+//   Tab 1 (topics)     — topic management (JSON-only workflow)
 //   Tab 2 (quiz)       — navigation panel linking to each topic's /quiz sub-route
-//   Tab 3 (assessment) — existing assessment management (unchanged)
-//
-// All server actions, API routes, and component logic are untouched.
-// The activeTab is resolved from the page's searchParams prop (Server Component pattern).
+//   Tab 3 (assessment) — assessment / tryout management
 
 import Link from "next/link";
 import { getSupabaseAdmin } from "../../../../../lib/supabaseAdmin";
 import { getAssessmentByModuleId, getAssessmentQuestions } from "../../../../../lib/lmsData";
-import { AddTopicForm } from "./AddTopicForm";
 import { TopicList } from "./TopicList";
-import { CsvImportForm } from "./CsvImportForm";
-import { SeedEngineTopicsButton } from "./SeedEngineTopicsButton";
 import { CreateAssessmentForm } from "../assessment/CreateAssessmentForm";
 import { AssessmentQuestionList } from "../assessment/AssessmentQuestionList";
 import { AddAssessmentQuestionForm } from "../assessment/AddAssessmentQuestionForm";
@@ -36,7 +30,6 @@ function resolveTab(raw: string | undefined): TabId {
 }
 
 export default async function ModuleTopicsPage({ params, searchParams }: PageProps) {
-  // ── Resolve params & searchParams (may be Promises in Next.js 15) ─────────
   const resolvedParams = await params;
   const resolvedSearch = searchParams ? await searchParams : {};
 
@@ -56,7 +49,6 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
     typeof resolvedSearch?.tab === "string" ? resolvedSearch.tab : undefined
   );
 
-  // ── Data fetching ─────────────────────────────────────────────────────────
   const supabaseAdmin = getSupabaseAdmin();
 
   const [
@@ -86,7 +78,6 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
     );
   }
 
-  // Assessment data (needed for Tab 3 regardless of active tab — fetched server-side)
   const { data: assessment } = await getAssessmentByModuleId(Number(moduleIdParam));
 
   let questions: Awaited<ReturnType<typeof getAssessmentQuestions>>["data"] = [];
@@ -97,66 +88,47 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
 
   const questionCount = questions?.length ?? 0;
 
-  const usedEngineTopicIds = (topics ?? [])
-    .map((t) => t.engine_topic_id)
-    .filter((id): id is string => typeof id === "string" && id.length > 0);
-
   // ── Tab 1: Topics ─────────────────────────────────────────────────────────
   const topicsTabContent = (
     <div className="space-y-6">
-      {/* Section 0: Sync from Engine */}
-      <div className="rounded-lg border-2 border-[var(--success)]/40 bg-[var(--success)]/5 p-4 space-y-4">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">🔗</span>
-          <div>
-            <h2 className="text-sm font-bold text-[var(--text-primary)]">Sync dari Lesson Engine</h2>
-            <p className="text-xs text-[var(--text-muted)]">
-              Tambahkan semua lesson bawaan dari engine ke modul ini sekaligus. Pilih kategori —
-              semua topik langsung ter-publish dan siap dipakai siswa.
-            </p>
-          </div>
+      {/* Info banner — JSON workflow */}
+      <div className="flex items-start gap-3 rounded-xl border border-violet-200 dark:border-violet-800/60 bg-violet-50 dark:bg-violet-950/30 p-4">
+        <span className="text-xl mt-0.5">📦</span>
+        <div className="flex-1">
+          <h2 className="text-sm font-bold text-violet-800 dark:text-violet-200 mb-1">
+            Topik dibuat via Bulk Upload JSON
+          </h2>
+          <p className="text-xs text-violet-700 dark:text-violet-300 leading-relaxed">
+            Untuk menambah atau mengganti topik, gunakan tombol{" "}
+            <strong>+ Create New Module</strong> dari halaman{" "}
+            <Link
+              href="/admin/modules"
+              className="underline underline-offset-2 hover:text-violet-900 dark:hover:text-violet-100"
+            >
+              Kelola Modul
+            </Link>{" "}
+            dan pilih{" "}
+            <strong>Option D: Bulk Upload via JSON</strong>. File JSON berisi semua topik,
+            node materi (10–20 per topik), dan quiz post-class sekaligus.
+          </p>
         </div>
-        <SeedEngineTopicsButton moduleId={moduleIdParam} />
       </div>
 
-      {/* Section 1: Manual input + topic list */}
-      <div className="rounded-lg border-2 border-[var(--accent)]/30 bg-[var(--accent)]/5 p-4 space-y-4">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">📝</span>
-          <div>
-            <h2 className="text-sm font-bold text-[var(--text-primary)]">Input Manual</h2>
-            <p className="text-xs text-[var(--text-muted)]">
-              Tambah topik satu per satu, hubungkan ke lesson engine bawaan, dan set publish.
-            </p>
-          </div>
-        </div>
-        <AddTopicForm moduleId={moduleIdParam} usedEngineTopicIds={usedEngineTopicIds} />
-        {topicsError && (
-          <p className="text-sm text-red-600">Error: {topicsError.message}</p>
+      {/* Topic list */}
+      {topicsError && (
+        <p className="text-sm text-red-600">Error: {topicsError.message}</p>
+      )}
+      <div className="glass-panel rounded-xl p-4">
+        <h3 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">
+          Daftar Topik ({topics?.length ?? 0})
+        </h3>
+        {!topics || topics.length === 0 ? (
+          <p className="text-sm text-[var(--text-muted)] italic">
+            Belum ada topik untuk modul ini. Upload JSON terlebih dahulu.
+          </p>
+        ) : (
+          <TopicList initialTopics={topics} moduleId={moduleIdParam} />
         )}
-        <div className="glass-panel rounded-lg p-4">
-          <h3 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">Daftar Topik</h3>
-          {!topics || topics.length === 0 ? (
-            <p className="text-sm text-[var(--text-muted)]">Belum ada topik untuk modul ini.</p>
-          ) : (
-            <TopicList initialTopics={topics} moduleId={moduleIdParam} />
-          )}
-        </div>
-      </div>
-
-      {/* Section 2: Bulk CSV upload */}
-      <div className="rounded-lg border-2 border-[var(--accent-light)]/30 bg-[var(--accent-light)]/5 p-4 space-y-4">
-        <div className="flex items-center gap-2">
-          <span className="text-lg">📦</span>
-          <div>
-            <h2 className="text-sm font-bold text-[var(--text-primary)]">Bulk Upload via CSV</h2>
-            <p className="text-xs text-[var(--text-muted)]">
-              Upload banyak lesson sekaligus. Topik baru akan dibuat otomatis (status draft) jika
-              belum ada. Setelah upload, publish topik secara manual di daftar topik.
-            </p>
-          </div>
-        </div>
-        <CsvImportForm moduleId={moduleIdParam} />
       </div>
     </div>
   );
@@ -174,9 +146,9 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
       {!topics || topics.length === 0 ? (
         <div className="rounded-lg border border-dashed border-[var(--glass-border)] bg-[var(--glass-bg)] p-8 text-center">
           <p className="text-sm text-[var(--text-muted)]">
-            Belum ada topik. Tambahkan topik di tab{" "}
+            Belum ada topik. Upload JSON di tab{" "}
             <Link
-              href={`?tab=topics`}
+              href="?tab=topics"
               replace
               scroll={false}
               className="font-semibold text-brand-primary underline underline-offset-2"
@@ -199,16 +171,16 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
                     {topic.order_index}. {topic.title}
                   </span>
                   {topic.engine_topic_id && (
-                    <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs text-blue-700">
+                    <span className="ml-2 inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-xs text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-400">
                       🔗 {topic.engine_topic_id}
                     </span>
                   )}
                   <span className={`ml-2 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs ${
-                    topic.status === 'published'
-                      ? 'border-green-300 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/40 dark:text-green-400'
-                      : 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-700/50 dark:bg-amber-950/40 dark:text-amber-400'
+                    topic.status === "published"
+                      ? "border-green-300 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/40 dark:text-green-400"
+                      : "border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-700/50 dark:bg-amber-950/40 dark:text-amber-400"
                   }`}>
-                    {topic.status === 'published' ? '✅ Published' : '⚠️ Draft'}
+                    {topic.status === "published" ? "✅ Published" : "⚠️ Draft"}
                   </span>
                 </div>
                 <span className="ml-3 shrink-0 text-xs font-semibold text-brand-primary">
@@ -222,21 +194,18 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
     </div>
   );
 
-  // ── Tab 3: Assessment / Tryout ─────────────────────────────────────────────
+  // ── Tab 3: Assessment ──────────────────────────────────────────────────────
   const assessmentTabContent = (
     <div className="space-y-6">
       {!assessment ? (
-        /* No assessment yet */
         <div className="glass-panel rounded-lg p-6">
           <p className="mb-4 text-sm text-[var(--text-secondary)]">
-            Modul ini belum memiliki assessment. Buat assessment baru untuk mengaktifkan fitur
-            tryout.
+            Modul ini belum memiliki assessment. Buat assessment baru untuk mengaktifkan fitur tryout.
           </p>
           <CreateAssessmentForm moduleId={moduleIdParam} />
         </div>
       ) : (
         <>
-          {/* Assessment title bar */}
           <div className="flex items-center gap-3 glass-panel rounded-lg px-4 py-3">
             <span className="text-lg">📋</span>
             <div className="min-w-0 flex-1">
@@ -247,35 +216,27 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
                 {assessment.title}
               </p>
             </div>
-            <span
-              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                questionCount >= 10
-                  ? "bg-green-100 text-green-800"
-                  : "bg-amber-100 text-amber-800"
-              }`}
-            >
+            <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+              questionCount >= 10 ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
+            }`}>
               {questionCount} soal
             </span>
           </div>
 
-          {/* Warning: fewer than 10 questions */}
           {questionCount < 10 && (
             <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
               <span className="mt-0.5 shrink-0">⚠️</span>
               <span>
-                Assessment membutuhkan minimal <strong>10 soal</strong> agar dapat digunakan
-                siswa. Saat ini baru ada <strong>{questionCount} soal</strong>.
+                Assessment membutuhkan minimal <strong>10 soal</strong> agar dapat digunakan siswa.
+                Saat ini baru ada <strong>{questionCount} soal</strong>.
               </span>
             </div>
           )}
 
-          {/* Question list */}
           <div className="glass-panel rounded-lg p-4">
             <h2 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">Daftar Soal</h2>
             {!questions || questions.length === 0 ? (
-              <p className="text-sm text-[var(--text-muted)]">
-                Belum ada soal. Tambahkan soal di bawah.
-              </p>
+              <p className="text-sm text-[var(--text-muted)]">Belum ada soal. Tambahkan soal di bawah.</p>
             ) : (
               <AssessmentQuestionList
                 questions={questions}
@@ -285,7 +246,6 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
             )}
           </div>
 
-          {/* Add question form */}
           <AddAssessmentQuestionForm
             assessmentId={assessment.id}
             moduleId={moduleIdParam}
@@ -299,7 +259,6 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
   const firstTopicEngineId =
     (topics ?? []).find((t) => t.engine_topic_id)?.engine_topic_id ?? null;
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <ModuleTabShell
       moduleId={moduleIdParam}
