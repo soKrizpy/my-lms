@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { createClient } from "../../../../lib/supabase/server";
 import { getSupabaseAdmin } from "../../../../lib/supabaseAdmin";
 import { resolveTopicUnlockMap } from "../../../../lib/topicUnlock";
@@ -53,7 +53,7 @@ export async function GET() {
       if (m) m.globalIndex = idx;
     });
 
-    // ── Streak calculation ────────────────────────────────────────────────
+    // â”€â”€ Streak calculation â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
     const meetingRecords: MeetingRecord[] = sortedMeetings.map((m: any) => ({
       meetingDate: new Date(m.meeting_date as string),
       hasJoined: m.meeting_students?.[0]?.has_joined === true,
@@ -108,7 +108,7 @@ export async function GET() {
       .map((sm: any) => sm?.module_id)
       .filter((id: any): id is number => typeof id === "number");
 
-    // 3. Quiz scores — fetched early so unlock logic can reference them
+    // 3. Quiz scores â€” fetched early so unlock logic can reference them
     let quizAttempts: any[] = [];
     try {
       const { data, error } = await supabaseAdmin
@@ -186,6 +186,21 @@ export async function GET() {
       }
 
       // 6. Module Assembly with safe null-coalescing
+      // Pre-compute global index per topic (same sort as resolveTopicUnlockMap)
+      // so topic N maps to sortedMeetings[N].progress_report for the post-class quiz gate.
+      const topicGlobalIndexMap = new Map<number, number>();
+      {
+        const allTopicsSorted = ((topics || []) as any[])
+          .slice()
+          .sort((a: any, b: any) => {
+            if (a.module_id !== b.module_id) return a.module_id - b.module_id;
+            return (a.order_index ?? 0) - (b.order_index ?? 0);
+          });
+        allTopicsSorted.forEach((t: any, idx: number) => {
+          if (t?.id != null) topicGlobalIndexMap.set(t.id as number, idx);
+        });
+      }
+
       modulesWithTopics = ((studentModules || []) as any[])
         .map((sm: any) => {
           if (!sm) return null;
@@ -205,7 +220,17 @@ export async function GET() {
               const quiz = ((quizzes || []) as any[]).find((q: any) => q && q.topic_id === t.id);
               // Use centralised unlock map (covers join + engine completion)
               const isUnlocked = unlockMap.get(t.id)?.isUnlocked ?? false;
-              return { ...t, quiz: quiz ?? null, isUnlocked };
+              // Post-class quiz gate: quiz only opens after teacher submits progress_report
+              const globalIdx = topicGlobalIndexMap.get(t.id as number) ?? -1;
+              const correspondingMeeting =
+                globalIdx >= 0 && globalIdx < sortedMeetings.length
+                  ? sortedMeetings[globalIdx]
+                  : undefined;
+              const hasProgressReport =
+                typeof correspondingMeeting?.progress_report === 'string' &&
+                correspondingMeeting.progress_report.trim().length > 0;
+
+              return { ...t, quiz: quiz ?? null, isUnlocked, hasProgressReport };
             })
             .filter((t: any): t is object => t !== null);
 
@@ -236,7 +261,7 @@ export async function GET() {
             .in('module_id', moduleIds);
           assessmentList = (asmData ?? []) as Array<{ id: number; module_id: number; title: string }>;
         }
-      } catch { /* graceful degradation — assessmentList stays [] */ }
+      } catch { /* graceful degradation â€” assessmentList stays [] */ }
 
       modulesWithTopics = modulesWithTopics.map((mod: any) => {
         const asm = assessmentList.find((a) => a.module_id === mod.id);

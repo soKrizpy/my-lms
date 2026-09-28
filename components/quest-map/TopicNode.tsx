@@ -32,6 +32,7 @@ export interface TopicNodeTopic {
   order_index: number;
   engine_topic_id: string | null;
   isUnlocked: boolean;
+  hasProgressReport?: boolean;
   description?: string | null;
   project_link?: string | null;
   topic_link?: string | null;
@@ -46,6 +47,7 @@ interface TopicNodeProps {
   topicProgress: TopicProgress[];
   onStartLesson?: (engineTopicId: string) => void;
   onOpenQuiz?: (quiz: { id: number; title: string }) => void;
+  onOpenPostClassQuiz?: (topic: TopicNodeTopic) => void;
   onSelectTopic?: (topic: TopicNodeTopic) => void;
   quizAttempts: QuizAttempt[];
   nodeIndex: number;
@@ -106,6 +108,7 @@ function TopicNodeInner({
   topicProgress,
   onStartLesson,
   onOpenQuiz,
+  onOpenPostClassQuiz,
   onSelectTopic,
   quizAttempts,
   nodeIndex,
@@ -261,24 +264,29 @@ function TopicNodeInner({
           </button>
         )}
 
-        {/* Quiz badge / nudge */}
+        {/* Post-class quiz badge — gate-aware */}
         {topic.quiz && state !== 'locked' && (
           quizAttempt ? (
-            // Attempted — show best score (score column always stores the highest)
-            <span
-              className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-700/50"
-            >
+            // Already attempted — show best score
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-700/50">
               Quiz ✓ {quizAttempt.score}
             </span>
-          ) : (
-            // No attempt yet — nudge student
+          ) : topic.hasProgressReport ? (
+            // Gate open — teacher submitted report
             <button
               type="button"
-              onClick={() => onOpenQuiz?.(topic.quiz!)}
+              onClick={() => onOpenPostClassQuiz
+                ? onOpenPostClassQuiz(topic)
+                : onOpenQuiz?.(topic.quiz!)}
               className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-500/60 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors cursor-pointer"
             >
-              📝 Kerjakan Quiz!
+              📝 Kerjakan Kuis!
             </button>
+          ) : (
+            // Gate closed — waiting for teacher report
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 cursor-default">
+              🔒 Menunggu Laporan Guru
+            </span>
           )
         )}
 

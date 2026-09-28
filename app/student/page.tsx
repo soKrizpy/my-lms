@@ -8,6 +8,7 @@ import { MagicalCounter } from "@/components/MagicalCounter";
 import { useLmsEngineListener } from "@/lib/useLmsEngineListener";
 import { getQuizQuestions } from "@/lib/quizResponse";
 import { QuestMap } from "@/components/quest-map/QuestMap";
+import { PostClassQuizModal } from "@/components/PostClassQuizModal";
 import { AvatarDisplay } from "@/components/avatar/AvatarDisplay";
 import { getTitleById } from "@/lib/gamification/catalog";
 import { TownSquareTab } from "@/components/town-square/TownSquareTab";
@@ -1305,6 +1306,7 @@ export default function StudentDashboard() {
   };
 
   const [activeQuiz, setActiveQuiz] = useState<{ id: number; title: string } | null>(null);
+  const [activePostClassQuiz, setActivePostClassQuiz] = useState<{ topicId: number; topicTitle: string } | null>(null);
   const [badgeQueue, setBadgeQueue] = useState<BadgeDefinition[]>([]);
   const [earnedBadges, setEarnedBadges] = useState<EarnedBadgeRow[]>([]);
   const [totalXP, setTotalXP] = useState(0);
@@ -1788,6 +1790,7 @@ export default function StudentDashboard() {
                 maxStreak={data.maxStreak ?? 0}
                 completedEngineTopics={data.completedEngineTopics ?? 0}
                 onOpenQuiz={(quiz) => setActiveQuiz(quiz)}
+                onOpenPostClassQuiz={(topic) => setActivePostClassQuiz({ topicId: topic.id, topicTitle: topic.title })}
                 onUpdateProfile={handleUpdateProfile}
                 onGoToSchedule={() => setActiveTab("jadwal")}
                 assessmentSummaries={data.assessmentSummaries || []}
@@ -1815,6 +1818,14 @@ export default function StudentDashboard() {
           quiz={activeQuiz}
           onClose={() => setActiveQuiz(null)}
           onComplete={() => { setActiveQuiz(null); void fetchData(); }}
+        />
+      )}
+      {activePostClassQuiz && (
+        <PostClassQuizModal
+          topicId={activePostClassQuiz.topicId}
+          topicTitle={activePostClassQuiz.topicTitle}
+          onClose={() => setActivePostClassQuiz(null)}
+          onComplete={() => { void fetchData(); }}
         />
       )}
       <BadgeCelebrationModal queue={badgeQueue} onDismiss={handleBadgeDismiss} />

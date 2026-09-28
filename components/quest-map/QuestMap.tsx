@@ -110,6 +110,7 @@ interface QuestMapProps {
   maxStreak: number;
   completedEngineTopics: number;
   onOpenQuiz?: (quiz: { id: number; title: string }) => void;
+  onOpenPostClassQuiz?: (topic: import('./TopicNode').TopicNodeTopic) => void;
   onUpdateProfile?: (
     avatarId: string,
     titleId: string
@@ -203,6 +204,7 @@ function QuestMapInner({
   maxStreak,
   completedEngineTopics,
   onOpenQuiz,
+  onOpenPostClassQuiz,
   onUpdateProfile,
   onGoToSchedule,
   assessmentSummaries,
@@ -255,6 +257,11 @@ function QuestMapInner({
   const handleOpenQuiz = useCallback(
     (quiz: { id: number; title: string }) => onOpenQuiz?.(quiz),
     [onOpenQuiz]
+  );
+
+  const handleOpenPostClassQuiz = useCallback(
+    (topic: import('./TopicNode').TopicNodeTopic) => onOpenPostClassQuiz?.(topic),
+    [onOpenPostClassQuiz]
   );
 
   const handleSelectTopic = useCallback(
@@ -390,6 +397,7 @@ function QuestMapInner({
               quizAttempts={quizAttempts}
               onStartLesson={handleStartLesson}
               onOpenQuiz={handleOpenQuiz}
+              onOpenPostClassQuiz={handleOpenPostClassQuiz}
               onSelectTopic={handleSelectTopic}
               assessmentState={buildAssessmentState(
                 mod,

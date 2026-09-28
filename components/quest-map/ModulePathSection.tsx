@@ -30,6 +30,7 @@ interface ModulePathSectionProps {
   quizAttempts: QuizAttempt[];
   onStartLesson?: (engineTopicId: string) => void;
   onOpenQuiz?: (quiz: { id: number; title: string }) => void;
+  onOpenPostClassQuiz?: (topic: TopicNodeTopic) => void;
   onSelectTopic?: (topic: TopicNodeTopic, moduleTitle: string, nodeIndex: number) => void;
   assessmentState?: AssessmentState;
   onOpenAssessment?: () => void;
@@ -76,6 +77,7 @@ function ModulePathSectionInner({
   quizAttempts,
   onStartLesson,
   onOpenQuiz,
+  onOpenPostClassQuiz,
   onSelectTopic,
   assessmentState,
   onOpenAssessment,
@@ -238,6 +240,7 @@ function ModulePathSectionInner({
                     quizAttempts={quizAttempts}
                     onStartLesson={isPaused ? undefined : onStartLesson}
                     onOpenQuiz={isPaused ? undefined : onOpenQuiz}
+                    onOpenPostClassQuiz={isPaused ? undefined : onOpenPostClassQuiz}
                     onSelectTopic={(t) => onSelectTopic?.(t, module.title, idx)}
                     nodeIndex={idx}
                   />
@@ -326,6 +329,7 @@ function ModulePathSectionInner({
                             quizAttempts={quizAttempts}
                             onStartLesson={isPaused ? undefined : onStartLesson}
                             onOpenQuiz={isPaused ? undefined : onOpenQuiz}
+                            onOpenPostClassQuiz={isPaused ? undefined : onOpenPostClassQuiz}
                             onSelectTopic={(t) => onSelectTopic?.(t, module.title, originalIdx)}
                             nodeIndex={originalIdx}
                           />
