@@ -1,0 +1,69 @@
+{
+  "module_title": "Contoh Modul Python Dasar",
+  "description": "Modul belajar Python untuk pemula dengan gaya Duolingo/Mimo.",
+  "level": "beginner",
+  "gamification_type": "duolingo",
+  "topics": [
+    {
+      "title": "Topik 1: Pengenalan Python",
+      "order_index": 1,
+      "description": "Belajar sintaks dasar Python dan cara menjalankan program pertama.",
+      "exp_reward": 50,
+      "coins_reward": 10,
+      "cypeco_exp_reward": 5,
+      "nodes": [
+        { "id": "node-01", "type": "lesson", "title": "Apa itu Python?", "content": "Python adalah bahasa pemrograman yang mudah dipelajari." },
+        { "id": "node-02", "type": "lesson", "title": "Mengapa Python Populer?", "content": "Python digunakan di AI, web, data science, dan banyak bidang lain." },
+        { "id": "node-03", "type": "code", "title": "Hello World!", "code": "print('Hello, World!')", "language": "python" },
+        { "id": "node-04", "type": "practice", "title": "Latihan: Cetak Nama", "instruction": "Ubah kode agar mencetak namamu sendiri." },
+        { "id": "node-05", "type": "lesson", "title": "Komentar dalam Python", "content": "Gunakan # untuk menulis komentar." },
+        { "id": "node-06", "type": "code", "title": "Contoh Komentar", "code": "# Ini adalah komentar\nprint('Belajar Python')", "language": "python" },
+        { "id": "node-07", "type": "lesson", "title": "Variabel", "content": "Variabel adalah tempat menyimpan data." },
+        { "id": "node-08", "type": "code", "title": "Membuat Variabel", "code": "nama = 'Budi'\numur = 12\nprint(nama, umur)", "language": "python" },
+        { "id": "node-09", "type": "practice", "title": "Latihan: Buat Variabel", "instruction": "Buat variabel kota berisi nama kotamu." },
+        { "id": "node-10", "type": "challenge", "title": "Mini Challenge", "instruction": "Buat program yang mencetak nama, umur, dan kota dalam satu baris." }
+      ],
+      "post_class_quiz": [
+        {
+          "id": "q1",
+          "question": "Apa fungsi perintah print() di Python?",
+          "options": [
+            { "id": "a", "text": "Mencetak output ke layar" },
+            { "id": "b", "text": "Menyimpan data ke file" },
+            { "id": "c", "text": "Menghapus variabel" },
+            { "id": "d", "text": "Mengimpor modul" },
+            { "id": "e", "text": "Menjalankan loop" }
+          ],
+          "correct_option_id": "a",
+          "explanation": "Fungsi print() digunakan untuk menampilkan output ke layar."
+        },
+        {
+          "id": "q2",
+          "question": "Bagaimana cara membuat komentar 1 baris di Python?",
+          "options": [
+            { "id": "a", "text": "// komentar" },
+            { "id": "b", "text": "# komentar" },
+            { "id": "c", "text": "/* komentar */" },
+            { "id": "d", "text": "-- komentar" },
+            { "id": "e", "text": "** komentar" }
+          ],
+          "correct_option_id": "b",
+          "explanation": "Di Python, komentar satu baris dimulai dengan tanda #."
+        },
+        {
+          "id": "q3",
+          "question": "Manakah cara yang benar membuat variabel di Python?",
+          "options": [
+            { "id": "a", "text": "var nama = 'Budi'" },
+            { "id": "b", "text": "string nama = 'Budi'" },
+            { "id": "c", "text": "nama = 'Budi'" },
+            { "id": "d", "text": "let nama = 'Budi'" },
+            { "id": "e", "text": "dim nama = 'Budi'" }
+          ],
+          "correct_option_id": "c",
+          "explanation": "Python menggunakan penugasan langsung tanpa kata kunci tipe data."
+        }
+      ]
+    }
+  ]
+}

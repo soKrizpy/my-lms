@@ -14,6 +14,7 @@ import {
   Download,
   AlertCircle,
   HelpCircle,
+  FileJson2,
 } from 'lucide-react';
 
 interface CreateModuleModalProps {
@@ -22,7 +23,7 @@ interface CreateModuleModalProps {
   onModuleCreated?: () => void;
 }
 
-type Mode = 'select' | 'scratch' | 'premade' | 'csv';
+type Mode = 'select' | 'scratch' | 'premade' | 'csv' | 'json';
 type SeedFailureDetails = {
   conflicts?: Array<{ lessonId: string; title: string; moduleId: number }>;
   errors?: Array<{ lessonId: string; title: string; message: string }>;
@@ -123,6 +124,11 @@ export function CreateModuleModal({
   const [createdModuleId, setCreatedModuleId] = useState<string | null>(null);
   const [seedFailureDetails, setSeedFailureDetails] =
     useState<SeedFailureDetails | null>(null);
+
+  // Option D (JSON) State
+  const jsonFileRef = useRef<HTMLInputElement>(null);
+  const [jsonFile, setJsonFile] = useState<File | null>(null);
+  const [jsonErrors, setJsonErrors] = useState<Array<{ path: string; message: string }>>([]);
 
   // Submit Option A: Scratch
   async function handleCreateScratch(e: React.FormEvent) {
@@ -276,6 +282,54 @@ export function CreateModuleModal({
     }
   }
 
+  async function handleImportJson(e: React.FormEvent) {
+    e.preventDefault();
+    if (!jsonFile) {
+      setError('Pilih file JSON terlebih dahulu.');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setJsonErrors([]);
+
+    try {
+      const text = await jsonFile.text();
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(text);
+      } catch {
+        setError('File bukan JSON yang valid. Periksa sintaks file Anda.');
+        setLoading(false);
+        return;
+      }
+
+      const res = await fetch('/api/admin/modules/bulk-upload-json', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(parsed),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (data.errors && Array.isArray(data.errors)) {
+          setJsonErrors(data.errors);
+          setError(data.error ?? 'Validasi JSON gagal. Lihat detail error di bawah.');
+        } else {
+          setError(data.error ?? 'Gagal mengupload modul.');
+        }
+        return;
+      }
+
+      onSuccess();
+      router.push(`/admin/modules/${data.moduleId}/topics?tab=topics`);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Terjadi kesalahan upload JSON.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden my-8 transition-all">
@@ -291,6 +345,7 @@ export function CreateModuleModal({
                 {mode === 'scratch' && 'Buat Modul dari Awal (Scratch)'}
                 {mode === 'premade' && 'Pilih Template Modul Bawaan'}
                 {mode === 'csv' && 'Bulk Upload Modul via CSV'}
+                {mode === 'json' && 'Bulk Upload Modul via JSON'}
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {mode === 'select' &&
@@ -300,6 +355,8 @@ export function CreateModuleModal({
                   'Pilih dari kurikulum siap pakai yang sudah tersedia.'}
                 {mode === 'csv' &&
                   'Upload file CSV berisi lesson, node, dan quiz secara kolektif.'}
+                {mode === 'json' &&
+                  'Upload file .json berstruktur dengan topik, node, dan quiz lengkap.'}
               </p>
             </div>
           </div>
@@ -414,6 +471,26 @@ export function CreateModuleModal({
                   <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
                     Upload file CSV berstruktur untuk mengimpor banyak topik,
                     materi interaktif, dan kuis sekaligus secara otomatis.
+                  </p>
+                </div>
+              </div>
+
+              <div
+                onClick={() => setMode('json')}
+                className="group p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/60 hover:border-blue-500 dark:hover:border-blue-500 hover:shadow-md cursor-pointer transition-all flex items-start gap-4"
+              >
+                <div className="p-3 rounded-xl bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400 group-hover:scale-105 transition-transform">
+                  <FileJson2 className="w-6 h-6" />
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                      Option D: Bulk Upload via JSON (Duolingo/Mimo Format)
+                    </h3>
+                    <ArrowRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                  </div>
+                  <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                    Upload file .json dengan format node Duolingo/Mimo. Setiap topik wajib memiliki 10–20 node, quiz 5 pilihan, dan reward EXP/Coins/Cypeco.
                   </p>
                 </div>
               </div>
@@ -780,6 +857,128 @@ export function CreateModuleModal({
                     className="px-5 py-2 text-xs font-bold text-white bg-emerald-600 rounded-xl hover:bg-emerald-700 disabled:opacity-50 flex items-center gap-1.5"
                   >
                     {loading ? 'Mengunggah...' : 'Upload & Impor CSV →'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
+
+          {/* MODE JSON UPLOAD */}
+          {mode === 'json' && (
+            <form onSubmit={handleImportJson} className="space-y-4">
+              {/* Download Template */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-800/60">
+                <div className="flex items-center gap-2">
+                  <FileJson2 className="w-4 h-4 text-violet-600 dark:text-violet-400" />
+                  <span className="text-xs font-semibold text-violet-700 dark:text-violet-300">
+                    Gunakan template JSON yang benar
+                  </span>
+                </div>
+                <a
+                  href="/templates/contoh-modul.json"
+                  download="contoh-modul.json"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-violet-600 text-white text-xs font-bold hover:bg-violet-700 transition-colors"
+                >
+                  <Download className="w-3 h-3" />
+                  Download Template
+                </a>
+              </div>
+
+              {/* Schema requirements */}
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs space-y-1.5 text-slate-600 dark:text-slate-300">
+                <p className="font-bold text-slate-800 dark:text-slate-200">Aturan validasi JSON:</p>
+                <ul className="space-y-1 list-disc list-inside">
+                  <li><code className="font-mono bg-slate-200 dark:bg-slate-700 px-1 rounded">module_title</code> — wajib ada (string)</li>
+                  <li><code className="font-mono bg-slate-200 dark:bg-slate-700 px-1 rounded">level</code> — beginner / intermediate / advanced</li>
+                  <li>Setiap topik wajib punya <strong>10–20 node</strong></li>
+                  <li>Setiap soal quiz wajib punya tepat <strong>5 pilihan jawaban</strong></li>
+                  <li>Reward: <code className="font-mono bg-slate-200 dark:bg-slate-700 px-1 rounded">exp_reward</code>, <code className="font-mono bg-slate-200 dark:bg-slate-700 px-1 rounded">coins_reward</code>, <code className="font-mono bg-slate-200 dark:bg-slate-700 px-1 rounded">cypeco_exp_reward</code></li>
+                </ul>
+              </div>
+
+              {/* File Input */}
+              <div>
+                <input
+                  ref={jsonFileRef}
+                  type="file"
+                  accept=".json,application/json"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0] ?? null;
+                    setJsonFile(f);
+                    setError(null);
+                    setJsonErrors([]);
+                  }}
+                  className="hidden"
+                  id="modal-json-input"
+                />
+                <label
+                  htmlFor="modal-json-input"
+                  className={`border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors ${
+                    jsonFile
+                      ? 'border-violet-500 bg-violet-500/5 text-violet-700 dark:text-violet-400'
+                      : 'border-slate-300 dark:border-slate-700 hover:border-violet-500 bg-slate-50 dark:bg-slate-900/50'
+                  }`}
+                >
+                  <FileJson2 className="w-8 h-8 mb-2 opacity-70" />
+                  {jsonFile ? (
+                    <div className="text-center">
+                      <p className="text-xs font-bold text-slate-900 dark:text-white">{jsonFile.name}</p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        ({(jsonFile.size / 1024).toFixed(1)} KB) — Klik untuk mengganti
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        Klik atau Drag &amp; Drop file .json di sini
+                      </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Format: module_title, level, topics[ ] dengan nodes dan post_class_quiz
+                      </p>
+                    </div>
+                  )}
+                </label>
+              </div>
+
+              {/* Validation errors list */}
+              {jsonErrors.length > 0 && (
+                <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/60 max-h-48 overflow-y-auto">
+                  <p className="text-xs font-bold text-red-700 dark:text-red-400 mb-2">
+                    {jsonErrors.length} error ditemukan:
+                  </p>
+                  <ul className="space-y-1">
+                    {jsonErrors.map((e, i) => (
+                      <li key={i} className="text-xs text-red-600 dark:text-red-400 flex items-start gap-1.5">
+                        <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
+                        <span>{e.message}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => { setMode('select'); setJsonFile(null); setJsonErrors([]); setError(null); }}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                >
+                  ← Kembali ke Pilihan Mode
+                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading || !jsonFile}
+                    className="px-5 py-2 text-xs font-bold text-white bg-violet-600 rounded-xl hover:bg-violet-700 disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {loading ? 'Memvalidasi & Upload...' : '🚀 Upload JSON Modul →'}
                   </button>
                 </div>
               </div>
