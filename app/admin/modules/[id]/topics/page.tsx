@@ -136,10 +136,14 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
   // ── Tab 2: Quiz navigation ─────────────────────────────────────────────────
   const quizTabContent = (
     <div className="space-y-4">
-      <div className="glass-panel rounded-lg p-4">
+      <div className="glass-panel rounded-lg p-4 space-y-2">
         <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-          Klik topik di bawah untuk mengelola quiz-nya. Setiap topik memiliki quiz tersendiri
-          yang berisi soal pilihan ganda untuk siswa.
+          Topik yang sudah memiliki quiz JSONB (dari JSON upload) menampilkan badge{" "}
+          <span className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">✅ Quiz JSONB</span>{" "}
+          — quiznya dikelola via <strong>✏️ Edit Materi → tab Quiz</strong>.
+        </p>
+        <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+          Topik lama tanpa JSONB quiz tetap bisa menggunakan <strong>Kelola quiz</strong> (System A) di sini.
         </p>
       </div>
 

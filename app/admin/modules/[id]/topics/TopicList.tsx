@@ -7,6 +7,13 @@ import { BUILT_IN_LESSONS } from "../../../../../lib/builtInLessons";
 import { EngineModal } from "../../../../../components/EngineModal";
 import { LessonContentEditorModal, type LessonContent } from "./LessonContentEditorModal";
 
+/** Returns true when a topic's lesson_content has a non-empty post_class_quiz array. */
+function hasJsonbQuiz(lessonContent: unknown): boolean {
+  if (!lessonContent || typeof lessonContent !== "object") return false;
+  const pcq = (lessonContent as Record<string, unknown>).post_class_quiz;
+  return Array.isArray(pcq) && pcq.length > 0;
+}
+
 type Topic = {
   id: number;
   title: string;
@@ -147,12 +154,20 @@ export function TopicList({
                     ✏️ Edit Materi
                   </button>
                 )}
-                <Link
-                  href={`/admin/modules/${moduleId}/topics/${topic.id}/quiz`}
-                  className="text-sm font-medium text-slate-900 dark:text-slate-100 underline"
-                >
-                  Kelola quiz
-                </Link>
+                {/* Show "Kelola quiz" (System A) only when topic has no JSONB post_class_quiz.
+                    When JSONB quiz exists, quiz is managed via Edit Materi → Quiz tab. */}
+                {hasJsonbQuiz(topic.lesson_content) ? (
+                  <span className="inline-flex items-center gap-1 rounded-md border border-emerald-300 dark:border-emerald-700/60 bg-emerald-50 dark:bg-emerald-950/30 px-2.5 py-1 text-xs font-semibold text-emerald-700 dark:text-emerald-400">
+                    ✅ Quiz JSONB
+                  </span>
+                ) : (
+                  <Link
+                    href={`/admin/modules/${moduleId}/topics/${topic.id}/quiz`}
+                    className="text-sm font-medium text-slate-900 dark:text-slate-100 underline"
+                  >
+                    Kelola quiz
+                  </Link>
+                )}
                 {Boolean(topic.lesson_content) && (
                 <form
                     action={(formData) => {
