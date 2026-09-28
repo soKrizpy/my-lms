@@ -176,3 +176,35 @@ export async function unpublishTopicAction(formData: FormData) {
   revalidatePath(topicPath(moduleId));
   return { success: true };
 }
+
+export async function updateLessonContentAction(formData: FormData) {
+  const authError = await requireAdminAction();
+  if (authError) return authError;
+
+  const moduleId = readString(formData, "moduleId");
+  const topicId = Number(readString(formData, "topicId"));
+  const lessonContentRaw = readString(formData, "lessonContent");
+
+  if (!moduleId || !topicId) {
+    return { error: "ID topik wajib diisi." };
+  }
+
+  let lessonContent: unknown;
+  try {
+    lessonContent = JSON.parse(lessonContentRaw);
+  } catch {
+    return { error: "Format lesson_content tidak valid (bukan JSON)." };
+  }
+
+  const supabaseAdmin = getSupabaseAdmin();
+  const { error } = await supabaseAdmin
+    .from("topics")
+    .update({ lesson_content: lessonContent })
+    .eq("id", topicId)
+    .eq("module_id", Number(moduleId));
+
+  if (error) return { error: error.message };
+
+  revalidatePath(topicPath(moduleId));
+  return { success: true };
+}

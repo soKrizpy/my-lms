@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { deleteTopicAction, updateTopicAction, publishTopicAction, unpublishTopicAction } from "./actions";
 import { BUILT_IN_LESSONS } from "../../../../../lib/builtInLessons";
 import { EngineModal } from "../../../../../components/EngineModal";
+import { LessonContentEditorModal, type LessonContent } from "./LessonContentEditorModal";
 
 type Topic = {
   id: number;
@@ -29,6 +30,7 @@ export function TopicList({
   const [isPending, startTransition] = useTransition();
   const [openSynopsis, setOpenSynopsis] = useState<Record<number, boolean>>({});
   const [previewTopicId, setPreviewTopicId] = useState<string | null>(null);
+  const [editingContentTopic, setEditingContentTopic] = useState<Topic | null>(null);
 
   const toggleSynopsis = (topicId: number) =>
     setOpenSynopsis((prev) => ({ ...prev, [topicId]: !prev[topicId] }));
@@ -134,6 +136,15 @@ export function TopicList({
                     className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 underline"
                   >
                     Preview
+                  </button>
+                )}
+                {topic.lesson_content != null && (
+                  <button
+                    type="button"
+                    onClick={() => setEditingContentTopic(topic)}
+                    className="inline-flex items-center gap-1 rounded-md border border-violet-300 dark:border-violet-700 px-2.5 py-1 text-xs font-semibold text-violet-700 dark:text-violet-300 hover:bg-violet-50 dark:hover:bg-violet-950/40 transition-colors"
+                  >
+                    ✏️ Edit Materi
                   </button>
                 )}
                 <Link
@@ -316,6 +327,17 @@ export function TopicList({
           </li>
         );
       })}
+
+      {editingContentTopic && (
+        <LessonContentEditorModal
+          topicId={editingContentTopic.id}
+          topicTitle={editingContentTopic.title}
+          moduleId={moduleId}
+          lessonContent={(editingContentTopic.lesson_content ?? {}) as LessonContent}
+          onClose={() => setEditingContentTopic(null)}
+          onSaved={() => setEditingContentTopic(null)}
+        />
+      )}
 
       {previewTopicId && (
         <EngineModal
