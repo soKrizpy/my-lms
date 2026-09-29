@@ -2,12 +2,13 @@
 'use client';
 
 import Link from 'next/link';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useTransition } from 'react';
 import AdminToast, { type AdminNotice } from '../components/AdminToast';
 import EditModuleModal from './EditModuleModal';
 import AssignModuleModal from './AssignModuleModal';
 import { CreateModuleModal } from './CreateModuleModal';
 import { EngineModal } from '@/components/EngineModal';
+import { publishAllTopicsAction, unpublishAllTopicsAction } from './actions';
 import {
   Plus,
   Search,
@@ -53,6 +54,7 @@ export default function ModulesPage() {
   const [assigningModule, setAssigningModule] = useState<Module | null>(null);
   const [previewTopicId, setPreviewTopicId] = useState<string | null>(null);
   const [notice, setNotice] = useState<AdminNotice | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   async function handleDeleteModule(id: string) {
     if (
@@ -343,6 +345,41 @@ export default function ModulesPage() {
                       >
                         <Eye className="w-3.5 h-3.5 text-blue-500" />
                         <span className="hidden md:inline">Preview</span>
+                      </button>
+                    )}
+
+                    {/* Publish All / Unpublish All */}
+                    {topics.length > 0 && (
+                      <button
+                        type="button"
+                        disabled={isPending}
+                        onClick={() => {
+                          const allPublished = publishedCount === topics.length;
+                          startTransition(async () => {
+                            const result = allPublished
+                              ? await unpublishAllTopicsAction(Number(mod.id))
+                              : await publishAllTopicsAction(Number(mod.id));
+                            if (result && 'error' in result) {
+                              setNotice({ type: 'error', text: result.error ?? 'Gagal.' });
+                            } else {
+                              setNotice({
+                                type: 'success',
+                                text: allPublished
+                                  ? `Semua topik "${mod.name}" dijadikan draft.`
+                                  : `Semua topik "${mod.name}" berhasil dipublish!`,
+                              });
+                              void loadModules();
+                            }
+                          });
+                        }}
+                        className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors disabled:opacity-50 ${
+                          publishedCount === topics.length
+                            ? 'border-amber-300 dark:border-amber-700/60 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-950/50'
+                            : 'border-emerald-400 dark:border-emerald-600 bg-emerald-600 dark:bg-emerald-700 text-white hover:bg-emerald-700 dark:hover:bg-emerald-600 shadow-sm'
+                        }`}
+                        title={publishedCount === topics.length ? 'Jadikan semua topik draft' : 'Publish semua topik'}
+                      >
+                        {publishedCount === topics.length ? '📦 Draft Semua' : '📢 Publish Semua'}
                       </button>
                     )}
 

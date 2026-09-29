@@ -12,6 +12,7 @@ import { CreateAssessmentForm } from "../assessment/CreateAssessmentForm";
 import { AssessmentQuestionList } from "../assessment/AssessmentQuestionList";
 import { AddAssessmentQuestionForm } from "../assessment/AddAssessmentQuestionForm";
 import ModuleTabShell, { type TabId } from "../ModuleTabShell";
+import { PublishAllTopicsButton } from "./PublishAllTopicsButton";
 
 type PageProps = {
   params:
@@ -119,9 +120,17 @@ export default async function ModuleTopicsPage({ params, searchParams }: PagePro
         <p className="text-sm text-red-600">Error: {topicsError.message}</p>
       )}
       <div className="glass-panel rounded-xl p-4">
-        <h3 className="mb-3 text-sm font-semibold text-[var(--text-primary)]">
-          Daftar Topik ({topics?.length ?? 0})
-        </h3>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-[var(--text-primary)]">
+            Daftar Topik ({topics?.length ?? 0})
+          </h3>
+          {topics && topics.length > 0 && (
+            <PublishAllTopicsButton
+              moduleId={moduleIdParam}
+              topics={topics}
+            />
+          )}
+        </div>
         {!topics || topics.length === 0 ? (
           <p className="text-sm text-[var(--text-muted)] italic">
             Belum ada topik untuk modul ini. Upload JSON terlebih dahulu.

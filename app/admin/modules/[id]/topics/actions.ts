@@ -208,3 +208,46 @@ export async function updateLessonContentAction(formData: FormData) {
   revalidatePath(topicPath(moduleId));
   return { success: true };
 }
+
+export async function publishAllTopicsInModuleAction(formData: FormData) {
+  const authError = await requireAdminAction();
+  if (authError) return authError;
+
+  const moduleId = readString(formData, "moduleId");
+  if (!moduleId) return { error: "moduleId wajib diisi." };
+
+  const supabaseAdmin = getSupabaseAdmin();
+  const { error } = await supabaseAdmin
+    .from("topics")
+    .update({
+      status: "published",
+      published_at: new Date().toISOString(),
+    })
+    .eq("module_id", Number(moduleId));
+
+  if (error) return { error: error.message };
+
+  revalidatePath(topicPath(moduleId));
+  revalidatePath("/admin/modules");
+  return { success: true };
+}
+
+export async function unpublishAllTopicsInModuleAction(formData: FormData) {
+  const authError = await requireAdminAction();
+  if (authError) return authError;
+
+  const moduleId = readString(formData, "moduleId");
+  if (!moduleId) return { error: "moduleId wajib diisi." };
+
+  const supabaseAdmin = getSupabaseAdmin();
+  const { error } = await supabaseAdmin
+    .from("topics")
+    .update({ status: "draft", published_at: null })
+    .eq("module_id", Number(moduleId));
+
+  if (error) return { error: error.message };
+
+  revalidatePath(topicPath(moduleId));
+  revalidatePath("/admin/modules");
+  return { success: true };
+}

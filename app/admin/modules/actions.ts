@@ -84,3 +84,38 @@ export async function deleteModuleAction(formData: FormData) {
 
   revalidateModules();
 }
+
+export async function publishAllTopicsAction(moduleId: number) {
+  if (await getSessionRole() !== "admin") return { error: "Unauthorized" };
+
+  const supabaseAdmin = getSupabaseAdmin();
+  const { error } = await supabaseAdmin
+    .from("topics")
+    .update({
+      status: "published",
+      published_at: new Date().toISOString(),
+    })
+    .eq("module_id", moduleId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/admin/modules/${moduleId}/topics`);
+  revalidatePath("/admin/modules");
+  return { success: true };
+}
+
+export async function unpublishAllTopicsAction(moduleId: number) {
+  if (await getSessionRole() !== "admin") return { error: "Unauthorized" };
+
+  const supabaseAdmin = getSupabaseAdmin();
+  const { error } = await supabaseAdmin
+    .from("topics")
+    .update({ status: "draft", published_at: null })
+    .eq("module_id", moduleId);
+
+  if (error) return { error: error.message };
+
+  revalidatePath(`/admin/modules/${moduleId}/topics`);
+  revalidatePath("/admin/modules");
+  return { success: true };
+}

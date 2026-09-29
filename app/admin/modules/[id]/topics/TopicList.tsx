@@ -168,7 +168,7 @@ export function TopicList({
                     Kelola quiz
                   </Link>
                 )}
-                {Boolean(topic.lesson_content) && (
+                {Boolean(topic.lesson_content) ? (
                 <form
                     action={(formData) => {
                       startTransition(async () => {
@@ -187,11 +187,38 @@ export function TopicList({
                       disabled={isPending}
                       className={`rounded-md px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-50 ${
                         topic.status === 'published'
-                          ? 'bg-amber-100 border border-amber-300 text-amber-800 hover:bg-amber-200'
-                          : 'bg-green-600 text-white hover:bg-green-700 shadow-sm'
+                          ? 'bg-amber-100 border border-amber-300 text-amber-800 hover:bg-amber-200 dark:bg-amber-950/40 dark:border-amber-700/60 dark:text-amber-300 dark:hover:bg-amber-950/60'
+                          : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm'
                       }`}
                     >
-                      {topic.status === 'published' ? '📤 Unpublish' : '🚀 Publish Sekarang!'}
+                      {topic.status === 'published' ? '📤 Unpublish' : '🚀 Publish!'}
+                    </button>
+                  </form>
+                ) : (
+                  /* No lesson_content yet — still show publish toggle for basic topic publish */
+                  <form
+                    action={(formData) => {
+                      startTransition(async () => {
+                        const action = topic.status === 'published' ? unpublishTopicAction : publishTopicAction;
+                        const result = await action(formData);
+                        if (result && 'error' in result && result.error) {
+                          alert("Gagal: " + result.error);
+                        }
+                      });
+                    }}
+                  >
+                    <input type="hidden" name="moduleId" value={moduleId} />
+                    <input type="hidden" name="topicId" value={topic.id} />
+                    <button
+                      type="submit"
+                      disabled={isPending}
+                      className={`rounded-md px-3 py-1.5 text-xs font-bold transition-colors disabled:opacity-50 ${
+                        topic.status === 'published'
+                          ? 'bg-amber-100 border border-amber-300 text-amber-800 hover:bg-amber-200 dark:bg-amber-950/40 dark:border-amber-700/60 dark:text-amber-300 dark:hover:bg-amber-950/60'
+                          : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm'
+                      }`}
+                    >
+                      {topic.status === 'published' ? '📤 Unpublish' : '🚀 Publish!'}
                     </button>
                   </form>
                 )}
